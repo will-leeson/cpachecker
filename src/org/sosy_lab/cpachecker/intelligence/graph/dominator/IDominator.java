@@ -21,24 +21,14 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence;
+package org.sosy_lab.cpachecker.intelligence.graph.dominator;
 
-import java.util.Map.Entry;
-import org.sosy_lab.cpachecker.cfa.CFA;
-public class CFATest {
+import java.util.Set;
 
-  public static void test(CFA cfa){
+public interface IDominator {
 
-    WLFeatureModel model = new WLFeatureModel(cfa, 5);
+  public Set<String> getDom(String v);
 
-    for(int i = 0; i < 2; i++){
-
-      for(Entry<String, Integer> count: model.iterate().entrySet()){
-        System.out.println(count.getKey()+": "+count.getValue());
-      }
-
-    }
-
-  }
+  public String getIDom(String v);
 
 }

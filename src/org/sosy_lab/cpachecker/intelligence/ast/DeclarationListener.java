@@ -24,11 +24,16 @@
 package org.sosy_lab.cpachecker.intelligence.ast;
 
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CDeclarationEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.AEdgeListener;
+import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationDefCollectorVisitor;
+import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationUseCollectorVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CSimpleDeclASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
@@ -60,6 +65,18 @@ public class DeclarationListener extends AEdgeListener {
             graph, depth
         ));
         graph.addSEdge(subTreeId, id);
+
+        Map<String, Object> options = graph.getNode(id).getOptions();
+        Set<String> vars = decl.accept(new CDeclarationUseCollectorVisitor());
+        if(vars != null && !vars.isEmpty())
+          options.put("variables", vars);
+        String declVar = decl.accept(new CDeclarationDefCollectorVisitor());
+        if(declVar != null) {
+          Set<String> declVars = new HashSet<>();
+          declVars.add(declVar);
+          options.put("output", declVars);
+        }
+
       } catch (CPATransferException pE) {
         pE.printStackTrace();
       }

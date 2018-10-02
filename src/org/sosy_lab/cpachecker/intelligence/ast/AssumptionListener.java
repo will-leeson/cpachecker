@@ -51,33 +51,33 @@ public class AssumptionListener extends AEdgeListener {
   public void listen(CFAEdge edge) {
     if(edge instanceof CAssumeEdge){
       CAssumeEdge assume = (CAssumeEdge)edge;
-      if(assume.getTruthAssumption()){
+      //if(assume.getTruthAssumption()){
 
-        String label = extractControlLabel(assume).name();
-        String id = "N"+assume.getPredecessor().getNodeNumber();
-        String idS = "N"+assume.getSuccessor().getNodeNumber();
-        graph.addNode(id, label);
-        Map<String, Object> options = graph.getNode(id).getOptions();
-        options.put("truth", true);
-        graph.addNode(idS);
-        graph.addCFGEdge(id, idS);
+      String label = extractControlLabel(assume).name();
+      String id = "N"+assume.getPredecessor().getNodeNumber();
+      String idS = "N"+assume.getSuccessor().getNodeNumber();
+      graph.addNode(id, label);
+      Map<String, Object> options = graph.getNode(id).getOptions();
+      options.put("truth", assume.getTruthAssumption());
+      graph.addNode(idS);
+      graph.addCFGEdge(id, idS);
 
-        Set<String> vars = assume.getExpression().accept(new CVariablesCollectingVisitor(assume.getPredecessor()));
-        options.put("variables", vars);
+      Set<String> vars = assume.getExpression().accept(new CVariablesCollectingVisitor(assume.getPredecessor()));
+      options.put("variables", vars);
 
-        if(depth >= 1){
-          try {
-            String assumeExpTree = assume.getExpression().accept(
-                new CExpressionASTVisitor(graph, depth - 1)
-            );
-            graph.addSEdge(assumeExpTree, id);
-          } catch (CPATransferException pE) {
-            pE.printStackTrace();
-          }
+      if(depth >= 1){
+        try {
+          String assumeExpTree = assume.getExpression().accept(
+              new CExpressionASTVisitor(graph, depth - 1)
+          );
+          graph.addSEdge(assumeExpTree, id);
+        } catch (CPATransferException pE) {
+          pE.printStackTrace();
         }
-
-
       }
+
+
+      //}
     }
   }
 }

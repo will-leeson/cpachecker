@@ -109,7 +109,7 @@ public class StructureGraph {
       return addEdge(new SEdge(nodes.get(source), nodes.get(target)));
     }
 
-    public Set<GEdge> getIncoming(String target){
+    public Set<GEdge> getIngoing(String target){
         Map<String, Map<String, GEdge>> E = edges.column(target);
         Set<GEdge> set = new HashSet<>();
 
@@ -188,7 +188,7 @@ public class StructureGraph {
       if(!nodes.containsKey(id))return false;
       nodes.remove(id);
 
-      for(GEdge e: getIncoming(id)){
+      for(GEdge e: getIngoing(id)){
         removeEdge(e);
       }
 
@@ -217,6 +217,37 @@ public class StructureGraph {
       while(nodes.containsKey(prefix + lastGen))
         lastGen++;
       return prefix+lastGen;
+    }
+
+    public String toDot(){
+      String s = "digraph G {\n";
+
+      for(String n: this.nodes()){
+        if(n.startsWith("N")){
+          s += n+"[ label="+this.nodes.get(n).getLabel()+" ];\n";
+        }
+      }
+
+      for(String n: this.nodes()){
+        if(n.startsWith("N")){
+
+          for(GEdge e: this.getOutgoing(n)){
+            if(e instanceof CFGEdge){
+              s += n+" -> "+e.getSink().getId()+";\n";
+            }
+            if(e instanceof DDEdge){
+              s += n+" -> "+e.getSink().getId()+"[color=red];\n";
+            }
+            if(e instanceof CDEdge){
+              s += n+" -> "+e.getSink().getId()+"[color=green];\n";
+            }
+          }
+
+        }
+      }
+
+
+      return s + "}";
     }
 
 }

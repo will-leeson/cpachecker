@@ -28,6 +28,7 @@ import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CStatementEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.AEdgeListener;
+import org.sosy_lab.cpachecker.intelligence.ast.visitors.CAssignVariablesCollector;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementVariablesCollectingVisitor;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
@@ -56,13 +57,15 @@ public class StatementListener extends AEdgeListener {
         graph.addNode(idS);
         graph.addCFGEdge(id, idS);
 
-        for(GEdge e: graph.getIncoming(astId)){
+        for(GEdge e: graph.getIngoing(astId)){
           graph.addSEdge(e.getSource().getId(), id);
         }
         graph.removeNode(astId);
 
         graph.getNode(id).getOptions().put("variables",
             statement.accept(new CStatementVariablesCollectingVisitor(edge.getPredecessor())));
+        graph.getNode(id).getOptions().put("output",
+            statement.accept(new CAssignVariablesCollector(edge.getPredecessor())));
 
       } catch (CPATransferException pE) {
         pE.printStackTrace();

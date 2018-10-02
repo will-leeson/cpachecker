@@ -21,24 +21,30 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence;
+package org.sosy_lab.cpachecker.intelligence.graph.dominator;
 
-import java.util.Map.Entry;
-import org.sosy_lab.cpachecker.cfa.CFA;
-public class CFATest {
+import java.util.Set;
 
-  public static void test(CFA cfa){
+public class InverseGraphNavigator implements IGraphNavigator{
 
-    WLFeatureModel model = new WLFeatureModel(cfa, 5);
+  private IGraphNavigator delegate;
 
-    for(int i = 0; i < 2; i++){
-
-      for(Entry<String, Integer> count: model.iterate().entrySet()){
-        System.out.println(count.getKey()+": "+count.getValue());
-      }
-
-    }
-
+  public InverseGraphNavigator(IGraphNavigator pDelegate) {
+    delegate = pDelegate;
   }
 
+  @Override
+  public Set<String> successor(String node) {
+    return delegate.predecessor(node);
+  }
+
+  @Override
+  public Set<String> predecessor(String node) {
+    return delegate.successor(node);
+  }
+
+  @Override
+  public Set<String> nodes() {
+    return delegate.nodes();
+  }
 }
