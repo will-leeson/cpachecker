@@ -28,7 +28,6 @@ import java.util.Set;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CAssumeEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
-import org.sosy_lab.cpachecker.intelligence.AEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CExpressionASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CVariablesCollectingVisitor;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;

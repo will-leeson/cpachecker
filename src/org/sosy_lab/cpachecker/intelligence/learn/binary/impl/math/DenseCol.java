@@ -21,30 +21,48 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math;
 
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import java.util.Iterator;
 
-public class InitExitListener extends AEdgeListener {
-  public InitExitListener(
-      int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+public class DenseCol implements Iterable<Double> {
+
+  private Matrix parent;
+  private int coordY;
+
+  DenseCol(Matrix pDenseMatrix, int x) {
+    this.parent = pDenseMatrix;
+    this.coordY = x;
   }
 
+  public double get(int row) {
+    return parent.get(row, coordY);
+  }
+
+  public void set(int row, double d) {
+    parent.set(row, coordY, d);
+  }
+
+  public int getRows() {
+    return parent.getRows();
+  }
+
+
   @Override
-  public void listen(CFAEdge edge) {
+  public Iterator<Double> iterator() {
+    DenseCol col = this;
+    return new Iterator<Double>() {
+      int i = 0;
 
-    if(edge.getPredecessor().getNumEnteringEdges() == 0){
-      String id = "N"+edge.getPredecessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.START.name());
-    }
+      @Override
+      public boolean hasNext() {
+        return i < col.getRows();
+      }
 
-    if(edge.getSuccessor().getNumLeavingEdges() == 0){
-      String id = "N"+edge.getSuccessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.END.name());
-    }
-
+      @Override
+      public Double next() {
+        return Double.valueOf(col.get(i++));
+      }
+    };
   }
 }

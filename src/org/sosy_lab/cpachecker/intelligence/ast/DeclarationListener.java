@@ -31,7 +31,6 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CDeclarationEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
-import org.sosy_lab.cpachecker.intelligence.AEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationDefCollectorVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationUseCollectorVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CSimpleDeclASTVisitor;

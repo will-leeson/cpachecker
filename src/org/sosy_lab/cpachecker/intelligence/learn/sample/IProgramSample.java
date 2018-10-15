@@ -21,30 +21,29 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.learn.sample;
 
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import java.util.Map;
+import java.util.Set;
 
-public class InitExitListener extends AEdgeListener {
-  public InitExitListener(
-      int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
-  }
+public interface IProgramSample {
 
-  @Override
-  public void listen(CFAEdge edge) {
+  public String getID();
 
-    if(edge.getPredecessor().getNumEnteringEdges() == 0){
-      String id = "N"+edge.getPredecessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.START.name());
-    }
+  public int getMaxIteration();
 
-    if(edge.getSuccessor().getNumLeavingEdges() == 0){
-      String id = "N"+edge.getSuccessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.END.name());
-    }
+  public int getMaxASTDepth();
 
-  }
+  public void assignLabel(String labelId, boolean correct, double time);
+
+  public boolean isCorrect(String labelId);
+
+  public double getTime(String labelId);
+
+  public boolean isBetter(String labelId1, String labelId2);
+
+  public Set<String> getDefinedLabels();
+
+  public Map<IFeature, Double> getFeatureBag(int iteration);
+
 }

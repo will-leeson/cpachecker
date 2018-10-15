@@ -23,21 +23,42 @@
  */
 package org.sosy_lab.cpachecker.intelligence;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 import org.sosy_lab.cpachecker.cfa.CFA;
+import org.sosy_lab.cpachecker.intelligence.learn.IRankLearner;
+import org.sosy_lab.cpachecker.intelligence.learn.RPCLearner;
+import org.sosy_lab.cpachecker.intelligence.learn.binary.IPredictorBatch;
+import org.sosy_lab.cpachecker.intelligence.learn.binary.LinearPretrainedType;
+import org.sosy_lab.cpachecker.intelligence.learn.binary.PredictorBatchBuilder;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.WLFeatureModel;
+
 public class CFATest {
 
-  public static void test(CFA cfa){
+  public static void test(CFA cfa) {
 
-    WLFeatureModel model = new WLFeatureModel(cfa, 5);
+    SampleRegistry registry = new SampleRegistry(
+        new FeatureRegistry(), 1, 5
+    );
 
-    for(int i = 0; i < 2; i++){
+    IProgramSample sample = registry.registerSample("defaultId", cfa);
 
-      for(Entry<String, Integer> count: model.iterate().entrySet()){
-        System.out.println(count.getKey()+": "+count.getValue());
-      }
+    PredictorBatchBuilder batchBuilder = new PredictorBatchBuilder(
+        new LinearPretrainedType(null), null
+    );
+    IPredictorBatch batch = batchBuilder.build();
+    IRankLearner learner = new RPCLearner(batch);
 
-    }
+    List<IProgramSample> sampleList = new ArrayList<>();
+    sampleList.add(sample);
+
+    System.out.println(learner.predict(sampleList));
+
 
   }
 

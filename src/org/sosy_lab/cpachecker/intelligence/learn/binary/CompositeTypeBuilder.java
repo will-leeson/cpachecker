@@ -21,30 +21,28 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.learn.binary;
 
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
-public class InitExitListener extends AEdgeListener {
-  public InitExitListener(
-      int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+public class CompositeTypeBuilder {
+
+  private IBinaryPredictorType defaultType;
+  private Table<String, String, IBinaryPredictorType> definedTypes = HashBasedTable.create();
+
+  CompositeTypeBuilder(IBinaryPredictorType pDefaultType) {
+    defaultType = pDefaultType;
   }
 
-  @Override
-  public void listen(CFAEdge edge) {
-
-    if(edge.getPredecessor().getNumEnteringEdges() == 0){
-      String id = "N"+edge.getPredecessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.START.name());
-    }
-
-    if(edge.getSuccessor().getNumLeavingEdges() == 0){
-      String id = "N"+edge.getSuccessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.END.name());
-    }
-
+  public CompositeTypeBuilder define(String label1, String label2, IBinaryPredictorType pType){
+    this.definedTypes.put(label1, label2, pType);
+    return this;
   }
+
+  public IBinaryPredictorType createType(){
+    return new CompositeType(defaultType, definedTypes);
+  }
+
+
 }

@@ -21,7 +21,7 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence;
+package org.sosy_lab.cpachecker.intelligence.learn.sample;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -50,6 +50,10 @@ public class WLFeatureModel {
     public WLFeatureModel(CFA pCFA, int pAstDepth){
       cfa = pCFA;
       astDepth = pAstDepth;
+    }
+
+    public int getAstDepth(){
+      return astDepth;
     }
 
     private Map<String, Integer> iteration0(){

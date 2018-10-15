@@ -21,30 +21,16 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.learn.binary;
 
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import java.util.concurrent.Future;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
+import org.sosy_lab.cpachecker.util.Pair;
 
-public class InitExitListener extends AEdgeListener {
-  public InitExitListener(
-      int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
-  }
+public interface IPredictorBatch {
 
-  @Override
-  public void listen(CFAEdge edge) {
+  public Future<double[][]> predict(Iterable<IProgramSample> entities);
 
-    if(edge.getPredecessor().getNumEnteringEdges() == 0){
-      String id = "N"+edge.getPredecessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.START.name());
-    }
+  public Pair<String, String> getLabelsByPosition(int i);
 
-    if(edge.getSuccessor().getNumLeavingEdges() == 0){
-      String id = "N"+edge.getSuccessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.END.name());
-    }
-
-  }
 }

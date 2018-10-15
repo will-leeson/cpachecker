@@ -27,7 +27,6 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CStatement;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CStatementEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
-import org.sosy_lab.cpachecker.intelligence.AEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CAssignVariablesCollector;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementVariablesCollectingVisitor;

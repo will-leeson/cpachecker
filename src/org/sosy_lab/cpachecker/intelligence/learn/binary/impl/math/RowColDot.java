@@ -21,30 +21,33 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math;
 
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import java.util.concurrent.Callable;
 
-public class InitExitListener extends AEdgeListener {
-  public InitExitListener(
-      int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+public class RowColDot implements Callable<Double> {
+
+  private DenseRow row;
+  private DenseCol col;
+
+  RowColDot(
+      DenseRow pRow,
+      DenseCol pDenseCol) {
+    row = pRow;
+    col = pDenseCol;
   }
 
   @Override
-  public void listen(CFAEdge edge) {
+  public Double call() throws Exception {
+    double d = 0.0;
 
-    if(edge.getPredecessor().getNumEnteringEdges() == 0){
-      String id = "N"+edge.getPredecessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.START.name());
-    }
+    if(row.getCols() != col.getRows())
+      throw new IllegalArgumentException("Columns and rows have to be equal ("+row.getCols()+", "+col.getRows()+")");
 
-    if(edge.getSuccessor().getNumLeavingEdges() == 0){
-      String id = "N"+edge.getSuccessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.END.name());
-    }
+    for(int i = 0; i < row.getCols(); i++)
+      d += row.get(i)*col.get(i);
 
+    return d;
   }
 }
+

@@ -21,30 +21,25 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.learn.sample.backend;
 
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import java.util.Set;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 
-public class InitExitListener extends AEdgeListener {
-  public InitExitListener(
-      int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+public class JsonBackend implements ISampleBackend {
+  @Override
+  public IProgramSample loadSample(String id) {
+    return null;
   }
 
   @Override
-  public void listen(CFAEdge edge) {
+  public void saveSample(
+      String id, IProgramSample pIProgramSample) {
 
-    if(edge.getPredecessor().getNumEnteringEdges() == 0){
-      String id = "N"+edge.getPredecessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.START.name());
-    }
+  }
 
-    if(edge.getSuccessor().getNumLeavingEdges() == 0){
-      String id = "N"+edge.getSuccessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.END.name());
-    }
-
+  @Override
+  public Set<String> listIds() {
+    return null;
   }
 }

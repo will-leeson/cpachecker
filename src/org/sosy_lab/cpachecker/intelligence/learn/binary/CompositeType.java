@@ -21,30 +21,27 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.learn.binary;
 
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import com.google.common.collect.Table;
 
-public class InitExitListener extends AEdgeListener {
-  public InitExitListener(
-      int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+public class CompositeType implements IBinaryPredictorType {
+
+  private IBinaryPredictorType defaultType;
+  private Table<String, String, IBinaryPredictorType> definedTypes;
+
+  CompositeType(
+      IBinaryPredictorType pDefaultType,
+      Table<String, String, IBinaryPredictorType> pDefinedTypes) {
+    defaultType = pDefaultType;
+    definedTypes = pDefinedTypes;
   }
 
   @Override
-  public void listen(CFAEdge edge) {
-
-    if(edge.getPredecessor().getNumEnteringEdges() == 0){
-      String id = "N"+edge.getPredecessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.START.name());
+  public IBinaryPredictor instantiate(String label1, String label2) {
+    if(definedTypes.contains(label1, label2)){
+      return definedTypes.get(label1, label2).instantiate(label1, label2);
     }
-
-    if(edge.getSuccessor().getNumLeavingEdges() == 0){
-      String id = "N"+edge.getSuccessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.END.name());
-    }
-
+    return defaultType.instantiate(label1, label2);
   }
 }

@@ -25,7 +25,6 @@ package org.sosy_lab.cpachecker.intelligence.ast;
 
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionReturnEdge;
-import org.sosy_lab.cpachecker.intelligence.AEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class ReturnFunctionListener extends AEdgeListener {

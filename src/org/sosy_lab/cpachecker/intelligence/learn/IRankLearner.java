@@ -21,19 +21,15 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence;
+package org.sosy_lab.cpachecker.intelligence.learn;
 
-import org.sosy_lab.cpachecker.intelligence.ast.IEdgeListener;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
-public abstract class AEdgeListener implements IEdgeListener {
+import java.util.List;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 
-  protected int depth;
-  protected StructureGraph graph;
+public interface IRankLearner {
 
-  public AEdgeListener(int pDepth, StructureGraph pGraph) {
-    depth = pDepth;
-    graph = pGraph;
-  }
+
+  public List<List<String>> predict(Iterable<IProgramSample> pSample);
 
 }

@@ -21,30 +21,30 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.learn.sample.backend;
 
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 
-public class InitExitListener extends AEdgeListener {
-  public InitExitListener(
-      int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+public class InMemBackend implements ISampleBackend {
+
+  private Map<String, IProgramSample> memory = new HashMap<>();
+
+  @Override
+  public IProgramSample loadSample(String id) {
+    return memory.get(id);
   }
 
   @Override
-  public void listen(CFAEdge edge) {
+  public void saveSample(
+      String id, IProgramSample pIProgramSample) {
+    memory.put(id, pIProgramSample);
+  }
 
-    if(edge.getPredecessor().getNumEnteringEdges() == 0){
-      String id = "N"+edge.getPredecessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.START.name());
-    }
-
-    if(edge.getSuccessor().getNumLeavingEdges() == 0){
-      String id = "N"+edge.getSuccessor().getNodeNumber();
-      graph.addNode(id, ASTNodeLabel.END.name());
-    }
-
+  @Override
+  public Set<String> listIds() {
+    return memory.keySet();
   }
 }
