@@ -19,6 +19,7 @@
             <ivy pattern="${repo.dir}/[organisation]/[module]/ivy-[revision].xml" />
             <artifact pattern="${repo.dir}/[organisation]/[module]/[artifact]-[revision](-[classifier]).[ext]" />
         </filesystem>
+
     </resolvers>
     <caches defaultCacheDir="${ivy.cache.dir}"/>
 </ivysettings>

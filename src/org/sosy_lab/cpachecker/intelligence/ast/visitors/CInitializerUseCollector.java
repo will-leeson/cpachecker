@@ -30,14 +30,24 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CInitializer;
 import org.sosy_lab.cpachecker.cfa.ast.c.CInitializerExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CInitializerList;
 import org.sosy_lab.cpachecker.cfa.ast.c.CInitializerVisitor;
+import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 
 public class CInitializerUseCollector implements
                                       CInitializerVisitor<Set<String>, CPATransferException> {
+  private CFANode predecessor;
+
+  public CInitializerUseCollector(CFANode pPredecessor) {
+    predecessor = pPredecessor;
+  }
+
+
   @Override
   public Set<String> visit(CInitializerExpression pInitializerExpression)
       throws CPATransferException {
-    return pInitializerExpression.getExpression().accept(new CVariablesCollectingVisitor(null));
+    return pInitializerExpression.getExpression().accept(new CVariablesCollectingVisitor(
+        predecessor
+    ));
   }
 
   @Override

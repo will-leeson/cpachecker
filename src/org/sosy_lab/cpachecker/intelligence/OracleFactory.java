@@ -25,8 +25,10 @@ package org.sosy_lab.cpachecker.intelligence;
 
 import java.nio.file.Path;
 import java.util.List;
-import net.bytebuddy.dynamic.scaffold.TypeInitializer.Drain.Default;
 import org.sosy_lab.common.configuration.AnnotatedValue;
+import org.sosy_lab.common.configuration.Configuration;
+import org.sosy_lab.common.configuration.InvalidConfigurationException;
+import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
 
 public class OracleFactory {
@@ -44,10 +46,12 @@ public class OracleFactory {
 
     }
 
-    public IConfigOracle create(List<AnnotatedValue<Path>> configPaths, CFA pCFA){
+    public IConfigOracle create(String oracle, LogManager logger, Configuration config, List<AnnotatedValue<Path>> configPaths, CFA pCFA)
+        throws InvalidConfigurationException {
 
-
-
+      if(oracle.equals("\"linear\"")){
+        return new LinearPredictiveOracle(logger, config, configPaths, pCFA);
+      }
 
       return new DefaultOracle(configPaths);
     }

@@ -31,11 +31,20 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CParameterDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CSimpleDeclarationVisitor;
 import org.sosy_lab.cpachecker.cfa.ast.c.CTypeDefDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CVariableDeclaration;
+import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.cfa.types.c.CEnumType.CEnumerator;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 
 public class CDeclarationUseCollectorVisitor implements
                                              CSimpleDeclarationVisitor<Set<String>, CPATransferException> {
+
+  private CFANode predecessor;
+
+  public CDeclarationUseCollectorVisitor(CFANode pPredecessor) {
+    predecessor = pPredecessor;
+  }
+
+
   @Override
   public Set<String> visit(CFunctionDeclaration pDecl) throws CPATransferException {
     return null;
@@ -54,7 +63,7 @@ public class CDeclarationUseCollectorVisitor implements
   @Override
   public Set<String> visit(CVariableDeclaration pDecl) throws CPATransferException {
     if(pDecl.getInitializer() != null)
-      return pDecl.getInitializer().accept(new CInitializerUseCollector());
+      return pDecl.getInitializer().accept(new CInitializerUseCollector(predecessor));
     return null;
   }
 

@@ -66,7 +66,7 @@ public class DeclarationListener extends AEdgeListener {
         graph.addSEdge(subTreeId, id);
 
         Map<String, Object> options = graph.getNode(id).getOptions();
-        Set<String> vars = decl.accept(new CDeclarationUseCollectorVisitor());
+        Set<String> vars = decl.accept(new CDeclarationUseCollectorVisitor(edge.getPredecessor()));
         if(vars != null && !vars.isEmpty())
           options.put("variables", vars);
         String declVar = decl.accept(new CDeclarationDefCollectorVisitor());

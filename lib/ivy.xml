@@ -134,6 +134,11 @@
             <exclude org="org.apache.xmlgraphics" module="batik-util"/>
         </dependency>
 
+        <dependency org="de.bwaldvogel" name="liblinear" rev="2.20" conf="runtime->default; contrib->sources" />
+
+        <dependency org="com.google.code.gson" name="gson" rev="2.8.0" conf="runtime->default; contrib->sources" />
+
+
         <!-- Guava has a dependency on error_prone_annotations without a revision number, need an override. -->
         <override org="com.google.errorprone" module="error_prone_annotations" rev="2.3.1"/>
 

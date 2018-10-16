@@ -110,7 +110,11 @@ public class CVariablesCollectingVisitor implements
   @Override
   public Set<String> visit(CFieldReference exp) {
     String varName = exp.toASTString(); // TODO "(*p).x" vs "p->x"
-    String function = isGlobal(exp) ? "" : predecessor.getFunctionName();
+
+    String function = "";
+    if(!isGlobal(exp) && predecessor != null)
+      function = predecessor.getFunctionName();
+
     Set<String> ret = Sets.newHashSetWithExpectedSize(1);
     ret.add(scopeVar(function, varName));
     return ret;

@@ -83,6 +83,7 @@ import org.sosy_lab.cpachecker.cpa.bam.BAMCPA;
 import org.sosy_lab.cpachecker.cpa.bam.BAMCounterexampleCheckAlgorithm;
 import org.sosy_lab.cpachecker.cpa.location.LocationCPA;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
+import org.sosy_lab.cpachecker.intelligence.IntelligentRestartAlgorithm;
 
 /**
  * Factory class for the three core components of CPAchecker:
@@ -142,6 +143,11 @@ public class CoreComponentsFactory {
   @Option(secure=true, name="restartAfterUnknown",
       description="restart the analysis using a different configuration after unknown result")
   private boolean useRestartingAlgorithm = false;
+
+
+  @Option(secure=true, name="restartIntelligentAfterUnknown",
+      description="restart the analysis using a different configuration after unknown result in a predicted sequence")
+  private boolean useIntelligentRestartingAlgorithm = false;
 
   @Option(
     secure = true,
@@ -352,6 +358,9 @@ public class CoreComponentsFactory {
     } else if (useRestartingAlgorithm) {
       logger.log(Level.INFO, "Using Restarting Algorithm");
       algorithm = RestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
+    }else if(useIntelligentRestartingAlgorithm){
+      logger.log(Level.INFO, "Using Restarting Algorithm with predictive execution");
+      algorithm = IntelligentRestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
     } else if (useInterleavedAlgorithm) {
       logger.log(Level.INFO, "Using Interleaved Algorithm");
       algorithm = new InterleavedAlgorithm(config, logger, shutdownNotifier, specification, cfa);
@@ -517,7 +526,8 @@ public class CoreComponentsFactory {
         || useRestartingAlgorithm
         || useHeuristicSelectionAlgorithm
         || useParallelAlgorithm
-        || asConditionalVerifier) {
+        || asConditionalVerifier
+        || useIntelligentRestartingAlgorithm) {
       // this algorithm needs an indirection so that it can change
       // the actual reached set instance on the fly
       if (memorizeReachedAfterRestart) {

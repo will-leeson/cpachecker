@@ -212,6 +212,12 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
   )
   private boolean alwaysRestart = false;
 
+  @Option(
+      secure = true,
+      description = "Oracle to use"
+  )
+  private String oracle = "default";
+
   private final LogManager logger;
   private final ShutdownNotifier shutdownNotifier;
   private final ShutdownRequestListener logShutdownListener;
@@ -221,7 +227,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
   private final Specification specification;
 
   private Algorithm currentAlgorithm;
-  private IConfigOracle oracle;
+  private IConfigOracle oracleImpl;
 
   private final List<ReachedSetUpdateListener> reachedSetUpdateListeners =
       new CopyOnWriteArrayList<>();
@@ -248,8 +254,8 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     this.globalConfig = config;
     specification = checkNotNull(pSpecification);
 
-    this.oracle = OracleFactory.getInstance().create(
-        this.configFiles, this.cfa
+    this.oracleImpl = OracleFactory.getInstance().create(
+        this.oracle, logger, config, this.configFiles, this.cfa
     );
 
     logShutdownListener =
@@ -290,7 +296,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     CFANode mainFunction = Iterables.getOnlyElement(initialNodes);
 
     PeekingIterator<AnnotatedValue<Path>> configFilesIterator =
-        this.oracle;
+        this.oracleImpl;
 
     AlgorithmStatus status = AlgorithmStatus.UNSOUND_AND_PRECISE;
     boolean provideReachedForNextAlgorithm = false;
