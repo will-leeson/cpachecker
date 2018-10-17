@@ -21,18 +21,14 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence;
+package org.sosy_lab.cpachecker.intelligence.learn.binary.exception;
 
-import com.google.common.collect.PeekingIterator;
-import java.nio.file.Path;
-import java.util.function.Consumer;
-import org.sosy_lab.common.configuration.AnnotatedValue;
-import org.sosy_lab.cpachecker.core.interfaces.StatisticsProvider;
+public class IncompleteConfigurationException extends Exception {
 
-public interface IConfigOracle extends PeekingIterator<AnnotatedValue<Path>>, StatisticsProvider {
+  public IncompleteConfigurationException(String message) {
+    super(message);
+  }
 
-
-  public void precomputeOracle(Consumer<IConfigOracle> callback);
-
-
+  public IncompleteConfigurationException() {
+  }
 }

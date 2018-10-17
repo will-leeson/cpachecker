@@ -199,6 +199,7 @@ public class CINSample implements IProgramSample {
     if(!bags.isEmpty()) return;
     InputStream stream = source.getInputStream(entry);
     List<List<Double>> decodeStream = decode_stream(stream);
+    stream.close();
 
     for(int i = 0; i < decodeStream.size() -1; i++){
       List<String> fIndex = featureIndex.get(i);

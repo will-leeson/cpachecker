@@ -21,18 +21,26 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence;
+package org.sosy_lab.cpachecker.intelligence.learn.binary.impl;
 
-import com.google.common.collect.PeekingIterator;
-import java.nio.file.Path;
-import java.util.function.Consumer;
-import org.sosy_lab.common.configuration.AnnotatedValue;
-import org.sosy_lab.cpachecker.core.interfaces.StatisticsProvider;
+import java.util.Map;
 
-public interface IConfigOracle extends PeekingIterator<AnnotatedValue<Path>>, StatisticsProvider {
+public class KernelCoef {
 
+  private Map<String, Double> coef;
+  private double intercept;
+  private Map<String, Double> y;
 
-  public void precomputeOracle(Consumer<IConfigOracle> callback);
+  public Map<String, Double> getCoef() {
+    return coef;
+  }
 
+  public double getIntercept() {
+    return intercept;
+  }
+
+  public Map<String, Double> getY() {
+    return y;
+  }
 
 }

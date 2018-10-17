@@ -25,11 +25,18 @@ package org.sosy_lab.cpachecker.intelligence.learn.binary;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.sosy_lab.cpachecker.intelligence.learn.binary.exception.IncompleteConfigurationException;
+import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.PretrainedJaccPredictorBatch;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.PretrainedSVMPredictorBatch;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
 import org.sosy_lab.cpachecker.util.Pair;
 
 public class PredictorBatchBuilder {
 
+  private SampleRegistry registry;
   private IBinaryPredictorType type;
   private List<Pair<String, String>> pairs;
 
@@ -41,10 +48,26 @@ public class PredictorBatchBuilder {
   }
 
 
-  public IPredictorBatch build(){
+  public PredictorBatchBuilder registry(SampleRegistry pSampleRegistry){
+    this.registry = pSampleRegistry;
+    return this;
+  }
+
+
+  public IPredictorBatch build() throws IncompleteConfigurationException {
     if(type instanceof LinearPretrainedType){
       LinearPretrainedType linear = (LinearPretrainedType)type;
       return new PretrainedSVMPredictorBatch(linear);
+    }
+
+    if(type instanceof JaccardPretrainedType){
+      JaccardPretrainedType jaccard = (JaccardPretrainedType)type;
+
+      if(registry == null)
+        throw new IncompleteConfigurationException("A kernelized SVM needs the sample registry");
+
+
+      return new PretrainedJaccPredictorBatch(registry, jaccard.getConfig());
     }
 
     List<IBinaryPredictor> predictors = new ArrayList<>();

@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class RealProgramSample implements IProgramSample {
 
@@ -75,6 +77,8 @@ public class RealProgramSample implements IProgramSample {
 
   private Map<String, ProgramLabel> labels = new HashMap<>();
   private List<Map<IFeature, Double>> bags = new ArrayList<>();
+
+  private Lock lock = new ReentrantLock();
 
   public RealProgramSample(
       String pId,
@@ -139,18 +143,26 @@ public class RealProgramSample implements IProgramSample {
     if(iteration > maxIteration){
       return new HashMap<>();
     }
-    while (bags.size() <= iteration){
-      Map<String, Integer> map = model.iterate();
-      Map<IFeature, Double> featureMap = new HashMap<>();
 
-      for(Entry<String, Integer> e: map.entrySet()){
-        String fName = e.getKey();
-        if(relabel().containsKey(fName))
-          fName = relabel().get(fName);
-        featureMap.put(registry.index(fName), (double)e.getValue());
+    if(bags.size() <= iteration) {
+      lock.lock();
+      try{
+        while (bags.size() <= iteration) {
+          Map<String, Integer> map = model.iterate();
+          Map<IFeature, Double> featureMap = new HashMap<>();
+
+          for (Entry<String, Integer> e : map.entrySet()) {
+            String fName = e.getKey();
+            if (relabel().containsKey(fName))
+              fName = relabel().get(fName);
+            featureMap.put(registry.index(fName), (double) e.getValue());
+          }
+
+          bags.add(featureMap);
+        }
+      }finally {
+        lock.unlock();
       }
-
-      bags.add(featureMap);
     }
 
     return bags.get(iteration);

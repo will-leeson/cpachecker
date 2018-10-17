@@ -35,6 +35,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -42,11 +43,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.EmptySample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 import scala.Int;
 
 public class CINBackend implements ISampleBackend {
+
+  private static int prefatch = 1000;
 
   private String path;
   private FeatureRegistry registry;
@@ -133,7 +137,7 @@ public class CINBackend implements ISampleBackend {
       }
     }
 
-    cache = CacheBuilder.newBuilder().maximumSize(1000)
+    cache = CacheBuilder.newBuilder().maximumSize(prefatch)
         .build(
             new CacheLoader<String, IProgramSample>() {
               @Override
@@ -142,11 +146,10 @@ public class CINBackend implements ISampleBackend {
                 if(e != null){
                   return new CINSample(bagIndex, labelIndex, zipFile, e, registry);
                 }
-                return null;
+                return new EmptySample();
               }
             }
         );
-
 
   }
 
@@ -166,6 +169,7 @@ public class CINBackend implements ISampleBackend {
   @Override
   public void saveSample(
       String id, IProgramSample pIProgramSample) {
+    decode();
     cache.put(id, pIProgramSample);
   }
 

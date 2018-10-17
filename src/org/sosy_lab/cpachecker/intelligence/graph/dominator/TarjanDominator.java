@@ -139,6 +139,9 @@ public class TarjanDominator implements IDominator {
 
   @Override
   public Set<String> getDom(String v){
+    if(v == null){
+      return new HashSet<>();
+    }
     if(dominator == null){
       dominator = HashMultimap.create();
     }
@@ -163,7 +166,8 @@ public class TarjanDominator implements IDominator {
     if(dom.containsKey(v)){
       return dom.get(v);
     }
-    return null;
+
+    return start;
   }
 
 

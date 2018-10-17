@@ -107,6 +107,10 @@ public class SVMPredictorBuilder {
         return new LinearPretrainedType(
             this.pretrainedModel
         );
+      }else if(this.kernel.equalsIgnoreCase("jaccard")){
+        return new JaccardPretrainedType(
+            this.pretrainedModel
+        );
       }
     }
     if(optimizeC != null){

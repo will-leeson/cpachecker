@@ -24,15 +24,14 @@
 package org.sosy_lab.cpachecker.intelligence;
 
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import org.sosy_lab.common.configuration.AnnotatedValue;
@@ -45,6 +44,7 @@ import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 import org.sosy_lab.cpachecker.intelligence.learn.IRankLearner;
 import org.sosy_lab.cpachecker.intelligence.learn.RPCLearner;
+import org.sosy_lab.cpachecker.intelligence.learn.binary.JaccardPretrainedType;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.LinearPretrainedType;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.PredictorBatchBuilder;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.exception.IncompleteConfigurationException;
@@ -52,18 +52,18 @@ import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
 
-@Options(prefix="linearOracle")
-public class LinearPredictiveOracle implements IConfigOracle {
-
+@Options(prefix="jaccOracle")
+public class JaccPredictiveOracle implements IConfigOracle {
   @Option(secure=true,
-          description = "file path to label-path mapping")
+      description = "file path to label-path mapping")
   private String labelPath = null;
 
   @Option(secure = true,
-          description = "pretrained parameter of linear SVM")
+      description = "pretrained parameter of linear SVM")
   private String pretrained = null;
 
 
+  private SampleRegistry registry;
   private Map<String, AnnotatedValue<Path>> labelToPath;
   private IProgramSample currentSample;
   private LogManager logger;
@@ -75,26 +75,31 @@ public class LinearPredictiveOracle implements IConfigOracle {
   private int pos = 0;
 
 
-  public LinearPredictiveOracle(LogManager pLogger, Configuration config, List<AnnotatedValue<Path>> configPaths, CFA pCFA)
+
+  public JaccPredictiveOracle(LogManager pLogger, Configuration config, List<AnnotatedValue<Path>> configPaths, CFA pCFA)
       throws InvalidConfigurationException {
 
-    SampleRegistry registry = new SampleRegistry(
+    registry = new SampleRegistry(
         new FeatureRegistry(), 0, 5
     );
 
     init(pLogger, config, configPaths, registry.registerSample("randId", pCFA));
   }
 
-  LinearPredictiveOracle(LogManager pLogger, Configuration config, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample)
+
+  JaccPredictiveOracle(LogManager pLogger, Configuration config, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample,
+                       SampleRegistry pSampleRegistry)
       throws InvalidConfigurationException {
-      init(pLogger, config, configPaths, pSample);
+
+    registry = pSampleRegistry;
+    init(pLogger, config, configPaths, pSample);
   }
 
   private void init(LogManager pLogger, Configuration pConfiguration, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample)
       throws InvalidConfigurationException {
     pConfiguration.inject(this);
 
-    stats = new OracleStatistics("Linear Oracle");
+    stats = new OracleStatistics("Jaccard Oracle");
 
     this.logger = pLogger;
 
@@ -135,17 +140,21 @@ public class LinearPredictiveOracle implements IConfigOracle {
   private void initRanking(){
     if(labelRanking != null)return;
 
+    logger.log(Level.INFO, "Start precise ranking... This can take some time.");
+
     long time = System.currentTimeMillis();
 
     PredictorBatchBuilder batchBuilder = new PredictorBatchBuilder(
-        new LinearPretrainedType(pretrained), null
+        new JaccardPretrainedType(pretrained), null
     );
 
     List<IProgramSample> samples = Arrays.asList(currentSample);
 
     IRankLearner learner = null;
     try {
-      learner = new RPCLearner(batchBuilder.build());
+      learner = new RPCLearner(batchBuilder
+          .registry(registry)
+          .build());
     } catch (IncompleteConfigurationException pE) {
       logger.log(Level.WARNING, pE, "Use random sequence");
       labelRanking = new ArrayList<>(labelToPath.keySet());

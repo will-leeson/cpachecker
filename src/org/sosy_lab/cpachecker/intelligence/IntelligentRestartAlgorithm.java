@@ -45,6 +45,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
 import javax.annotation.Nullable;
 import org.sosy_lab.common.ShutdownManager;
@@ -82,6 +85,11 @@ import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.exceptions.CounterexampleAnalysisFailed;
 import org.sosy_lab.cpachecker.exceptions.RefinementFailedException;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.CINBackend;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.ISampleBackend;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.InMemBackend;
 import org.sosy_lab.cpachecker.util.AbstractStates;
 import org.sosy_lab.cpachecker.util.CPAs;
 import org.sosy_lab.cpachecker.util.Triple;
@@ -117,7 +125,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
 
     @Override
     public String getName() {
-      return "Restart Algorithm";
+      return "Predictive Restart Algorithm";
     }
 
     private void printIntermediateStatistics(PrintStream out, Result result,
@@ -218,6 +226,14 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
   )
   private String oracle = "default";
 
+
+  @Option(
+      secure = true,
+      description = "path to file containing instances of the training set"
+  )
+  private String instancePath = null;
+
+
   private final LogManager logger;
   private final ShutdownNotifier shutdownNotifier;
   private final ShutdownRequestListener logShutdownListener;
@@ -225,6 +241,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
   private final CFA cfa;
   private final Configuration globalConfig;
   private final Specification specification;
+
 
   private Algorithm currentAlgorithm;
   private IConfigOracle oracleImpl;
@@ -254,9 +271,35 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     this.globalConfig = config;
     specification = checkNotNull(pSpecification);
 
-    this.oracleImpl = OracleFactory.getInstance().create(
-        this.oracle, logger, config, this.configFiles, this.cfa
+    //TODO: Create registry based on config
+    ISampleBackend backend;
+    FeatureRegistry registry = new FeatureRegistry();
+
+    try {
+      backend = new CINBackend(registry, instancePath);
+    } catch (IOException pE) {
+      if(instancePath != null){
+        try {
+          backend = new CINBackend(registry);
+        } catch (IOException pE1) {
+          backend = new InMemBackend();
+        }
+      }else{
+        backend = new InMemBackend();
+      }
+    }
+
+    SampleRegistry sampleRegistry = new SampleRegistry(
+        registry, 1, 5, backend
     );
+
+
+    this.oracleImpl = OracleFactory.getInstance().create(
+        this.oracle, logger, config, this.configFiles,
+        sampleRegistry,
+        this.cfa
+    );
+    this.oracleImpl.collectStatistics(stats.subStats);
 
     logShutdownListener =
         reason ->

@@ -26,8 +26,11 @@ package org.sosy_lab.cpachecker.intelligence;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 import org.sosy_lab.common.configuration.AnnotatedValue;
+import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 
 public class DefaultOracle implements IConfigOracle {
 
@@ -58,5 +61,13 @@ public class DefaultOracle implements IConfigOracle {
   }
 
 
+  @Override
+  public void precomputeOracle(Consumer<IConfigOracle> callback) {
+    callback.accept(this);
+  }
 
+  @Override
+  public void collectStatistics(Collection<Statistics> statsCollection) {
+
+  }
 }

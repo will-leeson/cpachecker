@@ -25,11 +25,15 @@ package org.sosy_lab.cpachecker.intelligence;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import org.sosy_lab.common.configuration.AnnotatedValue;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
 
 public class OracleFactory {
 
@@ -46,14 +50,31 @@ public class OracleFactory {
 
     }
 
-    public IConfigOracle create(String oracle, LogManager logger, Configuration config, List<AnnotatedValue<Path>> configPaths, CFA pCFA)
+    public IConfigOracle create(String oracle, LogManager logger, Configuration config,
+                                List<AnnotatedValue<Path>> configPaths,
+                                SampleRegistry pSampleRegistry, CFA pCFA)
         throws InvalidConfigurationException {
 
+      IProgramSample sample = pSampleRegistry.registerSample("testId", pCFA);
+
       if(oracle.equals("\"linear\"")){
-        return new LinearPredictiveOracle(logger, config, configPaths, pCFA);
+        return new LinearPredictiveOracle(logger, config, configPaths, sample);
+      }
+
+      if(oracle.equals("\"jaccard\"")){
+        return new JaccPredictiveOracle(logger, config, configPaths, sample, pSampleRegistry);
+      }
+
+      if(oracle.equals("\"staged\"")){
+        return new StagedPredictiveOracle(
+            config,
+            new LinearPredictiveOracle(logger, config, configPaths, sample),
+            new JaccPredictiveOracle(logger, config, configPaths, sample, pSampleRegistry)
+        );
       }
 
       return new DefaultOracle(configPaths);
     }
+
 
 }

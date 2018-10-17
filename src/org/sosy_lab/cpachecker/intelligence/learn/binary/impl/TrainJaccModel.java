@@ -21,18 +21,28 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence;
+package org.sosy_lab.cpachecker.intelligence.learn.binary.impl;
 
-import com.google.common.collect.PeekingIterator;
-import java.nio.file.Path;
-import java.util.function.Consumer;
-import org.sosy_lab.common.configuration.AnnotatedValue;
-import org.sosy_lab.cpachecker.core.interfaces.StatisticsProvider;
+import com.google.common.collect.Table;
 
-public interface IConfigOracle extends PeekingIterator<AnnotatedValue<Path>>, StatisticsProvider {
+public class TrainJaccModel {
 
+  private Table<String, String, KernelCoef> table;
+  private int featureSize = 0;
 
-  public void precomputeOracle(Consumer<IConfigOracle> callback);
+  public TrainJaccModel(Table<String, String, KernelCoef> pTable, int pFeatureSize) {
+    table = pTable;
+    featureSize = pFeatureSize;
+  }
+
+  public Table<String, String, KernelCoef> getTable() {
+    return table;
+  }
+
+  public int getFeatureSize() {
+    return featureSize;
+  }
+
 
 
 }
