@@ -24,7 +24,6 @@
 package org.sosy_lab.cpachecker.intelligence.learn.binary;
 
 import java.util.List;
-import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.JLinearSVM;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 
 public class SVMType implements IBinaryPredictorType {
@@ -60,16 +59,17 @@ public class SVMType implements IBinaryPredictorType {
 
   private IBinaryPredictor instantiateLinear(String label1, String label2){
 
-    JLinearSVM svm = new JLinearSVM();
+    //JLinearSVM svm = new JLinearSVM();
 
     if(pretrainedModel != null){
-      svm.loadModel(pretrainedModel);
-      return svm;
+      //svm.loadModel(pretrainedModel);
+      //return svm;
     }
 
-    svm.trainModel(label1, label2, trainingSamples, C, false);
+    //svm.trainModel(label1, label2, trainingSamples, C, false);
 
-    return svm;
+    //return svm;
+    return null;
   }
 
   @Override
