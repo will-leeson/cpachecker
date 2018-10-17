@@ -40,7 +40,7 @@ public class FeatureRegistry {
   }
 
 
-  private class InnerFeature implements IFeature{
+  private static class InnerFeature implements IFeature{
     int id;
     String feature;
 
