@@ -71,7 +71,6 @@ public class AssumptionListener extends AEdgeListener {
           );
           graph.addSEdge(assumeExpTree, id);
         } catch (CPATransferException pE) {
-          pE.printStackTrace();
         }
       }
 

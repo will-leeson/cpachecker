@@ -71,18 +71,24 @@ public class GraphAnalyser {
       Map<String, Object> options = pGraph.getNode(position).getOptions();
 
       if(options.containsKey("variables")){
-        for(String v: (Set<String>) options.get("variables")){
-          String last = lastDef.get(position, v);
-          if(last != null && pGraph.addDDEdge(position, last)){
-            cooling = cooldown;
+        Object o = options.get("variables");
+        if(o instanceof Set) {
+          for (String v : (Set<String>) o) {
+            String last = lastDef.get(position, v);
+            if (last != null && pGraph.addDDEdge(position, last)) {
+              cooling = cooldown;
+            }
           }
         }
       }
 
       Map<String, String> newDef = new HashMap<>(lastDef.row(position));
       if(options.containsKey("output")){
-        for(String v: (Set<String>) options.get("output")){
-          newDef.put(v, position);
+        Object o = options.get("output");
+        if(o instanceof Set) {
+          for (String v : (Set<String>) options.get("output")) {
+            newDef.put(v, position);
+          }
         }
       }
 

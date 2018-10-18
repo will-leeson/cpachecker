@@ -94,7 +94,6 @@ public class StagedPredictiveOracle implements IConfigOracle{
           try {
             this.wait();
           } catch (InterruptedException pE) {
-            pE.printStackTrace();
           }
         }
       }
