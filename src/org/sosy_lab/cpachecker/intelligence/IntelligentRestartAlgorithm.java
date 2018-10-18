@@ -161,7 +161,11 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     @Override
     public void writeOutputFiles(Result pResult, UnmodifiableReachedSet pReached) {
       for (Statistics s : subStats) {
-        StatisticsUtils.writeOutputFiles(s, logger, pResult, pReached);
+        try {
+          StatisticsUtils.writeOutputFiles(s, logger, pResult, pReached);
+        }catch(Exception e){
+          logger.log(Level.WARNING, "Problem while writting "+s.getName());
+        }
       }
     }
   }
@@ -295,7 +299,9 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
 
 
     this.oracleImpl = OracleFactory.getInstance().create(
-        this.oracle, logger, config, this.configFiles,
+        this.oracle, logger, config,
+        this.shutdownNotifier,
+        this.configFiles,
         sampleRegistry,
         this.cfa
     );
@@ -564,7 +570,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
       CPAs.closeCpaIfPossible(cpa, logger);
     }
 
-    // no further configuration available, and analysis has not finished
+    // no further configuration available, and analysis has no
     logger.log(Level.INFO, "No further configuration available.");
     return status;
   }
@@ -583,8 +589,9 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
 
     ConfigurationBuilder singleConfigBuilder = Configuration.builder();
     singleConfigBuilder.copyFrom(globalConfig);
-    singleConfigBuilder.clearOption("restartAlgorithm.configFiles");
-    singleConfigBuilder.clearOption("analysis.restartAfterUnknown");
+    singleConfigBuilder.clearOption("intelligentRestartAlgorithm.configFiles");
+    singleConfigBuilder.clearOption("intelligentRestartAlgorithm.oracle");
+    singleConfigBuilder.clearOption("analysis.restartIntelligentAfterUnknown");
     singleConfigBuilder.loadFromFile(singleConfigFileName);
 
     Configuration singleConfig = singleConfigBuilder.build();

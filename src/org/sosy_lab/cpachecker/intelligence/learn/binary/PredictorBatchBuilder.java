@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.exception.IncompleteConfigurationException;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.PretrainedJaccPredictorBatch;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.PretrainedSVMPredictorBatch;
@@ -37,6 +38,7 @@ import org.sosy_lab.cpachecker.util.Pair;
 public class PredictorBatchBuilder {
 
   private SampleRegistry registry;
+  private ShutdownNotifier notifier;
   private IBinaryPredictorType type;
   private List<Pair<String, String>> pairs;
 
@@ -47,6 +49,10 @@ public class PredictorBatchBuilder {
     pairs = pPairs;
   }
 
+  public PredictorBatchBuilder shutdownOn(ShutdownNotifier pShutdownNotifier){
+    this.notifier = pShutdownNotifier;
+    return this;
+  }
 
   public PredictorBatchBuilder registry(SampleRegistry pSampleRegistry){
     this.registry = pSampleRegistry;
@@ -67,7 +73,7 @@ public class PredictorBatchBuilder {
         throw new IncompleteConfigurationException("A kernelized SVM needs the sample registry");
 
 
-      return new PretrainedJaccPredictorBatch(registry, jaccard.getConfig());
+      return new PretrainedJaccPredictorBatch(registry, jaccard.getConfig(), notifier);
     }
 
     List<IBinaryPredictor> predictors = new ArrayList<>();

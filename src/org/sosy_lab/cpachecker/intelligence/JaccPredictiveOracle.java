@@ -34,6 +34,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.AnnotatedValue;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -67,6 +68,7 @@ public class JaccPredictiveOracle implements IConfigOracle {
   private Map<String, AnnotatedValue<Path>> labelToPath;
   private IProgramSample currentSample;
   private LogManager logger;
+  private ShutdownNotifier shutdownNotifier;
 
 
   private OracleStatistics stats;
@@ -76,28 +78,30 @@ public class JaccPredictiveOracle implements IConfigOracle {
 
 
 
-  public JaccPredictiveOracle(LogManager pLogger, Configuration config, List<AnnotatedValue<Path>> configPaths, CFA pCFA)
+  public JaccPredictiveOracle(LogManager pLogger, Configuration config, ShutdownNotifier pShutdownNotifier, List<AnnotatedValue<Path>> configPaths, CFA pCFA)
       throws InvalidConfigurationException {
 
     registry = new SampleRegistry(
-        new FeatureRegistry(), 0, 5
+        new FeatureRegistry(), 1, 5
     );
 
-    init(pLogger, config, configPaths, registry.registerSample("randId", pCFA));
+    init(pLogger, config, pShutdownNotifier, configPaths, registry.registerSample("randId", pCFA));
   }
 
 
-  JaccPredictiveOracle(LogManager pLogger, Configuration config, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample,
+  JaccPredictiveOracle(LogManager pLogger, Configuration config, ShutdownNotifier pShutdownNotifier, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample,
                        SampleRegistry pSampleRegistry)
       throws InvalidConfigurationException {
 
     registry = pSampleRegistry;
-    init(pLogger, config, configPaths, pSample);
+    init(pLogger, config, pShutdownNotifier, configPaths, pSample);
   }
 
-  private void init(LogManager pLogger, Configuration pConfiguration, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample)
+  private void init(LogManager pLogger, Configuration pConfiguration, ShutdownNotifier pShutdownNotifier, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample)
       throws InvalidConfigurationException {
     pConfiguration.inject(this);
+
+    this.shutdownNotifier = pShutdownNotifier;
 
     stats = new OracleStatistics("Jaccard Oracle");
 
@@ -144,6 +148,9 @@ public class JaccPredictiveOracle implements IConfigOracle {
 
     long time = System.currentTimeMillis();
 
+    labelRanking = new ArrayList<>();
+    stats.setOrder(labelRanking);
+
     PredictorBatchBuilder batchBuilder = new PredictorBatchBuilder(
         new JaccardPretrainedType(pretrained), null
     );
@@ -154,6 +161,7 @@ public class JaccPredictiveOracle implements IConfigOracle {
     try {
       learner = new RPCLearner(batchBuilder
           .registry(registry)
+          .shutdownOn(shutdownNotifier)
           .build());
     } catch (IncompleteConfigurationException pE) {
       logger.log(Level.WARNING, pE, "Use random sequence");

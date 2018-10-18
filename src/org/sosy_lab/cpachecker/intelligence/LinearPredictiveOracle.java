@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.AnnotatedValue;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -67,6 +68,7 @@ public class LinearPredictiveOracle implements IConfigOracle {
   private Map<String, AnnotatedValue<Path>> labelToPath;
   private IProgramSample currentSample;
   private LogManager logger;
+  private ShutdownNotifier shutdownNotifier;
 
 
   private OracleStatistics stats;
@@ -75,24 +77,28 @@ public class LinearPredictiveOracle implements IConfigOracle {
   private int pos = 0;
 
 
-  public LinearPredictiveOracle(LogManager pLogger, Configuration config, List<AnnotatedValue<Path>> configPaths, CFA pCFA)
+  public LinearPredictiveOracle(LogManager pLogger, Configuration config, ShutdownNotifier pShutdownNotifier, List<AnnotatedValue<Path>> configPaths, CFA pCFA)
       throws InvalidConfigurationException {
 
     SampleRegistry registry = new SampleRegistry(
         new FeatureRegistry(), 0, 5
     );
 
-    init(pLogger, config, configPaths, registry.registerSample("randId", pCFA));
+    init(pLogger, config, pShutdownNotifier, configPaths, registry.registerSample("randId", pCFA));
   }
 
-  LinearPredictiveOracle(LogManager pLogger, Configuration config, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample)
+
+  LinearPredictiveOracle(LogManager pLogger, Configuration config, ShutdownNotifier pShutdownNotifier, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample)
       throws InvalidConfigurationException {
-      init(pLogger, config, configPaths, pSample);
+
+    init(pLogger, config, pShutdownNotifier, configPaths, pSample);
   }
 
-  private void init(LogManager pLogger, Configuration pConfiguration, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample)
+  private void init(LogManager pLogger, Configuration pConfiguration, ShutdownNotifier pShutdownNotifier, List<AnnotatedValue<Path>> configPaths, IProgramSample pSample)
       throws InvalidConfigurationException {
     pConfiguration.inject(this);
+
+    this.shutdownNotifier = pShutdownNotifier;
 
     stats = new OracleStatistics("Linear Oracle");
 
@@ -132,10 +138,13 @@ public class LinearPredictiveOracle implements IConfigOracle {
 
   }
 
-  private void initRanking(){
+  private void initRanking() throws InterruptedException {
     if(labelRanking != null)return;
 
     long time = System.currentTimeMillis();
+
+    labelRanking = new ArrayList<>();
+    stats.setOrder(labelRanking);
 
     PredictorBatchBuilder batchBuilder = new PredictorBatchBuilder(
         new LinearPretrainedType(pretrained), null
@@ -150,6 +159,9 @@ public class LinearPredictiveOracle implements IConfigOracle {
       logger.log(Level.WARNING, pE, "Use random sequence");
       labelRanking = new ArrayList<>(labelToPath.keySet());
     }
+
+    this.shutdownNotifier.shutdownIfNecessary();
+
     labelRanking = learner.predict(samples).get(0);
     stats.setOrder(labelRanking);
 
@@ -159,7 +171,7 @@ public class LinearPredictiveOracle implements IConfigOracle {
   }
 
 
-  private AnnotatedValue<Path> get(int i){
+  private AnnotatedValue<Path> get(int i) throws InterruptedException {
     initRanking();
     if(i >= labelRanking.size()){
       i = i - labelRanking.size();
@@ -180,18 +192,31 @@ public class LinearPredictiveOracle implements IConfigOracle {
 
   @Override
   public AnnotatedValue<Path> peek() {
-    return get(pos);
+    try {
+      return get(pos);
+    } catch (InterruptedException pE) {
+      throw new NoSuchElementException(pE.getMessage());
+    }
   }
+
 
   @Override
   public boolean hasNext() {
-    initRanking();
+    try {
+      initRanking();
+    } catch (InterruptedException pE) {
+      return false;
+    }
     return pos < labelRanking.size() + unknown.size();
   }
 
   @Override
   public AnnotatedValue<Path> next() {
-    return get(pos++);
+    try {
+      return get(pos++);
+    } catch (InterruptedException pE) {
+      throw new NoSuchElementException(pE.getMessage());
+    }
   }
 
   @Override
@@ -201,8 +226,11 @@ public class LinearPredictiveOracle implements IConfigOracle {
 
   @Override
   public void precomputeOracle(Consumer<IConfigOracle> callback) {
-    initRanking();
-    callback.accept(this);
+    try {
+      initRanking();
+      callback.accept(this);
+    } catch (InterruptedException pE) {
+    }
   }
 
   @Override

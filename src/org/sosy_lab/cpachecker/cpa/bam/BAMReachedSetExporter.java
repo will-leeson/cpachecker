@@ -116,6 +116,7 @@ class BAMReachedSetExporter implements Statistics {
       final Multimap<ARGState, ARGState> connections = HashMultimap.create();
 
       for (final UnmodifiableReachedSet reachedSet : allReachedSets) {
+        if(!(reachedSet.getFirstState() instanceof ARGState))continue;
         ARGState rootState = (ARGState) reachedSet.getFirstState();
         rootStates.add(rootState);
         Multimap<ARGState, ARGState> localConnections = HashMultimap.create();
@@ -174,6 +175,7 @@ class BAMReachedSetExporter implements Statistics {
       if (!finished.add(reachedSet)) {
         continue;
       }
+      if(!(reachedSet.getFirstState() instanceof ARGState))continue;
       final ARGState rootState = (ARGState) reachedSet.getFirstState();
       final Set<ReachedSet> referencedReachedSets = getConnections(rootState, connections);
       waitlist.addAll(referencedReachedSets);
@@ -181,6 +183,7 @@ class BAMReachedSetExporter implements Statistics {
 
     final Set<ARGState> rootStates = new HashSet<>();
     for (UnmodifiableReachedSet reachedSet : finished) {
+      if(!(reachedSet.getFirstState() instanceof ARGState))continue;
       rootStates.add((ARGState) reachedSet.getFirstState());
     }
     return rootStates;

@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.KernelCoef;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.DenseVector;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.Vector;
@@ -42,6 +43,7 @@ import org.sosy_lab.cpachecker.util.Pair;
 public class SeqKernelComputationProcess {
 
   private SampleRegistry registry;
+  private ShutdownNotifier notifier;
   private Table<String, String, KernelCoef> config;
   private IProgramSample sample;
   private List<Pair<String, String>> pos;
@@ -50,10 +52,12 @@ public class SeqKernelComputationProcess {
 
   public SeqKernelComputationProcess(
       SampleRegistry pRegistry,
+      ShutdownNotifier pShutdownNotifier,
       Table<String, String, KernelCoef> pConfig,
       IProgramSample pSample,
       List<Pair<String, String>> pPos) {
     registry = pRegistry;
+    notifier = pShutdownNotifier;
     config = pConfig;
     sample = pSample;
     pos = pPos;
@@ -69,10 +73,16 @@ public class SeqKernelComputationProcess {
 
   }
 
-  private double single(KernelCoef coef){
+  private double single(KernelCoef coef) throws InterruptedException {
     double pred = 0.0;
 
     for(Entry<String, Double> c: coef.getCoef().entrySet()){
+
+      if(notifier != null){
+        notifier.shutdownIfNecessary();
+      }
+
+
       double kernel = kernel(c.getKey());
 
       if(kernel == -1){
@@ -97,12 +107,16 @@ public class SeqKernelComputationProcess {
   public Vector compute() {
     Vector vector = new DenseVector(pos.size());
 
-    for(int i = 0; i < pos.size(); i++){
-      Pair<String, String> p = pos.get(i);
-      KernelCoef coef = config.get(p.getFirst(), p.getSecond());
-      vector.set(i, single(
-          coef
-      ));
+    try {
+      for (int i = 0; i < pos.size(); i++) {
+        Pair<String, String> p = pos.get(i);
+        KernelCoef coef = config.get(p.getFirst(), p.getSecond());
+        vector.set(i, single(
+            coef
+        ));
+      }
+    }catch(InterruptedException e){
+      return new DenseVector(pos.size());
     }
 
     return vector;

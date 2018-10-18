@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.AnnotatedValue;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -51,6 +52,7 @@ public class OracleFactory {
     }
 
     public IConfigOracle create(String oracle, LogManager logger, Configuration config,
+                                ShutdownNotifier pShutdownNotifier,
                                 List<AnnotatedValue<Path>> configPaths,
                                 SampleRegistry pSampleRegistry, CFA pCFA)
         throws InvalidConfigurationException {
@@ -58,18 +60,18 @@ public class OracleFactory {
       IProgramSample sample = pSampleRegistry.registerSample("testId", pCFA);
 
       if(oracle.equals("\"linear\"")){
-        return new LinearPredictiveOracle(logger, config, configPaths, sample);
+        return new LinearPredictiveOracle(logger, config, pShutdownNotifier, configPaths, sample);
       }
 
       if(oracle.equals("\"jaccard\"")){
-        return new JaccPredictiveOracle(logger, config, configPaths, sample, pSampleRegistry);
+        return new JaccPredictiveOracle(logger, config, pShutdownNotifier, configPaths, sample, pSampleRegistry);
       }
 
       if(oracle.equals("\"staged\"")){
         return new StagedPredictiveOracle(
             config,
-            new LinearPredictiveOracle(logger, config, configPaths, sample),
-            new JaccPredictiveOracle(logger, config, configPaths, sample, pSampleRegistry)
+            new LinearPredictiveOracle(logger, config,pShutdownNotifier, configPaths, sample),
+            new JaccPredictiveOracle(logger, config,pShutdownNotifier, configPaths, sample, pSampleRegistry)
         );
       }
 

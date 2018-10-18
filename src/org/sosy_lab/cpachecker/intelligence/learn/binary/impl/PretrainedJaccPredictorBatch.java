@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.RecursiveTask;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.IPredictorBatch;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.jaccard.KernelComputationProcess;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.jaccard.SeqKernelComputationProcess;
@@ -43,14 +44,17 @@ import org.sosy_lab.cpachecker.util.Pair;
 public class PretrainedJaccPredictorBatch implements IPredictorBatch {
 
   private SampleRegistry registry;
+  private ShutdownNotifier notifier;
   private Table<String, String, KernelCoef> config;
   private List<Pair<String, String>> pos = new ArrayList<>();
 
   public PretrainedJaccPredictorBatch(
       SampleRegistry pRegistry,
-      Table<String, String, KernelCoef> pConfig) {
+      Table<String, String, KernelCoef> pConfig,
+      ShutdownNotifier pShutdownNotifier) {
     registry = pRegistry;
     config = pConfig;
+    notifier = pShutdownNotifier;
     buildPos();
   }
 
@@ -85,8 +89,16 @@ public class PretrainedJaccPredictorBatch implements IPredictorBatch {
 
       for(IProgramSample sample: entities){
         predictions.add(
-            new SeqKernelComputationProcess(registry, config, sample, pos).compute()
+            new SeqKernelComputationProcess(registry, notifier, config, sample, pos).compute()
         );
+
+        if(notifier != null) {
+          try {
+            notifier.shutdownIfNecessary();
+          } catch (InterruptedException pE) {
+            return new double[0][];
+          }
+        }
       }
 
       double[][] p = new double[predictions.size()][];
