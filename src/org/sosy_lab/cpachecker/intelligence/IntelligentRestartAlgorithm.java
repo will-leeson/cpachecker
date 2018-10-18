@@ -240,6 +240,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
 
   private final LogManager logger;
   private final ShutdownNotifier shutdownNotifier;
+  private final ShutdownManager predictionShutdown;
   private final ShutdownRequestListener logShutdownListener;
   private final RestartAlgorithmStatistics stats;
   private final CFA cfa;
@@ -271,6 +272,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     this.stats = new RestartAlgorithmStatistics(configFiles.size(), pLogger);
     this.logger = pLogger;
     this.shutdownNotifier = pShutdownNotifier;
+    this.predictionShutdown = ShutdownManager.createWithParent(pShutdownNotifier);
     this.cfa = pCfa;
     this.globalConfig = config;
     specification = checkNotNull(pSpecification);
@@ -300,7 +302,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
 
     this.oracleImpl = OracleFactory.getInstance().create(
         this.oracle, logger, config,
-        this.shutdownNotifier,
+        this.predictionShutdown.getNotifier(),
         this.configFiles,
         sampleRegistry,
         this.cfa
@@ -490,6 +492,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
         unregisterReachedSetUpdateListeners();
         singleShutdownManager.getNotifier().unregister(logShutdownListener);
         singleShutdownManager.requestShutdown("Analysis terminated"); // shutdown any remaining components
+        this.predictionShutdown.requestShutdown("Analyis terminated");
         stats.totalTime.stop();
       }
 
@@ -571,6 +574,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     }
 
     // no further configuration available, and analysis has no
+    this.predictionShutdown.requestShutdown("Analyis terminated");
     logger.log(Level.INFO, "No further configuration available.");
     return status;
   }

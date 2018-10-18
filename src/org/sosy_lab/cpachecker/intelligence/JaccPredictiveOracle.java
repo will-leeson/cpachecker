@@ -167,6 +167,14 @@ public class JaccPredictiveOracle implements IConfigOracle {
       logger.log(Level.WARNING, pE, "Use random sequence");
       labelRanking = new ArrayList<>(labelToPath.keySet());
     }
+    List<List<String>> predictions = learner.predict(samples);
+
+    if(predictions.size() < 1){
+      logger.log(Level.WARNING, "Oracle stopped as prediction is empty");
+      stats.stopTime();
+      return;
+    }
+
     labelRanking = learner.predict(samples).get(0);
     stats.setOrder(labelRanking);
 
@@ -219,7 +227,8 @@ public class JaccPredictiveOracle implements IConfigOracle {
   @Override
   public void precomputeOracle(Consumer<IConfigOracle> callback) {
     initRanking();
-    callback.accept(this);
+    if(labelRanking.size() > 0)
+      callback.accept(this);
   }
 
   @Override

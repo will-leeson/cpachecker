@@ -48,6 +48,9 @@ public class RPCLearner implements IRankLearner {
     try {
       double[][] prediction = batch.predict(pSample).get();
 
+      if(prediction.length < 1)
+        return new ArrayList<>();
+
       List<List<String>> rankings = new ArrayList<>();
 
       for(int i = 0; i < prediction.length; i++){
