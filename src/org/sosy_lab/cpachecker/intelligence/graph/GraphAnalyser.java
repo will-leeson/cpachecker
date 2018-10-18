@@ -86,7 +86,7 @@ public class GraphAnalyser {
       if(options.containsKey("output")){
         Object o = options.get("output");
         if(o instanceof Set) {
-          for (String v : (Set<String>) options.get("output")) {
+          for (String v : (Set<String>) o) {
             newDef.put(v, position);
           }
         }
