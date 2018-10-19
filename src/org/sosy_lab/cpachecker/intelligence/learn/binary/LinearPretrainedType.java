@@ -36,6 +36,7 @@ import com.google.gson.JsonParseException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,8 +45,11 @@ import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.TrainModel;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.DenseMatrix;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.MathEngine;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.Matrix;
+import org.sosy_lab.cpachecker.intelligence.util.PathFinder;
 
 public class LinearPretrainedType implements IBinaryPredictorType {
+
+  private static final String DEFAULT_RESOURCE_PATH = "resources/%s.json";
 
   private MathEngine engine = MathEngine.instance();
   private Matrix alpha;
@@ -76,8 +80,17 @@ public class LinearPretrainedType implements IBinaryPredictorType {
     if(!mapFeatures.isEmpty())return;
     if(!mapCombination.isEmpty())return;
 
+    Path p;
+
     if(path == null){
-      path = this.getClass().getClassLoader().getResource("Train_Spec.json").getPath();
+      p = PathFinder.find(DEFAULT_RESOURCE_PATH, "Train_Spec");
+    }else{
+      p = PathFinder.find("%s", path);
+    }
+
+    if(p == null){
+      System.err.println("Couldn't find "+path+" or default.");
+      return;
     }
 
     GsonBuilder builder = new GsonBuilder();
@@ -115,7 +128,7 @@ public class LinearPretrainedType implements IBinaryPredictorType {
     });
     Gson gson = builder.create();
     try {
-      TrainModel model = gson.fromJson(new FileReader(path), TrainModel.class);
+      TrainModel model = gson.fromJson(new FileReader(p.toFile()), TrainModel.class);
 
       alpha = engine.zeros(model.getTable().size(), model.getFeatureSize() + 1);
 

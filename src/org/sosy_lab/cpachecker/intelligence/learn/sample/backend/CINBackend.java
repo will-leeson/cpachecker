@@ -23,34 +23,32 @@
  */
 package org.sosy_lab.cpachecker.intelligence.learn.sample.backend;
 
-import com.google.common.cache.Cache;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.EmptySample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
+import org.sosy_lab.cpachecker.intelligence.util.PathFinder;
 import scala.Int;
 
 public class CINBackend implements ISampleBackend {
 
   private static int prefatch = 1000;
+  private static final String DEFAULT_ZIP_FILES_DIR = "resources/%s.zip";
 
   private String path;
   private FeatureRegistry registry;
@@ -73,11 +71,19 @@ public class CINBackend implements ISampleBackend {
   }
 
   private ZipFile searchForZip() throws IOException {
-    if(path == null){
-      URL url = CINBackend.class.getClassLoader().getResource("svcomp18.zip");
-      return new ZipFile(url.getFile());
+    Path p;
+    if(path != null){
+      p = PathFinder.find("%s", path);
+    }else{
+      p = PathFinder.find(DEFAULT_ZIP_FILES_DIR, "svcomp18");
     }
-    return new ZipFile(path);
+
+    if(p == null){
+      System.err.println("Couldn't find "+path+" or default.");
+      return null;
+    }
+
+    return new ZipFile(p.toFile());
   }
 
   private void decodeFI(ZipEntry e){
@@ -119,6 +125,7 @@ public class CINBackend implements ISampleBackend {
 
   private void decode(){
     if(bagIndex != null)return;
+    if(zipFile == null)return;
     bagIndex = new ArrayList<>();
 
     Enumeration<? extends ZipEntry> en = zipFile.entries();

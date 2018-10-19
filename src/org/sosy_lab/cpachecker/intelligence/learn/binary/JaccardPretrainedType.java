@@ -36,11 +36,15 @@ import com.google.gson.JsonSyntaxException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.util.Map.Entry;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.KernelCoef;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.TrainJaccModel;
+import org.sosy_lab.cpachecker.intelligence.util.PathFinder;
 
 public class JaccardPretrainedType implements IBinaryPredictorType {
+
+  private static final String DEFAULT_RESOURCE_PATH = "resources/%s.json";
 
   private String path;
 
@@ -55,8 +59,17 @@ public class JaccardPretrainedType implements IBinaryPredictorType {
   private void load() {
     if(config != null)return;
 
+    Path p;
+
     if(path == null){
-      path = this.getClass().getClassLoader().getResource("Train_Jacc.json").getPath();
+      p = PathFinder.find(DEFAULT_RESOURCE_PATH, "Train_Jacc");
+    }else{
+      p = PathFinder.find("%s", path);
+    }
+
+    if(p == null){
+      System.err.println("Couldn't find "+path+" or default.");
+      return;
     }
 
     GsonBuilder builder = new GsonBuilder();
@@ -95,7 +108,7 @@ public class JaccardPretrainedType implements IBinaryPredictorType {
     Gson gson = builder.create();
 
     try {
-      TrainJaccModel model = gson.fromJson(new FileReader(path), TrainJaccModel.class);
+      TrainJaccModel model = gson.fromJson(new FileReader(p.toFile()), TrainJaccModel.class);
       config = model.getTable();
     }catch(JsonSyntaxException pE){
       pE.printStackTrace();
