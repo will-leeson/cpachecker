@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import org.sosy_lab.common.ShutdownNotifier;
 
 public class TarjanDominator implements IDominator {
 
@@ -45,11 +46,17 @@ public class TarjanDominator implements IDominator {
   private Multimap<String, String> bucket = HashMultimap.create();
   private Multimap<String, String> dominator;
 
+  private ShutdownNotifier notifier;
 
 
   public TarjanDominator(IGraphNavigator pGraphNavigator, String pStart) {
+    this(pGraphNavigator, pStart, null);
+  }
+
+  public TarjanDominator(IGraphNavigator pGraphNavigator, String pStart, ShutdownNotifier pShutdownNotifier) {
     navigator = pGraphNavigator;
     start = pStart;
+    notifier = pShutdownNotifier;
   }
 
 
@@ -76,7 +83,7 @@ public class TarjanDominator implements IDominator {
 
 
 
-  private void dfs(){
+  private void dfs() throws InterruptedException {
     this.index = HashBiMap.create();
     Stack<String> stack = new Stack<>();
     stack.add(start);
@@ -84,6 +91,11 @@ public class TarjanDominator implements IDominator {
     int i = 0;
 
     while(!stack.isEmpty()){
+
+      if(notifier != null){
+        notifier.shutdownIfNecessary();
+      }
+
       String s = stack.pop();
 
       if(index.containsKey(s))
@@ -99,10 +111,15 @@ public class TarjanDominator implements IDominator {
     }
   }
 
-  private void step234(){
+  private void step234() throws InterruptedException {
     Forest forest = new Forest();
 
     for(int i = index.size()-1; i >=1; i--){
+
+      if(notifier != null){
+        notifier.shutdownIfNecessary();
+      }
+
       String w = vertex(i);
 
       for(String p: navigator.predecessor(w)){
@@ -160,8 +177,12 @@ public class TarjanDominator implements IDominator {
   @Override
   public String getIDom(String v) {
     if(index == null){
-      dfs();
-      step234();
+      try {
+        dfs();
+        step234();
+      }catch (InterruptedException e){
+        return start;
+      }
     }
     if(dom.containsKey(v)){
       return dom.get(v);

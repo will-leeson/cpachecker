@@ -43,7 +43,7 @@ import org.sosy_lab.cpachecker.intelligence.learn.sample.EmptySample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 import org.sosy_lab.cpachecker.intelligence.util.PathFinder;
-import scala.Int;
+
 
 public class CINBackend implements ISampleBackend {
 
@@ -95,31 +95,26 @@ public class CINBackend implements ISampleBackend {
 
     int number = Integer.parseInt(name.substring(8, name.length() - 5));
 
-    List<String> list = new ArrayList<>();
-    try(BufferedReader br = new BufferedReader(new InputStreamReader(zipFile.getInputStream(e)))) {
-      for(String line; (line = br.readLine()) != null; ) {
-        list.add(line);
+    List<String> list;
+    try {
+      list = CINDecoder.decodeFI(name, zipFile.getInputStream(e));
+
+      while(bagIndex.size() <= number){
+        bagIndex.add(new ArrayList<>());
       }
+      bagIndex.set(number, list);
+
     } catch (IOException pE) {
       pE.printStackTrace();
     }
-
-    while(bagIndex.size() <= number){
-      bagIndex.add(new ArrayList<>());
-    }
-    bagIndex.set(number, list);
   }
 
   private void decodeLI(ZipEntry e){
-    List<String> list = new ArrayList<>();
-    try(BufferedReader br = new BufferedReader(new InputStreamReader(zipFile.getInputStream(e)))) {
-      for(String line; (line = br.readLine()) != null; ) {
-        list.add(line);
-      }
+    try {
+      labelIndex = CINDecoder.decodeLI(zipFile.getInputStream(e));
     } catch (IOException pE) {
       pE.printStackTrace();
     }
-    labelIndex = list;
   }
 
 

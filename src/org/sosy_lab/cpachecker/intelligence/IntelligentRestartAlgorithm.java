@@ -45,9 +45,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
 import javax.annotation.Nullable;
 import org.sosy_lab.common.ShutdownManager;
@@ -90,6 +87,8 @@ import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.CINBackend;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.ISampleBackend;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.InMemBackend;
+import org.sosy_lab.cpachecker.intelligence.oracle.IConfigOracle;
+import org.sosy_lab.cpachecker.intelligence.oracle.OracleFactory;
 import org.sosy_lab.cpachecker.util.AbstractStates;
 import org.sosy_lab.cpachecker.util.CPAs;
 import org.sosy_lab.cpachecker.util.Triple;
@@ -365,9 +364,20 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
       boolean lastAnalysisTerminated = false;
       boolean recursionFound = false;
       boolean concurrencyFound = false;
+      boolean failWithUnknown = false;
 
       try {
-        Path singleConfigFileName = configFilesIterator.next().value();
+        AnnotatedValue<Path> current = configFilesIterator.next();
+
+        failWithUnknown = (current.annotation().isPresent()) && current.annotation().get().equals("shutdownAfter");
+
+        Path singleConfigFileName = current.value();
+
+        if(singleConfigFileName.endsWith("SKIP")){
+          logger.log(Level.INFO, "Encounter special SKIP config. Skip to next config");
+          continue;
+        }
+
         logger.logf(
             Level.INFO,
             "Loading analysis %d from file %s ...",
@@ -492,11 +502,18 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
         unregisterReachedSetUpdateListeners();
         singleShutdownManager.getNotifier().unregister(logShutdownListener);
         singleShutdownManager.requestShutdown("Analysis terminated"); // shutdown any remaining components
-        this.predictionShutdown.requestShutdown("Analyis terminated");
         stats.totalTime.stop();
+
+        if(failWithUnknown){
+          this.predictionShutdown.requestShutdown("Analyis terminated");
+          logger.log(Level.INFO, "Shutdown after shutdownAfter condition.");
+          return status;
+        }
+
       }
 
       shutdownNotifier.shutdownIfNecessary();
+
 
       if (configFilesIterator.hasNext()) {
         // Check if the next config file has a condition,
@@ -524,6 +541,9 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
               break;
               case "use-reached":
                 provideReachedForNextAlgorithm = true;
+                foundConfig = true;
+                break;
+              case "shutdownAfter":
                 foundConfig = true;
                 break;
             default:

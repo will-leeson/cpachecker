@@ -33,6 +33,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.sosy_lab.common.ShutdownNotifier;
 
 public class RealProgramSample implements IProgramSample {
 
@@ -140,6 +141,15 @@ public class RealProgramSample implements IProgramSample {
 
   @Override
   public Map<IFeature, Double> getFeatureBag(int iteration) {
+    try {
+      return getFeatureBag(iteration, null);
+    } catch (InterruptedException pE) {
+      return new HashMap<>();
+    }
+  }
+
+  public Map<IFeature, Double> getFeatureBag(int iteration, ShutdownNotifier pShutdownNotifier)
+      throws InterruptedException {
     if(iteration > maxIteration){
       return new HashMap<>();
     }
@@ -148,7 +158,12 @@ public class RealProgramSample implements IProgramSample {
       lock.lock();
       try{
         while (bags.size() <= iteration) {
-          Map<String, Integer> map = model.iterate();
+          Map<String, Integer> map = model.iterate(pShutdownNotifier);
+
+          if(pShutdownNotifier != null){
+            pShutdownNotifier.shutdownIfNecessary();
+          }
+
           Map<IFeature, Double> featureMap = new HashMap<>();
 
           for (Entry<String, Integer> e : map.entrySet()) {
@@ -167,6 +182,7 @@ public class RealProgramSample implements IProgramSample {
 
     return bags.get(iteration);
   }
+
 
   private class ProgramLabel{
     boolean correctSolved;

@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
@@ -116,14 +117,27 @@ public class WLFeatureModel {
       return rLabel;
     }
 
-
     public Map<String, Integer> iterate(){
+      try {
+        return iterate(null);
+      } catch (InterruptedException pE) {
+        return  new HashMap<>();
+      }
+    }
+
+
+    public Map<String, Integer> iterate(ShutdownNotifier pShutdownNotifier)
+        throws InterruptedException {
       iteration++;
       if(iteration == 0){
         return iteration0();
       }else if(iteration == 1){
-        GraphAnalyser.applyDD(graph);
-        GraphAnalyser.applyCD(graph);
+        GraphAnalyser.applyDD(graph, pShutdownNotifier);
+        GraphAnalyser.applyCD(graph, pShutdownNotifier);
+      }
+
+      if(pShutdownNotifier != null){
+        pShutdownNotifier.shutdownIfNecessary();
       }
 
       Map<String, String> oldRelabel = relabel;

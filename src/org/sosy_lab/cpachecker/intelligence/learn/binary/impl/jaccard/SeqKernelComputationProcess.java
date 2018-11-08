@@ -66,7 +66,7 @@ public class SeqKernelComputationProcess {
   private double kernel(String id){
 
     if(!kernelCache.containsKey(id)) {
-      JaccardKernelCall call = new JaccardKernelCall(sample, registry.getSample(id));
+      JaccardKernelCall call = new JaccardKernelCall(sample, registry.getSample(id), notifier);
       kernelCache.put(id, call.compute());
     }
     return kernelCache.get(id);

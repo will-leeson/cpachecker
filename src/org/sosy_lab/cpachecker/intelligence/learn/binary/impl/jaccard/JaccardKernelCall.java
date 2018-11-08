@@ -28,21 +28,26 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.RecursiveTask;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.EmptySample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IFeature;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.RealProgramSample;
 
 
 public class JaccardKernelCall extends RecursiveTask<Double> {
 
   private IProgramSample first;
   private IProgramSample loaded;
+  private ShutdownNotifier notifier;
 
   public JaccardKernelCall(
       IProgramSample pFirst,
-      IProgramSample pSecond) {
+      IProgramSample pSecond,
+      ShutdownNotifier pShutdownNotifier) {
     first = pFirst;
     loaded = pSecond;
+    notifier = pShutdownNotifier;
   }
 
   @Override
@@ -56,7 +61,18 @@ public class JaccardKernelCall extends RecursiveTask<Double> {
     double d = 0;
 
     for(int i = 0; i < m; i++){
-      Map<IFeature, Double> bag1 = first.getFeatureBag(i);
+      Map<IFeature, Double> bag1;
+
+      if(first instanceof RealProgramSample){
+        try {
+          bag1 = ((RealProgramSample) first).getFeatureBag(i, notifier);
+        } catch (InterruptedException pE) {
+          return -1.0;
+        }
+      }else{
+        bag1 = first.getFeatureBag(i);
+      }
+
       Map<IFeature, Double> bag2 = loaded.getFeatureBag(i);
 
       double min = 0.0;

@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IGraphNavigator;
@@ -44,17 +45,31 @@ public class GraphAnalyser {
 
 
   public static void applyDD(StructureGraph pGraph){
-    applyDD(pGraph, pGraph.nodes().size() * 10);
+    try {
+      applyDD(pGraph, null);
+    } catch (InterruptedException pE) {
+    }
+  }
+
+  public static void applyDD(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+      throws InterruptedException {
+    applyDD(pGraph, pGraph.nodes().size() * 10, pShutdownNotifier);
   }
 
 
-  public static void applyDD(StructureGraph pGraph, int cooldown){
+  public static void applyDD(StructureGraph pGraph, int cooldown, ShutdownNotifier pShutdownNotifier)
+      throws InterruptedException {
 
     Table<String, String, String> lastDef = HashBasedTable.create();
     Set<String> seen = new HashSet<>();
     Stack<String> stack = new Stack<>();
 
     for(String n: pGraph.nodes()){
+
+      if(pShutdownNotifier != null){
+        pShutdownNotifier.shutdownIfNecessary();
+      }
+
       if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
         stack.add(n);
         break;
@@ -64,6 +79,10 @@ public class GraphAnalyser {
     int cooling = cooldown;
 
     while(cooling > 0 && !stack.isEmpty()){
+
+      if(pShutdownNotifier != null){
+        pShutdownNotifier.shutdownIfNecessary();
+      }
 
       cooling--;
 
@@ -93,6 +112,11 @@ public class GraphAnalyser {
       }
 
       for(GEdge e: pGraph.getOutgoing(position)){
+
+        if(pShutdownNotifier != null){
+          pShutdownNotifier.shutdownIfNecessary();
+        }
+
         if(e instanceof CFGEdge){
           String next = e.getSink().getId();
           boolean change = !seen.contains(next);
@@ -207,10 +231,22 @@ public class GraphAnalyser {
   }
 
 
-
   public static void applyCD(StructureGraph pGraph){
+    try {
+      applyCD(pGraph, null);
+    } catch (InterruptedException pE) {
+    }
+  }
+
+
+  public static void applyCD(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+      throws InterruptedException {
 
     String end = findEndOrFix(pGraph);
+
+    if(pShutdownNotifier != null){
+      pShutdownNotifier.shutdownIfNecessary();
+    }
 
     IGraphNavigator navigator = new InverseGraphNavigator(
         new SGraphNavigator(pGraph)
@@ -223,6 +259,11 @@ public class GraphAnalyser {
     Set<String> seen = new HashSet<>();
 
     for(String n: navigator.nodes()){
+
+      if(pShutdownNotifier != null){
+        pShutdownNotifier.shutdownIfNecessary();
+      }
+
       if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
         stack.add(new CDTravelor(n, new HashSet<>()));
       }
@@ -232,6 +273,11 @@ public class GraphAnalyser {
     }
 
     while(!stack.isEmpty()){
+
+      if(pShutdownNotifier != null){
+        pShutdownNotifier.shutdownIfNecessary();
+      }
+
       CDTravelor travelor = stack.pop();
 
       Set<String> nPost = dominator.getDom(travelor.pos);
