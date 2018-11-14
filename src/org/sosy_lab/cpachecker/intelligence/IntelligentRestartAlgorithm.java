@@ -335,7 +335,19 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
   @SuppressFBWarnings(value="DM_DEFAULT_ENCODING",
       justification="Encoding is irrelevant for null output stream")
   @Override
-  public AlgorithmStatus run(ReachedSet pReached) throws CPAException, InterruptedException {
+  public AlgorithmStatus run(ReachedSet pReachedSet) throws CPAException, InterruptedException {
+    try{
+      return this.runImpl(pReachedSet);
+    }finally {
+      this.predictionShutdown.requestShutdown("Analysis finished");
+    }
+  }
+
+
+
+  @SuppressFBWarnings(value="DM_DEFAULT_ENCODING",
+      justification="Encoding is irrelevant for null output stream")
+  public AlgorithmStatus runImpl(ReachedSet pReached) throws CPAException, InterruptedException {
     checkArgument(pReached instanceof ForwardingReachedSet, "RestartAlgorithm needs ForwardingReachedSet");
     checkArgument(pReached.size() <= 1, "RestartAlgorithm does not support being called several times with the same reached set");
     checkArgument(!pReached.isEmpty(), "RestartAlgorithm needs non-empty reached set");

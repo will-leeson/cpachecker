@@ -85,6 +85,10 @@ public class SeqKernelComputationProcess {
       if(coefficient != 0) {
         double kernel = kernel(c.getKey());
 
+        if(notifier != null){
+          notifier.shutdownIfNecessary();
+        }
+
         if (kernel == -1) {
           System.out.println(
               "Skip instance (prediction may be incorrect): " + c.getKey() + " (alpha: " + c
