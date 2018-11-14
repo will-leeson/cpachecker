@@ -24,10 +24,10 @@
 package org.sosy_lab.cpachecker.cfa.model;
 
 
-import org.sosy_lab.cpachecker.cfa.ast.FileLocation;
 import com.google.common.base.Optional;
 import java.io.Serializable;
 import org.sosy_lab.cpachecker.cfa.ast.AAstNode;
+import org.sosy_lab.cpachecker.cfa.ast.FileLocation;
 
 public interface CFAEdge extends Serializable {
 

@@ -25,7 +25,6 @@ package org.sosy_lab.cpachecker.intelligence.graph.dominator;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

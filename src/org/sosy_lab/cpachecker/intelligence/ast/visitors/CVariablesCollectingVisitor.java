@@ -23,10 +23,9 @@
  */
 package org.sosy_lab.cpachecker.intelligence.ast.visitors;
 
+import com.google.common.collect.Sets;
 import java.util.Set;
-
 import javax.annotation.Nullable;
-
 import org.sosy_lab.cpachecker.cfa.ast.c.CAddressOfLabelExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CArraySubscriptExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CBinaryExpression;
@@ -47,8 +46,6 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CStringLiteralExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CTypeIdExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CUnaryExpression;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
-
-import com.google.common.collect.Sets;
 
 public class CVariablesCollectingVisitor implements
                                          CExpressionVisitor<Set<String>, RuntimeException> {

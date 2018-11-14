@@ -34,7 +34,6 @@ import java.util.concurrent.FutureTask;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.IPredictorBatch;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.LinearPretrainedType;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.Matrix;
-import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.MathEngine;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.SparseVector;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IFeature;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;

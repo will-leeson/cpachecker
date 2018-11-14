@@ -21,7 +21,6 @@ package org.sosy_lab.cpachecker.util;
 
 import java.io.Serializable;
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 /**

@@ -23,15 +23,14 @@
  */
 package org.sosy_lab.cpachecker.util.predicates.smt;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.List;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.BooleanFormula;
 import org.sosy_lab.java_smt.api.FormulaType;
 import org.sosy_lab.java_smt.api.NumeralFormula;
 import org.sosy_lab.java_smt.api.NumeralFormulaManager;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.List;
 
 public class NumeralFormulaManagerView
         <ParamFormulaType extends NumeralFormula, ResultFormulaType extends NumeralFormula>

@@ -23,9 +23,8 @@
  */
 package org.sosy_lab.cpachecker.core.counterexample;
 
-import java.util.List;
-
 import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 /**
  * Is used to represent a field reference without pointer dereferences.

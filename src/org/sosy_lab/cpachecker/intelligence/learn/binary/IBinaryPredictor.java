@@ -23,7 +23,6 @@
  */
 package org.sosy_lab.cpachecker.intelligence.learn.binary;
 
-import java.util.List;
 import java.util.concurrent.Future;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 

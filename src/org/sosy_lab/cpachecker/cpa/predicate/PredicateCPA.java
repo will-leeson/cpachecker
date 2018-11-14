@@ -24,7 +24,8 @@
 package org.sosy_lab.cpachecker.cpa.predicate;
 
 import com.google.common.collect.ImmutableSet;
-
+import java.util.Collection;
+import java.util.logging.Level;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.collect.PathCopyingPersistentTreeMap;
 import org.sosy_lab.common.configuration.Configuration;
@@ -70,9 +71,6 @@ import org.sosy_lab.cpachecker.util.predicates.smt.FormulaManagerView;
 import org.sosy_lab.cpachecker.util.predicates.smt.Solver;
 import org.sosy_lab.cpachecker.util.refinement.PrefixProvider;
 import org.sosy_lab.java_smt.api.SolverException;
-
-import java.util.Collection;
-import java.util.logging.Level;
 
 /**
  * CPA that defines symbolic predicate abstraction.

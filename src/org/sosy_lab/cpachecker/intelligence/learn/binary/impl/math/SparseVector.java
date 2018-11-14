@@ -23,9 +23,7 @@
  */
 package org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;

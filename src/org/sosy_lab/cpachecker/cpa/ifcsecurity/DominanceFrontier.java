@@ -23,14 +23,13 @@
  */
 package org.sosy_lab.cpachecker.cpa.ifcsecurity;
 
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.cfa.model.FunctionEntryNode;
 import org.sosy_lab.cpachecker.cfa.model.FunctionSummaryEdge;
-
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * Algorithm for computing the DominanceFrontier given a FlowGraph and its DominatorTree

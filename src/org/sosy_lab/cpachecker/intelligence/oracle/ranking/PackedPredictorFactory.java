@@ -32,7 +32,6 @@ import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
-import org.sosy_lab.cpachecker.intelligence.oracle.OracleFactory;
 import org.sosy_lab.cpachecker.intelligence.oracle.predictor.IOracleLabelPredictor;
 import org.sosy_lab.cpachecker.intelligence.oracle.predictor.PredictorFactory;
 

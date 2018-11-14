@@ -29,6 +29,11 @@ import static org.sosy_lab.cpachecker.util.predicates.smt.FormulaManagerView.Bit
 import static org.sosy_lab.cpachecker.util.predicates.smt.FormulaManagerView.BitwiseXorUfName;
 import static org.sosy_lab.java_smt.api.FormulaType.getBitvectorTypeWithSize;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
@@ -45,12 +50,6 @@ import org.sosy_lab.java_smt.api.FunctionDeclaration;
 import org.sosy_lab.java_smt.api.NumeralFormula;
 import org.sosy_lab.java_smt.api.NumeralFormulaManager;
 import org.sosy_lab.java_smt.api.UFManager;
-
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 class ReplaceBitvectorWithNumeralAndFunctionTheory<T extends NumeralFormula>
   extends BaseManagerView implements BitvectorFormulaManager {

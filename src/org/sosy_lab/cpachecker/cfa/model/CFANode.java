@@ -26,12 +26,11 @@ package org.sosy_lab.cpachecker.cfa.model;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
-import org.sosy_lab.common.UniqueIdGenerator;
-import org.sosy_lab.cpachecker.cfa.ast.FileLocation;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import org.sosy_lab.common.UniqueIdGenerator;
+import org.sosy_lab.cpachecker.cfa.ast.FileLocation;
 
 public class CFANode implements Comparable<CFANode>, Serializable {
 

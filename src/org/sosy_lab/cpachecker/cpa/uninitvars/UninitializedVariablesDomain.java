@@ -25,7 +25,6 @@ package org.sosy_lab.cpachecker.cpa.uninitvars;
 
 import java.util.Collection;
 import java.util.Iterator;
-
 import org.sosy_lab.cpachecker.core.interfaces.AbstractDomain;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
 import org.sosy_lab.cpachecker.util.Pair;

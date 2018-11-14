@@ -25,9 +25,6 @@ package org.sosy_lab.cpachecker.intelligence.learn.binary;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.exception.IncompleteConfigurationException;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.PretrainedJaccPredictorBatch;

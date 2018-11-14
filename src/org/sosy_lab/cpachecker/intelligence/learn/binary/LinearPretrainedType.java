@@ -42,7 +42,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.CoefInterModel;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.TrainModel;
-import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.DenseMatrix;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.MathEngine;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.Matrix;
 import org.sosy_lab.cpachecker.intelligence.util.PathFinder;

@@ -23,11 +23,9 @@
  */
 package org.sosy_lab.cpachecker.cpa.automaton;
 
-import javax.annotation.Nonnull;
-
-import org.sosy_lab.cpachecker.core.interfaces.Property;
-
 import com.google.common.base.Preconditions;
+import javax.annotation.Nonnull;
+import org.sosy_lab.cpachecker.core.interfaces.Property;
 
 
 public class AutomatonSafetyProperty implements Property {

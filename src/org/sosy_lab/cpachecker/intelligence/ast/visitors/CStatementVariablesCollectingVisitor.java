@@ -25,7 +25,6 @@ package org.sosy_lab.cpachecker.intelligence.ast.visitors;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpressionAssignmentStatement;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpressionStatement;

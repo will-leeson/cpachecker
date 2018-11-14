@@ -23,9 +23,8 @@
  */
 package org.sosy_lab.cpachecker.core.interfaces;
 
-import javax.annotation.Nonnull;
-
 import com.google.common.base.Preconditions;
+import javax.annotation.Nonnull;
 
 /**
  * Interface that describes a partition of the state space.

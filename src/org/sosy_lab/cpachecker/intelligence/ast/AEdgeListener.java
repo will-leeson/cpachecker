@@ -23,7 +23,6 @@
  */
 package org.sosy_lab.cpachecker.intelligence.ast;
 
-import org.sosy_lab.cpachecker.intelligence.ast.IEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public abstract class AEdgeListener implements IEdgeListener {

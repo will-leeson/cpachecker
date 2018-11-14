@@ -28,13 +28,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.common.base.Joiner;
-
+import java.io.Serializable;
 import org.sosy_lab.common.collect.PathCopyingPersistentTreeMap;
 import org.sosy_lab.common.collect.PersistentSortedMap;
 import org.sosy_lab.cpachecker.core.defaults.LatticeAbstractState;
 import org.sosy_lab.cpachecker.util.CFAUtils;
-
-import java.io.Serializable;
 
 /**
  * Represents one abstract state of the FunctionPointer CPA.

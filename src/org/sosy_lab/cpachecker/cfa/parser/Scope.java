@@ -24,7 +24,6 @@
 package org.sosy_lab.cpachecker.cfa.parser;
 
 import javax.annotation.Nullable;
-
 import org.sosy_lab.cpachecker.cfa.ast.c.CComplexTypeDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CSimpleDeclaration;

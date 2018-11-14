@@ -23,12 +23,11 @@
  */
 package org.sosy_lab.cpachecker.cfa.types.java;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 
 /**
  * Description of a simple Java structure's type.

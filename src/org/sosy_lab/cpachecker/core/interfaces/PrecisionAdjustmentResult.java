@@ -25,13 +25,11 @@ package org.sosy_lab.cpachecker.core.interfaces;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
-
-import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
-
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
+import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
 
 /**
  * Represents the result to a call to

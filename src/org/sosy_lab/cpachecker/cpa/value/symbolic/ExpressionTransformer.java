@@ -25,7 +25,6 @@ package org.sosy_lab.cpachecker.cpa.value.symbolic;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-
 import org.sosy_lab.cpachecker.cfa.ast.ACharLiteralExpression;
 import org.sosy_lab.cpachecker.cfa.ast.ADeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.AExpression;

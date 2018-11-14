@@ -38,7 +38,6 @@ import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.InverseGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.SGraphNavigator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.SimpleDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.TarjanDominator;
 
 public class GraphAnalyser {

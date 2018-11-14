@@ -25,9 +25,7 @@ package org.sosy_lab.cpachecker.intelligence.oracle;
 
 import com.google.common.collect.PeekingIterator;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.function.Consumer;
-import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.common.configuration.AnnotatedValue;
 import org.sosy_lab.cpachecker.core.interfaces.StatisticsProvider;
 

@@ -23,18 +23,16 @@
  */
 package org.sosy_lab.cpachecker.cpa.apron;
 
+import apron.Abstract0;
+import apron.ApronException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.sosy_lab.cpachecker.util.Pair;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractDomain;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
-
-import apron.Abstract0;
-import apron.ApronException;
+import org.sosy_lab.cpachecker.util.Pair;
 
 class ApronDomain implements AbstractDomain {
 

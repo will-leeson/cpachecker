@@ -23,15 +23,14 @@
  */
 package org.sosy_lab.cpachecker.cpa.ifcsecurity.dependencytracking;
 
-import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
-import org.sosy_lab.cpachecker.cfa.model.CFANode;
-import org.sosy_lab.cpachecker.exceptions.UnsupportedCodeException;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
+import org.sosy_lab.cpachecker.cfa.model.CFANode;
+import org.sosy_lab.cpachecker.exceptions.UnsupportedCodeException;
 
 /**
  * Class for maintaining the variable dependencies of control flows

@@ -23,6 +23,13 @@
  */
 package org.sosy_lab.cpachecker.cpa.ifcsecurity;
 
+import java.io.Serializable;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import org.sosy_lab.cpachecker.core.defaults.LatticeAbstractState;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractQueryableState;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
@@ -34,14 +41,6 @@ import org.sosy_lab.cpachecker.cpa.ifcsecurity.policies.PredefinedPolicies;
 import org.sosy_lab.cpachecker.cpa.ifcsecurity.policies.SecurityClasses;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.exceptions.InvalidQueryException;
-
-import java.io.Serializable;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * CPA-Abstract-State for enforcing a Security Policy

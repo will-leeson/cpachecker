@@ -25,13 +25,13 @@ package org.sosy_lab.cpachecker.cpa.overflow;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.sosy_lab.cpachecker.cfa.ast.AExpression;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractQueryableState;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractStateWithAssumptions;
 import org.sosy_lab.cpachecker.core.interfaces.Graphable;
-import java.util.List;
-import java.util.Objects;
 import org.sosy_lab.cpachecker.exceptions.InvalidQueryException;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.PathFormula;
 

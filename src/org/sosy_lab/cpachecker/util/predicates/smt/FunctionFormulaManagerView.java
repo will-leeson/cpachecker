@@ -27,15 +27,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.FluentIterable.from;
 
 import com.google.common.base.Function;
-
+import java.util.Arrays;
+import java.util.List;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaType;
 import org.sosy_lab.java_smt.api.FunctionDeclaration;
 import org.sosy_lab.java_smt.api.FunctionDeclarationKind;
 import org.sosy_lab.java_smt.api.UFManager;
-
-import java.util.Arrays;
-import java.util.List;
 
 
 public class FunctionFormulaManagerView extends BaseManagerView implements UFManager {

@@ -24,7 +24,6 @@
 package org.sosy_lab.cpachecker.core.interfaces;
 
 import com.google.common.base.Predicate;
-
 import javax.annotation.Nullable;
 
 public interface WrapperPrecision extends Precision {

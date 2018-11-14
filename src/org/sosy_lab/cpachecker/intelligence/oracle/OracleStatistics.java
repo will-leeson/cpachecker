@@ -26,7 +26,6 @@ package org.sosy_lab.cpachecker.intelligence.oracle;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Nullable;
 import org.sosy_lab.common.time.Timer;
 import org.sosy_lab.cpachecker.core.CPAcheckerResult.Result;

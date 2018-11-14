@@ -23,7 +23,6 @@
  */
 package org.sosy_lab.cpachecker.intelligence.ast.visitors;
 
-import java.util.HashSet;
 import java.util.Set;
 import org.sosy_lab.cpachecker.cfa.ast.c.CComplexTypeDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionDeclaration;

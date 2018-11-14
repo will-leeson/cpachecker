@@ -25,7 +25,9 @@ package org.sosy_lab.cpachecker.core.algorithm.invariants;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
@@ -36,10 +38,6 @@ import org.sosy_lab.cpachecker.util.expressions.And;
 import org.sosy_lab.cpachecker.util.expressions.ExpressionTree;
 import org.sosy_lab.cpachecker.util.expressions.ExpressionTrees;
 import org.sosy_lab.cpachecker.util.expressions.Or;
-
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 
 public class ReachedSetBasedExpressionTreeSupplier implements ExpressionTreeSupplier {
 

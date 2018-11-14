@@ -23,15 +23,14 @@
  */
 package org.sosy_lab.cpachecker.util.expressions;
 
-import java.util.Collections;
-import java.util.Iterator;
-
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.Collections;
+import java.util.Iterator;
 
 public class Or<LeafType> extends AbstractExpressionTree<LeafType>
     implements Iterable<ExpressionTree<LeafType>> {

@@ -24,14 +24,10 @@
 package org.sosy_lab.cpachecker.intelligence.learn.binary.impl.jaccard;
 
 import com.google.common.collect.Table;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.KernelCoef;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.DenseVector;

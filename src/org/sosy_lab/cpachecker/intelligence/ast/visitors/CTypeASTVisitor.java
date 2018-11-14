@@ -22,9 +22,9 @@
  *    http://cpachecker.sosy-lab.org
  */
 package org.sosy_lab.cpachecker.intelligence.ast.visitors;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.types.c.CArrayType;
 import org.sosy_lab.cpachecker.cfa.types.c.CBitFieldType;
 import org.sosy_lab.cpachecker.cfa.types.c.CCompositeType;

@@ -33,7 +33,6 @@ import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
-import org.sosy_lab.cpachecker.intelligence.oracle.OracleFactory;
 
 public class PredictorFactory {
 

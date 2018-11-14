@@ -45,7 +45,6 @@ import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 import org.sosy_lab.cpachecker.intelligence.oracle.IConfigOracle;
 import org.sosy_lab.cpachecker.intelligence.oracle.OracleFactory;
 import org.sosy_lab.cpachecker.intelligence.oracle.OracleStatistics;
-import org.sosy_lab.cpachecker.intelligence.oracle.predictor.IOracleLabelPredictor;
 
 @Options(prefix = "oracle")
 public class PredictiveOracle implements IConfigOracle {
