@@ -63,6 +63,14 @@ public class JaccardKernelCall extends RecursiveTask<Double> {
     for(int i = 0; i < m; i++){
       Map<IFeature, Double> bag1;
 
+      if(notifier != null){
+        try {
+          notifier.shutdownIfNecessary();
+        } catch (InterruptedException pE) {
+          return -1.0;
+        }
+      }
+
       if(first instanceof RealProgramSample){
         try {
           bag1 = ((RealProgramSample) first).getFeatureBag(i, notifier);
