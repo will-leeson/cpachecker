@@ -26,7 +26,7 @@ package org.sosy_lab.cpachecker.intelligence.oracle.ranking.heuristics;
 public class TrueCondition implements HCondition {
 
   @Override
-  public boolean satisfied(int time, String label) {
+  public boolean satisfied(int time, int precision, String label) {
     return true;
   }
 }

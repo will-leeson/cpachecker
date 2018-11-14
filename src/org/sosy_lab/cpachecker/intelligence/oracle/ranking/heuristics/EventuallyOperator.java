@@ -33,8 +33,8 @@ public class EventuallyOperator implements HOperator {
   }
 
   @Override
-  public boolean isActive(int timeStep, String label) {
-    return condition.satisfied(timeStep, label);
+  public boolean isActive(int timeStep, int precision, String label) {
+    return condition.satisfied(timeStep, precision, label);
   }
 
   @Override

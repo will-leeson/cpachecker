@@ -24,9 +24,11 @@
 package org.sosy_lab.cpachecker.intelligence.oracle.ranking;
 
 import com.google.common.collect.PeekingIterator;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -34,6 +36,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 import org.sosy_lab.cpachecker.intelligence.oracle.ranking.IRankingProvider.ProviderStatus;
+import org.sosy_lab.cpachecker.intelligence.oracle.ranking.heuristics.RankHeuristic;
+import org.sosy_lab.cpachecker.intelligence.oracle.ranking.heuristics.RankHeuristicOperation;
 
 public class RankManager implements PeekingIterator<String> {
 
@@ -53,6 +57,13 @@ public class RankManager implements PeekingIterator<String> {
   private ExecutorService service;
   private Set<IRankingProvider> openProvider = new HashSet<>();
 
+
+  private int time = 0;
+  private List<RankHeuristic> heuristics = new ArrayList<>();
+  private Set<RankHeuristicOperation> operations = new HashSet<>();
+  private String bufferOverwrite;
+
+
   public RankManager(IRankingProvider pCoreProvider) {
     coreProvider = pCoreProvider;
     currentProvider = pCoreProvider;
@@ -60,6 +71,10 @@ public class RankManager implements PeekingIterator<String> {
 
   public void registerProvider(int precision, IRankingProvider provider){
     precisionMap.put(provider, precision);
+  }
+
+  public void registerHeuristic(RankHeuristic pHeuristic){
+    heuristics.add(pHeuristic);
   }
 
   private void init(){
@@ -73,6 +88,13 @@ public class RankManager implements PeekingIterator<String> {
     updatePrecision(0);
 
     currentProvider.initRanking(this::callback);
+
+    for(RankHeuristic h: heuristics){
+      operations.addAll(
+          h.apply(-1, currentPrecision, "", seenLabel)
+      );
+    }
+
 
   }
 
@@ -98,7 +120,7 @@ public class RankManager implements PeekingIterator<String> {
 
         int providerPrecision = precisionMap.get(provider);
 
-        if(providerPrecision > currentPrecision){
+        if(providerPrecision >= currentPrecision){
           if(provider.getStatus() == ProviderStatus.INIT){
             service.execute(
                 new Runnable() {
@@ -142,8 +164,33 @@ public class RankManager implements PeekingIterator<String> {
 
   }
 
+  private String handleHeuristic(String label){
+
+    for(RankHeuristic h: heuristics){
+      operations.addAll(
+          h.apply(time, currentPrecision, label, seenLabel)
+      );
+    }
+
+    for(RankHeuristicOperation op: new HashSet<>(operations)){
+      if(label != null && op.getHeuristicOperator().isActive(time, currentPrecision, label)) {
+        label = op.apply(time, currentPrecision, label, seenLabel);
+      }
+      if(!op.getHeuristicOperator().eventuallyActive()){
+        operations.remove(op);
+      }
+    }
+
+    return label;
+  }
+
   private void nextBuffer(){
-    buffer = currentProvider.queryLabel();
+    if(bufferOverwrite != null){
+      buffer = bufferOverwrite;
+      bufferOverwrite = null;
+    }else {
+      buffer = currentProvider.queryLabel();
+    }
 
     if(buffer == null)return;
 
@@ -152,6 +199,14 @@ public class RankManager implements PeekingIterator<String> {
     }else{
       seenLabel.add(buffer);
     }
+
+    buffer = handleHeuristic(buffer);
+
+    if(buffer == null){
+      nextBuffer();
+    }
+
+
   }
 
 
@@ -186,6 +241,7 @@ public class RankManager implements PeekingIterator<String> {
     if(hasNext()) {
       String tmp = buffer;
       nextBuffer();
+      time++;
       return tmp;
     }
     throw new NoSuchElementException();

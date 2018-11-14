@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
+import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -43,6 +44,7 @@ import org.sosy_lab.cpachecker.intelligence.learn.binary.exception.IncompleteCon
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
 import org.sosy_lab.cpachecker.intelligence.oracle.OracleStatistics;
+import org.sosy_lab.cpachecker.util.resources.ResourceLimitChecker;
 
 @Options(prefix="jaccardPredictor")
 public class JaccardLabelPredictor implements IOracleLabelPredictor {
@@ -51,9 +53,14 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
       description = "pretrained parameter of jaccard SVM")
   private String pretrained = null;
 
+  @Option(secure = true,
+          description = "timeout for prediction")
+  private int timeout = -1;
+
   private LogManager logger;
   private SampleRegistry registry;
   private ShutdownNotifier shutdownNotifier;
+  private ShutdownManager ownManager;
   private IProgramSample currentSample;
 
   private OracleStatistics statistics = new OracleStatistics(getName()+ " Oracle");
@@ -67,8 +74,24 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
     pConfiguration.inject(this);
     logger = pLogger;
     registry = pRegistry;
-    shutdownNotifier = pShutdownNotifier;
+    ownManager = ShutdownManager.createWithParent(pShutdownNotifier);
+    shutdownNotifier = ownManager.getNotifier();
     currentSample = pCurrentSample;
+  }
+
+  private void enableTimeout(){
+    if(timeout < 0)return;
+
+    try {
+      Configuration configuration = Configuration.builder()
+                                    .setOption("limits.time.cpu", timeout+"s")
+                                    .setOption("limits.time.cpu::required", timeout+"s")
+                                    .build();
+      ResourceLimitChecker checker = ResourceLimitChecker.fromConfiguration(configuration, logger, ownManager);
+      checker.start();
+    } catch (InvalidConfigurationException pE) {
+    }
+
   }
 
   @Override
@@ -78,6 +101,7 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
 
   @Override
   public List<String> ranking() {
+    enableTimeout();
     statistics.reset();
     logger.log(Level.INFO, "Start precise ranking... This can take some time.");
 
@@ -105,6 +129,10 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
     }
 
     List<String> out = learner.predict(samples).get(0);
+
+    if(out.get(out.size() - 1 ).equalsIgnoreCase("Unknown")){
+      out.remove(out.size() - 1);
+    }
 
     logger.log(Level.INFO, "Predicted ranking: "+out.toString());
 

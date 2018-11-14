@@ -27,6 +27,6 @@ import java.util.Set;
 
 public interface RankHeuristic {
 
-  public Set<RankHeuristicOperation> apply(int i, String label, Set<String> seen);
+  public Set<RankHeuristicOperation> apply(int time, int precision, String label, Set<String> seen);
 
 }

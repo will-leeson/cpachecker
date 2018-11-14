@@ -27,7 +27,7 @@ public interface HOperator {
 
   public boolean eventuallyActive();
 
-  public boolean isActive(int timeStep, String label);
+  public boolean isActive(int timeStep, int precision, String label);
 
   public void setConditon(HCondition pConditon);
 

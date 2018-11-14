@@ -87,6 +87,10 @@ public class LinearLabelPredictor implements IOracleLabelPredictor {
 
     List<String> out = learner.predict(samples).get(0);
 
+    if(out.get(out.size() - 1 ).equalsIgnoreCase("Unknown")){
+      out.remove(out.size() - 1);
+    }
+
     logger.log(Level.INFO, "Predicted ranking: "+out.toString());
 
     statistics.setOrder(out);

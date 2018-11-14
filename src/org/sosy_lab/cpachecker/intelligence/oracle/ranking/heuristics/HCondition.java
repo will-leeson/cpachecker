@@ -25,6 +25,6 @@ package org.sosy_lab.cpachecker.intelligence.oracle.ranking.heuristics;
 
 public interface HCondition {
 
-  public boolean satisfied(int time, String label);
+  public boolean satisfied(int time, int precision, String label);
 
 }

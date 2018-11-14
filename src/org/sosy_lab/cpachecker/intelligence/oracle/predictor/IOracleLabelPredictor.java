@@ -26,6 +26,7 @@ package org.sosy_lab.cpachecker.intelligence.oracle.predictor;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 
 public interface IOracleLabelPredictor {
@@ -36,5 +37,6 @@ public interface IOracleLabelPredictor {
   public List<String> ranking();
 
   public void collectStatistics(Collection<Statistics> statsCollection);
+
 
 }

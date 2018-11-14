@@ -27,12 +27,12 @@ import com.google.common.collect.PeekingIterator;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
+import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.common.configuration.AnnotatedValue;
 import org.sosy_lab.cpachecker.core.interfaces.StatisticsProvider;
 
 public interface IConfigOracle extends PeekingIterator<AnnotatedValue<Path>>, StatisticsProvider {
 
   public void precomputeOracle(Consumer<IConfigOracle> callback);
-
 
 }

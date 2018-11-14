@@ -29,6 +29,6 @@ public interface RankHeuristicOperation {
 
   public HOperator getHeuristicOperator();
 
-  public String apply(int time, String current, Set<String> seen);
+  public String apply(int time, int precision, String current, Set<String> seen);
 
 }

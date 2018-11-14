@@ -34,10 +34,10 @@ public class AlwaysOperator implements HOperator {
   }
 
   @Override
-  public boolean isActive(int timeStep, String label) {
+  public boolean isActive(int timeStep, int precision, String label) {
 
     if(eventually){
-      boolean sat = condition.satisfied(timeStep, label);
+      boolean sat = condition.satisfied(timeStep, precision, label);
       if(sat){
         return true;
       }else {

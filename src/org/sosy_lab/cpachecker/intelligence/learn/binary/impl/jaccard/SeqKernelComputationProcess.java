@@ -82,18 +82,22 @@ public class SeqKernelComputationProcess {
         notifier.shutdownIfNecessary();
       }
 
-
-      double kernel = kernel(c.getKey());
-
-      if(kernel == -1){
-        System.out.println("Skip instance (prediction may be incorrect): "+c.getKey()+" (alpha: "+c.getValue()+").");
-        continue;
-      }
-
-      double y = coef.getY().get(c.getKey());
+      // double y = coef.getY().get(c.getKey());
       double alpha = c.getValue();
+      double coefficient = alpha;
 
-      pred += alpha * y * kernel;
+      if(coefficient != 0) {
+        double kernel = kernel(c.getKey());
+
+        if (kernel == -1) {
+          System.out.println(
+              "Skip instance (prediction may be incorrect): " + c.getKey() + " (alpha: " + c
+                  .getValue() + ").");
+          continue;
+        }
+
+        pred += coefficient * kernel;
+      }
     }
 
     pred += coef.getIntercept();

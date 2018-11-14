@@ -40,11 +40,11 @@ public class NextOperator implements HOperator {
   }
 
   @Override
-  public boolean isActive(int timeStep, String label) {
+  public boolean isActive(int timeStep, int precision, String label) {
 
     eventually = false;
     if(timeStep == currentTime + 1){
-      return condition.satisfied(timeStep, label);
+      return condition.satisfied(timeStep, precision, label);
     }
 
 

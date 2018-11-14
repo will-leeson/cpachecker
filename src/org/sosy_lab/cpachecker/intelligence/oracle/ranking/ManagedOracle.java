@@ -44,6 +44,8 @@ import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 import org.sosy_lab.cpachecker.intelligence.oracle.IConfigOracle;
 import org.sosy_lab.cpachecker.intelligence.oracle.OracleFactory;
+import org.sosy_lab.cpachecker.intelligence.oracle.ranking.heuristics.RankHeuristic;
+import org.sosy_lab.cpachecker.intelligence.oracle.ranking.heuristics.impl.HeuristicsFactory;
 
 @Options(prefix = "managedOracle")
 public class ManagedOracle implements IConfigOracle {
@@ -57,8 +59,12 @@ public class ManagedOracle implements IConfigOracle {
   private String base = "linear";
 
   @Option(secure = true,
-          description = "Staged predictor. Sort list after precision level and prediction speed.")
+      description = "Staged predictor. Sort list after precision level and prediction speed.")
   private List<String> staged = new ArrayList<>();
+
+  @Option(secure = true,
+      description = "Backup predictor. Sort list after prediction speed.")
+  private List<String> backup = new ArrayList<>();
 
   @Option(secure = true,
           description = "Heuristics to apply on output ranking.")
@@ -97,6 +103,21 @@ public class ManagedOracle implements IConfigOracle {
           pFactory.getLogger(), pFactory.create(stage)
       );
       m.registerProvider(i++, stagedProvider);
+    }
+
+    for(String stage: backup){
+      IRankingProvider stagedProvider = new PredictorProviderWrapper(
+          pFactory.getLogger(), pFactory.create(stage)
+      );
+      m.registerProvider(0, stagedProvider);
+    }
+
+    HeuristicsFactory factory = new HeuristicsFactory();
+    for(String heuristic: heuristics){
+      RankHeuristic h = factory.create(heuristic);
+      if(h != null){
+        m.registerHeuristic(h);
+      }
     }
 
     return m;

@@ -60,12 +60,12 @@ public class OracleFactory {
       Map<String, AnnotatedValue<Path>> labelToPath;
 
       Map<String, String> revLabel = new HashMap<>();
-      revLabel.put("svcomp18--01-valueAnalysis.properties", "VA-NoCegar");
-      revLabel.put("svcomp18--02-valueAnalysis-itp.properties", "VA-Cegar");
-      revLabel.put("svcomp18--03-predicateAnalysis.properties", "PA");
-      revLabel.put("svcomp18--04-kInduction.properties", "KI");
-      revLabel.put("svcomp18--recursion.properties", "BAM");
-      revLabel.put("svcomp18--bmc.properties", "BMC");
+      revLabel.put("pesco19--01-valueAnalysis.properties", "VA-NoCegar");
+      revLabel.put("pesco19--02-valueAnalysis-itp.properties", "VA-Cegar");
+      revLabel.put("pesco19--03-predicateAnalysis.properties", "PA");
+      revLabel.put("pesco19--04-kInduction.properties", "KI");
+      //revLabel.put("pesco19--recursion.properties", "BAM");
+      revLabel.put("pesco19--bmc.properties", "BMC");
 
       labelToPath = new HashMap<>();
 
