@@ -206,8 +206,10 @@ public class RankManager implements PeekingIterator<String> {
       nextBuffer();
     }
 
-    bufferOverwrite = buffer;
-    buffer = hBuffer;
+    if(!hBuffer.equalsIgnoreCase(buffer)) {
+      bufferOverwrite = buffer;
+      buffer = hBuffer;
+    }
 
 
   }
