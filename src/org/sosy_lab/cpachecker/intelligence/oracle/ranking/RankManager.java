@@ -200,11 +200,14 @@ public class RankManager implements PeekingIterator<String> {
       seenLabel.add(buffer);
     }
 
-    buffer = handleHeuristic(buffer);
+    String hBuffer = handleHeuristic(buffer);
 
-    if(buffer == null){
+    if(hBuffer == null){
       nextBuffer();
     }
+
+    bufferOverwrite = buffer;
+    buffer = hBuffer;
 
 
   }
