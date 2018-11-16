@@ -42,7 +42,7 @@ public class NextOperator implements HOperator {
   @Override
   public boolean isActive(int timeStep, int precision, String label) {
 
-    eventually = false;
+    eventually = timeStep <= currentTime;
     if(timeStep == currentTime + 1){
       return condition.satisfied(timeStep, precision, label);
     }
