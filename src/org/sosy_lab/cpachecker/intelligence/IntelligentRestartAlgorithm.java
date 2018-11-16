@@ -686,6 +686,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     if (currentAlgorithm instanceof StatisticsProvider) {
       ((StatisticsProvider)currentAlgorithm).collectStatistics(pStatsCollection);
     }
+    this.oracleImpl.collectStatistics(pStatsCollection);
     pStatsCollection.add(stats);
   }
 

@@ -295,6 +295,10 @@ analysis.replacedFunctionsWithParameters = {"pthread_create"}
 # restart the analysis using a different configuration after unknown result
 analysis.restartAfterUnknown = false
 
+# restart the analysis using a different configuration after unknown result
+# in a predicted sequence
+analysis.restartIntelligentAfterUnknown = false
+
 # Use heuristics to select the analysis
 analysis.selectAnalysisHeuristically = false
 
@@ -2949,6 +2953,34 @@ heuristicSelection.onlyBoolConfig = no default value
 # enable the Forced Covering optimization
 impact.useForcedCovering = true
 
+# wether to start next algorithm independently from the previous result
+intelligentRestartAlgorithm.alwaysRestart = false
+
+# combine (partial) ARGs obtained by restarts of the analysis after an
+# unknown result with a different configuration
+intelligentRestartAlgorithm.combineARGsAfterRestart = false
+
+# List of files with configurations to use. A filename can be suffixed with
+# :if-interrupted, :if-failed, and :if-terminated which means that this
+# configuration will only be used if the previous configuration ended with a
+# matching condition. What also can be added is :use-reached then the reached
+# set of the preceding analysis is taken and provided to the next analysis.
+intelligentRestartAlgorithm.configFiles = no default value
+
+# path to file containing instances of the training set
+intelligentRestartAlgorithm.instancePath = no default value
+
+# Oracle to use
+intelligentRestartAlgorithm.oracle = "default"
+
+# print the statistics of each component of the restart algorithm directly
+# after the components computation is finished
+intelligentRestartAlgorithm.printIntermediateStatistics = true
+
+# let each component of the restart algorithm write output files and not only
+# the last one that is excuted
+intelligentRestartAlgorithm.writeIntermediateOutputFiles = false
+
 # where to store initial condition, when generated
 interleavedAlgorithm.condition.file = "AssumptionAutomaton.txt"
 
@@ -2998,6 +3030,12 @@ invariantGeneration.kInduction.invariantsAutomatonFile = no default value
 # found to be incorrect.
 invariantGeneration.kInduction.terminateOnCounterexample = false
 
+# pretrained parameter of jaccard SVM
+jaccardPredictor.pretrained = no default value
+
+# timeout for prediction
+jaccardPredictor.timeout = -1
+
 # Specify the class code path to search for java class or interface
 # definitions
 java.classpath = ""
@@ -3039,6 +3077,9 @@ limits.time.cpu::required = -1ns
 # for infinite)
 limits.time.wall = -1ns
 
+# pretrained parameter of jaccard SVM
+linearPredictor.pretrained = no default value
+
 # By changing this option one can adjust the way how live variables are
 # created. Function-wise means that each function is handled separately,
 # global means that the whole cfa is used for the computation.
@@ -3061,6 +3102,24 @@ locmapper.dumpTokenizedProgramToFile = no default value
 # all used options are printed
 log.usedOptions.export = false
 
+# Backup predictor. Sort list after prediction speed.
+managedOracle.backup = new ArrayList<>()
+
+# Base predictor for oracle. Predictor should be fast.
+managedOracle.base = "linear"
+
+# Heuristics to apply on output ranking.
+managedOracle.heuristics = new ArrayList<>()
+
+# forcibly kill execution if new prediction arrives.
+managedOracle.kill = false
+
+# file path to label-path mapping
+managedOracle.labelPath = no default value
+
+# Staged predictor. Sort list after precision level and prediction speed.
+managedOracle.staged = new ArrayList<>()
+
 # When checking for memory safety properties, use this configuration file
 # instead of the current one.
 memorysafety.config = no default value
@@ -3068,6 +3127,9 @@ memorysafety.config = no default value
 # which merge operator to use for LiveVariablesCPA
 merge = "JOIN"
   allowed values: [SEP, JOIN]
+
+# file path to label-path mapping
+oracle.labelPath = no default value
 
 # When checking for the overflow property, use this configuration file
 # instead of the current one.
@@ -3512,6 +3574,9 @@ solver.solver = MATHSAT5
 # comma-separated list of files with specifications that should be checked
 # (see config/specification/ for examples)
 specification = []
+
+# Number of analysis allowed to run till stage 2
+stagedOracle.prerun = -1
 
 # export abstract states as formula, e.g. for re-using them as
 # PredicatePrecision.

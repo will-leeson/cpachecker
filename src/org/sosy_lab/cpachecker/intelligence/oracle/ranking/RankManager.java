@@ -207,6 +207,7 @@ public class RankManager implements PeekingIterator<String> {
     }
 
     if(!hBuffer.equalsIgnoreCase(buffer)) {
+      seenLabel.remove(buffer);
       bufferOverwrite = buffer;
       buffer = hBuffer;
     }
