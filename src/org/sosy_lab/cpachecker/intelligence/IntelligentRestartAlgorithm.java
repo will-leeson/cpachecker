@@ -519,7 +519,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
         if(failWithUnknown){
           this.predictionShutdown.requestShutdown("Analyis terminated");
           logger.log(Level.INFO, "Shutdown after shutdownAfter condition.");
-          return status;
+          return AlgorithmStatus.UNSOUND_AND_PRECISE;
         }
 
       }
