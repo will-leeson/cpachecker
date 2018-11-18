@@ -1,3 +1,10 @@
+Changes from CPAChecker 1.7 to PeSCo 1.7
+----------------------------------------
+* PeSCo loads a pertained model for sequence prediction
+* Verifier chains are constructed on-the-fly
+
+
+
 Changes from CPAchecker 1.6.1 to CPAchecker 1.7
 -----------------------------------------------
 * CPAchecker requires Java 8.

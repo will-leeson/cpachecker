@@ -31,12 +31,11 @@ Install CPAchecker -- Source
 2. Install `ant` (anything since version 1.7 should be ok).
    (Ubuntu: `sudo apt-get install ant`)
 
-3. Install Subversion.
-   (Ubuntu: `sudo apt-get install subversion`)
+3. Install git.
+   (Ubuntu: `sudo apt-get install git`)
 
-4. Checkout CPAchecker from SVN repository.
-   URL: https://svn.sosy-lab.org/software/cpachecker/trunk
-   URL (read-only GIT mirror): https://github.com/sosy-lab/cpachecker
+4. Checkout CPAchecker (PeSCo) from Git repository.
+   URL (read-only GIT mirror): https://github.com/cedricrupb/cpachecker
 
 5. Run `ant` in CPAchecker directory to build CPAchecker.
    When building CPAchecker for the first time, this will automatically
@@ -52,5 +51,3 @@ Install CPAchecker -- Source
    - If the build fails because the class `org.apache.ivy.ant.BuildOBRTask` cannot be found,
      this is probably caused by an old Ivy version installed on your system.
      Please try uninstalling Ivy.
-
-(For building CPAchecker within Eclipse, cf. [`doc/Developing.md`](doc/Developing.md).)

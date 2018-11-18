@@ -1,5 +1,5 @@
-Getting Started with CPAchecker
-===============================
+Getting Started with CPAchecker (PeSCo Configuration)
+======================================================
 
 Installation Instructions:  [`INSTALL.md`](INSTALL.md)
 
@@ -19,8 +19,8 @@ CPAchecker is able to parse and analyze a large subset of (GNU)C.
 If parsing fails for your program, please send a report to
 cpachecker-users@googlegroups.com.
 
-Verifying a Program with CPAchecker
------------------------------------
+Verifying a Program with CPAchecker (PeSCo Configuration)
+----------------------------------------------------------
 
 1. Choose a source code file that you want to be checked.
    If you use your own program, remember to pre-process it as mentioned above.
@@ -38,6 +38,8 @@ Verifying a Program with CPAchecker
    you need to provide specifically-compiled MathSAT binaries
    for this configuration to work.
    The configuration of CPAchecker is explained in doc/Configuration.md.
+   To use the configuration for Sequence prediction,
+   use `config/svcomp19-pesco.properties` or `config/svcomp19-pesco-delay.properties`
 
 3. Choose a specification file (you may not need this for some CPAs).
    The standard configuration files use `config/specification/default.spc`
@@ -85,7 +87,7 @@ There are also additional output files in the directory `output/`:
  - `predmap.txt`: Predicates used by predicate analysis to prove program safety
  - `reached.txt`: Dump of all reached abstract states
  - `Statistics.txt`: Time statistics (can also be printed to console with `-stats`)
- 
+
 Note that not all of these files will be available for all configurations.
 Also some of these files are only produced if an error is found (or vice-versa).
 CPAchecker will overwrite files in this directory!
