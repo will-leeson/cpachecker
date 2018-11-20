@@ -73,7 +73,7 @@ public class CExpressionASTVisitor implements CExpressionVisitor<String, CPATran
         label = ASTNodeLabel.DIVIDE.name();
         break;
       case PLUS:
-        label = ASTNodeLabel.MULTIPLY.name();
+        label = ASTNodeLabel.PLUS.name();
         break;
       case MINUS:
         label = ASTNodeLabel.MINUS.name();
@@ -320,7 +320,7 @@ public class CExpressionASTVisitor implements CExpressionVisitor<String, CPATran
       graph.addNode(tIdA, ASTNodeLabel.ARRAY_EXPRESSION.name());
       graph.addSEdge(tIdA, id);
       graph.addNode(tIdS, ASTNodeLabel.SUBSCRIPT_EXPRESSION.name());
-      graph.addNode(tIdS, id);
+      graph.addSEdge(tIdS, id);
     }
 
     if(depth >= 2) {

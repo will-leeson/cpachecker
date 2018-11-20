@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.Stack;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
+import org.sosy_lab.cpachecker.intelligence.graph.SCCUtil.SCC;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.InverseGraphNavigator;
@@ -41,6 +42,154 @@ import org.sosy_lab.cpachecker.intelligence.graph.dominator.SGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.TarjanDominator;
 
 public class GraphAnalyser {
+
+  public static void pruneGraph(StructureGraph pGraph){
+    //pruneUnusedGlobal(pGraph);
+    pruneFloating(pGraph);
+  }
+
+
+  private static void pruneUnusedGlobal(StructureGraph pGraph){
+
+    Set<String> globalIds = new HashSet<>();
+    Set<String> localIds = new HashSet<>();
+
+    for(String nodeId: pGraph.nodes()){
+      if(nodeId.startsWith("N")) {
+
+        GNode node = pGraph.getNode(nodeId);
+
+        if(node.getLabel().toLowerCase().contains("global")){
+          globalIds.add(nodeId);
+        }else{
+          localIds.add(nodeId);
+        }
+
+
+      }
+    }
+
+
+
+  }
+
+
+  private static void pruneFloating(StructureGraph pGraph){
+    //Floating nodes
+
+    Set<String> floatingNodes = new HashSet<>();
+
+    for(String nodeId: pGraph.nodes()){
+      GNode node = pGraph.getNode(nodeId);
+
+      if(!node.getLabel().equalsIgnoreCase("START") &&
+          !nodeId.startsWith("A") && pGraph.getIngoing(nodeId).isEmpty()){
+        floatingNodes.add(nodeId);
+      }
+
+    }
+
+    for(String nodeId: floatingNodes)
+      pGraph.removeNode(nodeId);
+  }
+
+  public static void applyDummyEdges(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+      throws InterruptedException {
+
+    String endId = null;
+
+    for(String id: pGraph.nodes()){
+      GNode node = pGraph.getNode(id);
+
+      if(pShutdownNotifier != null)
+        pShutdownNotifier.shutdownIfNecessary();
+
+      if(node.getLabel().equalsIgnoreCase(ASTNodeLabel.END.name())){
+        endId = id;
+        break;
+      }
+    }
+
+    if(endId == null){
+      endId = pGraph.genId("N");
+      pGraph.addNode(endId);
+    }
+
+    if(pShutdownNotifier != null)
+      pShutdownNotifier.shutdownIfNecessary();
+
+    Set<GEdge> toDelete = new HashSet<>();
+
+    for(String id: pGraph.nodes()){
+      GNode node = pGraph.getNode(id);
+
+      if(pShutdownNotifier != null)
+        pShutdownNotifier.shutdownIfNecessary();
+
+      if(id.equalsIgnoreCase(endId))continue;
+
+      if(pGraph.getOutgoing(id).isEmpty() || (node.getLabel().contains("FUNC_CALL") && node.getLabel().contains("VERIFIER_ERROR"))){
+
+        for(GEdge e: pGraph.getOutgoing(id)){
+          toDelete.add(e);
+        }
+
+        pGraph.addCFGEdge(id, endId);
+
+      }
+
+    }
+
+    for(GEdge delete: toDelete)
+      pGraph.removeEdge(delete);
+
+    if(pShutdownNotifier != null)
+      pShutdownNotifier.shutdownIfNecessary();
+
+    SCCUtil sccUtil = new SCCUtil(pGraph);
+
+    for(SCC scc: sccUtil.getStronglyConnectedComponents()){
+
+      if(scc.getNodes().size() < 2){
+        continue;
+      }
+
+      String sourceId = null;
+      boolean terminate = false;
+
+      for(String nId: scc.getNodes()){
+        if(pShutdownNotifier != null)
+          pShutdownNotifier.shutdownIfNecessary();
+
+        for(GEdge e: pGraph.getOutgoing(nId)){
+          if(!scc.getNodes().contains(e.getSink().getId())){
+            terminate = true;
+            break;
+          }
+        }
+
+        if(terminate)
+          break;
+
+        Set<GEdge> out = pGraph.getOutgoing(nId);
+
+        if(out.size() < 2){
+          sourceId = nId;
+        }
+
+
+      }
+
+      if(!terminate){
+        pGraph.addCFGEdge(sourceId, endId);
+      }
+
+
+    }
+
+
+
+  }
 
 
   public static void applyDD(StructureGraph pGraph){
@@ -266,7 +415,7 @@ public class GraphAnalyser {
       if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
         stack.add(new CDTravelor(n, new HashSet<>()));
       }
-      if(navigator.predecessor(n).size() > 1){
+      if(navigator.predecessor(n).size() >= 1){
         branches.add(n);
       }
     }

@@ -50,7 +50,6 @@ public class AssumptionListener extends AEdgeListener {
   public void listen(CFAEdge edge) {
     if(edge instanceof CAssumeEdge){
       CAssumeEdge assume = (CAssumeEdge)edge;
-      //if(assume.getTruthAssumption()){
 
       String label = extractControlLabel(assume).name();
       String id = "N"+assume.getPredecessor().getNodeNumber();
@@ -64,18 +63,20 @@ public class AssumptionListener extends AEdgeListener {
       Set<String> vars = assume.getExpression().accept(new CVariablesCollectingVisitor(assume.getPredecessor()));
       options.put("variables", vars);
 
-      if(depth >= 1){
-        try {
-          String assumeExpTree = assume.getExpression().accept(
-              new CExpressionASTVisitor(graph, depth - 1)
-          );
-          graph.addSEdge(assumeExpTree, id);
-        } catch (CPATransferException pE) {
+      if(assume.getTruthAssumption()) {
+        if (depth >= 1) {
+          try {
+            String assumeExpTree = assume.getExpression().accept(
+                new CExpressionASTVisitor(graph, depth - 1)
+            );
+            graph.addSEdge(assumeExpTree, id);
+          } catch (CPATransferException pE) {
+          }
         }
       }
 
 
-      //}
+
     }
   }
 }

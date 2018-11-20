@@ -23,9 +23,14 @@
  */
 package org.sosy_lab.cpachecker.intelligence.learn.sample;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import com.google.common.primitives.Bytes;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,6 +45,39 @@ import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class WLFeatureModel {
+
+    private static Map<String, String> relabelLabel = null;
+
+    private static Map<String, String> relabelLabel(){
+      if(relabelLabel == null) {
+        Map<String, String> map = new HashMap<>();
+        map.put("UNSIGNED_INT", "INT");
+        map.put("LONG_UNSIGNED_INT", "LONG");
+        map.put("LONG_INT", "LONG");
+        map.put("LONGLONG_UNSIGNED_INT", "LONG");
+        map.put("LONGLONG_INT", "LONG");
+        map.put("LONG_UNSIGNED_LONG", "LONG");
+        map.put("LONG_LONG", "LONG");
+        map.put("UNSIGNED_CHAR", "CHAR");
+        map.put("VOLATILE_LONG_LONG", "VOLATILE_LONG");
+        map.put("VOLATILE_LONG_UNSIGNED_INT", "VOLATILE_LONG");
+        map.put("VOLATILE_LONG_INT", "VOLATILE_LONG");
+        map.put("VOLATILE_LONG_UNSIGNED_LONG", "VOLATILE_LONG");
+        map.put("VOLATILE_UNSIGNED_INT", "VOLATILE_INT");
+        map.put("CONST_UNSIGNED_INT", "CONST_INT");
+        map.put("CONST_LONG_LONG", "CONST_LONG");
+        map.put("CONST_LONG_UNSIGNED_LONG", "CONST_LONG");
+        map.put("CONST_LONGLONG_UNSIGNED_LONGLONG", "CONST_LONG");
+        map.put("CONST_LONGLONG_LONGLONG", "CONST_LONG");
+        map.put("CONST_UNSIGNED_CHAR", "CONST_CHAR");
+        map.put("INT_LITERAL_SMALL", "INT_LITERAL");
+        map.put("INT_LITERAL_MEDIUM", "INT_LITERAL");
+        map.put("INT_LITERAL_LARGE", "INT_LITERAL");
+
+        relabelLabel = ImmutableMap.copyOf(map);
+      }
+      return relabelLabel;
+    }
 
     private CFA cfa;
     private int astDepth;
@@ -64,10 +102,15 @@ public class WLFeatureModel {
 
       for(String n: graph.nodes()){
         String label = graph.getNode(n).getLabel();
+
+        if(relabelLabel().containsKey(label))
+          label = relabelLabel().get(label);
+
         if(!count.containsKey(label))
           count.put(label, 0);
         count.put(label, count.get(label) + 1);
       }
+
 
       return count;
     }
@@ -79,13 +122,20 @@ public class WLFeatureModel {
       return graph;
     }
 
+    private String hash(String str){
+      HashFunction function = Hashing.murmur3_32();
+      byte[] bytes = function.hashString(str, StandardCharsets.UTF_8).asBytes();
+      bytes = Bytes.toArray(Lists.reverse(Bytes.asList(bytes)));
+      return new BigInteger(bytes).toString();
+    }
+
 
     private String relabelNode(String nodeId, Map<String, String> relabelIndex){
       String label = graph.getNode(nodeId).getLabel();
       if(relabelIndex.containsKey(nodeId))
         label = relabelIndex.get(nodeId);
-
-      HashFunction function = Hashing.murmur3_32(42);
+      if(relabelLabel().containsKey(label))
+        label = relabelLabel().get(label);
 
       List<String> neighbours = new ArrayList<>();
 
@@ -94,25 +144,36 @@ public class WLFeatureModel {
         String neigh_label = node.getLabel();
         if(relabelIndex.containsKey(e.getSource().getId()))
           neigh_label = relabelIndex.get(e.getSource().getId());
+        if(relabelLabel().containsKey(neigh_label))
+          neigh_label = relabelLabel().get(neigh_label);
         String edge_type = e.getId();
-        String truth = Boolean.FALSE.toString();
 
-        if(node.getOptions().containsKey("truth")){
-          truth = Boolean.valueOf((boolean)node.getOptions().get("truth")).toString();
+        if(edge_type.equalsIgnoreCase("s")){
+          edge_type = "ast";
+        }else if(edge_type.equalsIgnoreCase("cfg")){
+          edge_type = "cf";
         }
 
-        String nLabel = function.hashString(
-            String.join("_", neigh_label, edge_type, truth), Charset.defaultCharset()
-        ).asInt() + "";
+        //String truth = Boolean.FALSE.toString();
+
+        //if(node.getOptions().containsKey("truth")){
+          //truth = Boolean.valueOf((boolean)node.getOptions().get("truth")).toString();
+        //}
+
+        String nLabel = String.join("_", neigh_label, edge_type);
+
+        nLabel = hash(nLabel);
 
         neighbours.add(nLabel);
       }
 
       Collections.sort(neighbours);
       String rLabel = String.join("_", neighbours);
-      rLabel = function.hashString(
-          String.join("_", label, rLabel), Charset.defaultCharset()
-      ).asInt() + "";
+      if(!rLabel.isEmpty())
+        rLabel = String.join("_", label, rLabel);
+      else
+        rLabel = label;
+      rLabel = hash(rLabel);
 
       return rLabel;
     }
@@ -132,6 +193,8 @@ public class WLFeatureModel {
       if(iteration == 0){
         return iteration0();
       }else if(iteration == 1){
+        GraphAnalyser.pruneGraph(graph);
+        GraphAnalyser.applyDummyEdges(graph, pShutdownNotifier);
         GraphAnalyser.applyDD(graph, pShutdownNotifier);
         GraphAnalyser.applyCD(graph, pShutdownNotifier);
       }

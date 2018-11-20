@@ -37,40 +37,6 @@ import org.sosy_lab.common.ShutdownNotifier;
 
 public class RealProgramSample implements IProgramSample {
 
-  private static Map<String, String> relabel = null;
-
-  private static Map<String, String> relabel(){
-    if(relabel == null) {
-      Map<String, String> map = new HashMap<>();
-      map.put("UNSIGNED_INT", "INT");
-      map.put("LONG_UNSIGNED_INT", "LONG");
-      map.put("LONG_INT", "LONG");
-      map.put("LONGLONG_UNSIGNED_INT", "LONG");
-      map.put("LONGLONG_INT", "LONG");
-      map.put("LONG_UNSIGNED_LONG", "LONG");
-      map.put("LONG_LONG", "LONG");
-      map.put("UNSIGNED_CHAR", "CHAR");
-      map.put("VOLATILE_LONG_LONG", "VOLATILE_LONG");
-      map.put("VOLATILE_LONG_UNSIGNED_INT", "VOLATILE_LONG");
-      map.put("VOLATILE_LONG_INT", "VOLATILE_LONG");
-      map.put("VOLATILE_LONG_UNSIGNED_LONG", "VOLATILE_LONG");
-      map.put("VOLATILE_UNSIGNED_INT", "VOLATILE_INT");
-      map.put("CONST_UNSIGNED_INT", "CONST_INT");
-      map.put("CONST_LONG_LONG", "CONST_LONG");
-      map.put("CONST_LONG_UNSIGNED_LONG", "CONST_LONG");
-      map.put("CONST_LONGLONG_UNSIGNED_LONGLONG", "CONST_LONG");
-      map.put("CONST_LONGLONG_LONGLONG", "CONST_LONG");
-      map.put("CONST_UNSIGNED_CHAR", "CONST_CHAR");
-      map.put("INT_LITERAL_SMALL", "INT_LITERAL");
-      map.put("INT_LITERAL_MEDIUM", "INT_LITERAL");
-      map.put("INT_LITERAL_LARGE", "INT_LITERAL");
-
-      relabel = ImmutableMap.copyOf(map);
-    }
-    return relabel;
-  }
-
-
   private String id;
   private int maxIteration;
   private WLFeatureModel model;
@@ -168,9 +134,11 @@ public class RealProgramSample implements IProgramSample {
 
           for (Entry<String, Integer> e : map.entrySet()) {
             String fName = e.getKey();
-            if (relabel().containsKey(fName))
-              fName = relabel().get(fName);
-            featureMap.put(registry.index(fName), (double) e.getValue());
+            IFeature feature = registry.index(fName);
+            if(!featureMap.containsKey(feature)){
+              featureMap.put(feature, 0.0);
+            }
+            featureMap.put(feature, featureMap.get(feature) + (double) e.getValue());
           }
 
           bags.add(featureMap);

@@ -204,6 +204,7 @@ public class RankManager implements PeekingIterator<String> {
 
     if(hBuffer == null){
       nextBuffer();
+      return;
     }
 
     if(!hBuffer.equalsIgnoreCase(buffer)) {
@@ -237,6 +238,7 @@ public class RankManager implements PeekingIterator<String> {
     if(!initialised){
       init();
       nextBuffer();
+      time++;
     }
 
     return buffer != null;

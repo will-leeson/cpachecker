@@ -78,6 +78,11 @@ public class FeatureRegistry {
       return Objects.hash(id, feature);
     }
 
+    @Override
+    public String toString(){
+      return feature;
+    }
+
   }
 
 }

@@ -199,6 +199,8 @@ public class StructureGraph {
       return true;
     }
 
+
+
     public Set<String> nodes(){
       return nodes.keySet();
     }
@@ -216,7 +218,7 @@ public class StructureGraph {
     public String genId(String prefix){
       while(nodes.containsKey(prefix + lastGen))
         lastGen++;
-      return prefix+lastGen;
+      return prefix+(lastGen++);
     }
 
     public String toDot(){
@@ -240,6 +242,9 @@ public class StructureGraph {
             }
             if(e instanceof CDEdge){
               s += n+" -> "+e.getSink().getId()+"[color=green];\n";
+            }
+            if(e instanceof SEdge){
+              s += n+" -> "+e.getSink().getId()+"[color=blue];\n";
             }
           }
 
