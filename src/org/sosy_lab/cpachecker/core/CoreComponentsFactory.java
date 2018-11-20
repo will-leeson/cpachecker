@@ -83,6 +83,7 @@ import org.sosy_lab.cpachecker.cpa.bam.BAMCPA;
 import org.sosy_lab.cpachecker.cpa.bam.BAMCounterexampleCheckAlgorithm;
 import org.sosy_lab.cpachecker.cpa.location.LocationCPA;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
+import org.sosy_lab.cpachecker.intelligence.GraphGenAlgorithm;
 import org.sosy_lab.cpachecker.intelligence.IntelligentRestartAlgorithm;
 
 /**
@@ -253,6 +254,13 @@ public class CoreComponentsFactory {
   )
   boolean runCBMCasExternalTool = false;
 
+  @Option(
+      secure = true,
+      name = "algorithm.GraphGen",
+      description = "generate a software verification graph from CFA"
+  )
+  boolean runGraphGenAlgorithm = false;
+
   private final Configuration config;
   private final LogManager logger;
   private final @Nullable ShutdownManager shutdownManager;
@@ -358,9 +366,13 @@ public class CoreComponentsFactory {
     } else if (useRestartingAlgorithm) {
       logger.log(Level.INFO, "Using Restarting Algorithm");
       algorithm = RestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
-    }else if(useIntelligentRestartingAlgorithm){
+    }else if(useIntelligentRestartingAlgorithm) {
       logger.log(Level.INFO, "Using Restarting Algorithm with predictive execution");
-      algorithm = IntelligentRestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
+      algorithm =
+          IntelligentRestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
+    }else if(runGraphGenAlgorithm){
+        logger.log(Level.INFO, "Using Graph generation algorithm");
+        algorithm = new GraphGenAlgorithm(logger, config, shutdownNotifier, cfa);
     } else if (useInterleavedAlgorithm) {
       logger.log(Level.INFO, "Using Interleaved Algorithm");
       algorithm = new InterleavedAlgorithm(config, logger, shutdownNotifier, specification, cfa);
@@ -433,6 +445,7 @@ public class CoreComponentsFactory {
                 specification,
                 aggregatedReachedSets);
       }
+
 
       if (checkCounterexamples) {
         if (cpa instanceof BAMCPA) {

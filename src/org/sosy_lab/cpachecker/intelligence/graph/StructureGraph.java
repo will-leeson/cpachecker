@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 public class StructureGraph {
 
@@ -253,6 +254,191 @@ public class StructureGraph {
 
 
       return s + "}";
+    }
+
+    public String toDFSRepresentation(){
+      Map<String, Integer> index = new HashMap<>();
+
+      String startId = null;
+
+      for(String nodeId: this.nodes()){
+        GNode node = this.getNode(nodeId);
+        if(node.getLabel().equalsIgnoreCase("START")){
+          startId = nodeId;
+          break;
+        }
+      }
+
+      if(startId == null){
+        for(String nodeId: this.nodes()){
+          if(this.getIngoing(nodeId).isEmpty()){
+            startId = nodeId;
+            break;
+          }
+        }
+      }
+
+      int counter = 0;
+      Stack<String> stack = new Stack<>();
+      stack.push(startId);
+
+      while (!stack.isEmpty()){
+
+        String id = stack.pop();
+
+        if(index.containsKey(id))continue;
+
+        index.put(id, counter++);
+
+        for(GEdge e: this.getOutgoing(id)){
+          stack.push(e.getSink().getId());
+        }
+
+        for(GEdge e: this.getIngoing(id)){
+          stack.push(e.getSource().getId());
+        }
+
+      }
+
+      String s = "[";
+      stack.push(startId);
+      Set<String> seen = new HashSet<>();
+      Set<DFSReprNode> seenRepr = new HashSet<>();
+
+      while (!stack.isEmpty()){
+
+        String id = stack.pop();
+
+        if(seen.contains(id))continue;
+        seen.add(id);
+
+        for(GEdge e: this.getOutgoing(id)){
+          DFSReprNode node = new DFSReprNode(index.get(id), index.get(e.getSink().getId()), false,
+              e);
+          if(!seenRepr.contains(node)) {
+            seenRepr.add(node);
+            s = s + node.getRepresentation()+", ";
+          }
+          stack.push(e.getSink().getId());
+        }
+
+        for(GEdge e: this.getIngoing(id)){
+          DFSReprNode node = new DFSReprNode(index.get(id), index.get(e.getSource().getId()), true,
+              e);
+          if(!seenRepr.contains(node)) {
+            seenRepr.add(node);
+            s = s + node.getRepresentation()+", ";
+          }
+          stack.push(e.getSource().getId());
+        }
+
+      }
+
+      return s.substring(0, s.length()-2) +"]";
+
+    }
+
+    private class DFSReprNode{
+
+      public DFSReprNode(
+          int pSourceIndex,
+          int pSinkIndex,
+          boolean pIncoming,
+          GEdge pEdge) {
+        sourceIndex = pSourceIndex;
+        sinkIndex = pSinkIndex;
+        incoming = pIncoming;
+        edge = pEdge;
+      }
+
+      private int sourceIndex;
+      private int sinkIndex;
+      private boolean incoming;
+      private GEdge edge;
+
+      private String edgeRepr(){
+        if(sourceIndex <= sinkIndex){
+          if(incoming){
+            return "<|"+edge.getId();
+          }else{
+            return edge.getId()+"|>";
+          }
+        }else {
+          if(incoming){
+            return edge.getId()+"|>";
+          }else {
+            return "<|"+edge.getId();
+          }
+        }
+      }
+
+      private String getSourceLabel(){
+
+        if(sourceIndex <= sinkIndex){
+          if(incoming){
+            return edge.getSink().getLabel();
+          }else{
+            return edge.getSource().getLabel();
+          }
+        }else{
+          if(incoming){
+            return edge.getSource().getLabel();
+          }else{
+            return edge.getSink().getLabel();
+          }
+        }
+      }
+
+      private String getSinkLabel(){
+
+        if(sourceIndex <= sinkIndex){
+          if(incoming){
+            return edge.getSource().getLabel();
+          }else{
+            return edge.getSink().getLabel();
+          }
+        }else{
+          if(incoming){
+            return edge.getSink().getLabel();
+          }else{
+            return edge.getSource().getLabel();
+          }
+        }
+      }
+
+      public String getRepresentation(){
+        int source = (sourceIndex <= sinkIndex)?sourceIndex:sinkIndex;
+        int sink = (sourceIndex <= sinkIndex)?sinkIndex:sourceIndex;
+        String sourceLabel = getSourceLabel();
+        String sinkLabel  = getSinkLabel();
+
+        return "["+source+", "+sink+", \""+sourceLabel+"\", \""+edgeRepr()+"\", \""+sinkLabel+"\"]";
+
+      }
+
+      @Override
+      public int hashCode(){
+        int source = (sourceIndex <= sinkIndex)?sourceIndex:sinkIndex;
+        int sink = (sourceIndex <= sinkIndex)?sinkIndex:sourceIndex;
+        return source*13*13 + sink*13 + edgeRepr().hashCode();
+      }
+
+      @Override
+      public boolean equals(Object pDFSReprNode){
+        if(pDFSReprNode instanceof DFSReprNode){
+
+          DFSReprNode node = (DFSReprNode)pDFSReprNode;
+
+          int source = (sourceIndex <= sinkIndex)?sourceIndex:sinkIndex;
+          int sink = (sourceIndex <= sinkIndex)?sinkIndex:sourceIndex;
+          int oSource = (node.sourceIndex <= node.sinkIndex)?node.sourceIndex: node.sinkIndex;
+          int oSink = (node.sourceIndex <= node.sinkIndex)?node.sinkIndex: node.sourceIndex;
+
+          return source==oSource && sink == oSink && edgeRepr().equals(node.edgeRepr());
+        }
+        return false;
+      }
+
     }
 
 }
