@@ -137,6 +137,7 @@ public class ManagedOracle implements IConfigOracle {
         }
         if (!knownPath) unknown.add(l);
       }
+      unknown.add(translate("unknown"));
     }
 
   }
