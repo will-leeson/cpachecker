@@ -31,6 +31,11 @@ public class HeuristicsFactory {
     if(name.equalsIgnoreCase("cegar")){
       return new CegarHeuristic();
     }
+
+    if(name.equalsIgnoreCase("bam")){
+      return new BAMHeuristic();
+    }
+
     return null;
   }
 

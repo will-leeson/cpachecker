@@ -87,6 +87,7 @@ import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.CINBackend;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.ISampleBackend;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.InMemBackend;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.proto.ProtoBackend;
 import org.sosy_lab.cpachecker.intelligence.oracle.IConfigOracle;
 import org.sosy_lab.cpachecker.intelligence.oracle.OracleFactory;
 import org.sosy_lab.cpachecker.util.AbstractStates;
@@ -281,11 +282,11 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     FeatureRegistry registry = new FeatureRegistry();
 
     try {
-      backend = new CINBackend(registry, instancePath);
+      backend = new ProtoBackend(registry, instancePath);
     } catch (IOException pE) {
       if(instancePath != null){
         try {
-          backend = new CINBackend(registry);
+          backend = new ProtoBackend(registry);
         } catch (IOException pE1) {
           backend = new InMemBackend();
         }

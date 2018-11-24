@@ -70,5 +70,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" exported="" name="jblas-1.2.4-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="protobuf-java-3.6.1" level="project" />
   </component>
 </module>

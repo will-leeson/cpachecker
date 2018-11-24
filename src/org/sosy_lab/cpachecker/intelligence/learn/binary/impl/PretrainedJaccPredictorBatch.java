@@ -28,13 +28,16 @@ import com.google.common.collect.Table.Cell;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RecursiveTask;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.IPredictorBatch;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.jaccard.SeqKernelComputationProcess;
+import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.jaccard.planning.PlannedComputationProcess;
 import org.sosy_lab.cpachecker.intelligence.learn.binary.impl.math.Vector;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
+import org.sosy_lab.cpachecker.intelligence.learn.sample.RealProgramSample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
 import org.sosy_lab.cpachecker.util.Pair;
 
@@ -85,9 +88,11 @@ public class PretrainedJaccPredictorBatch implements IPredictorBatch {
       List<Vector> predictions = new ArrayList<>();
 
       for(IProgramSample sample: entities){
+
         predictions.add(
-            new SeqKernelComputationProcess(registry, notifier, config, sample, pos).compute()
+            new SeqKernelComputationProcess(registry, notifier, config, (RealProgramSample)sample, pos).compute()
         );
+
 
         if(notifier != null) {
           try {

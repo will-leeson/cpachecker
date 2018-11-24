@@ -29,7 +29,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Bytes;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,8 +102,8 @@ public class WLFeatureModel {
       for(String n: graph.nodes()){
         String label = graph.getNode(n).getLabel();
 
-        if(relabelLabel().containsKey(label))
-          label = relabelLabel().get(label);
+        //if(relabelLabel().containsKey(label))
+          //label = relabelLabel().get(label);
 
         if(!count.containsKey(label))
           count.put(label, 0);
@@ -147,12 +146,6 @@ public class WLFeatureModel {
         if(relabelLabel().containsKey(neigh_label))
           neigh_label = relabelLabel().get(neigh_label);
         String edge_type = e.getId();
-
-        if(edge_type.equalsIgnoreCase("s")){
-          edge_type = "ast";
-        }else if(edge_type.equalsIgnoreCase("cfg")){
-          edge_type = "cf";
-        }
 
         //String truth = Boolean.FALSE.toString();
 
