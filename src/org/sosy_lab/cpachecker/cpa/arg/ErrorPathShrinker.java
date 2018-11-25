@@ -77,6 +77,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import org.sosy_lab.cpachecker.util.Pair;
 
 
 /** The Class ErrorPathShrinker gets an targetPath and creates a new Path,

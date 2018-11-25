@@ -92,12 +92,8 @@ class ModelView implements Model {
     return (BigInteger) evaluateImpl(f);
   }
 
-  @Override
-  @Nullable
-  public <T extends Formula> T eval(T f) {
-    return wrappingHandler.wrap(
-        wrappingHandler.getFormulaType(f), delegate.eval(wrappingHandler.unwrap(f)));
-  }
+
+
 
   @Override
   public Iterator<ValueAssignment> iterator() {
