@@ -29,6 +29,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.common.base.Joiner;
 import java.io.Serializable;
+import java.util.Set;
 import org.sosy_lab.common.collect.PathCopyingPersistentTreeMap;
 import org.sosy_lab.common.collect.PersistentSortedMap;
 import org.sosy_lab.cpachecker.core.defaults.LatticeAbstractState;
@@ -41,15 +42,12 @@ public class FunctionPointerState
 
   private static final long serialVersionUID = -1951853216031911649L;
 
-  // java reference counting + immutable objects should help us
-  // to reduce memory consumption.
-  static abstract class FunctionPointerTarget {
-  }
+  interface FunctionPointerTarget {}
 
-  static final class UnknownTarget extends FunctionPointerTarget {
+  static final class UnknownTarget implements FunctionPointerTarget {
     private static final UnknownTarget instance = new UnknownTarget();
 
-    private UnknownTarget() { }
+    private UnknownTarget() {}
 
     @Override
     public String toString() {
@@ -67,15 +65,15 @@ public class FunctionPointerState
 
     @Override
     public int hashCode() {
-      return toString().hashCode();
+      return 0; // some constant value is sufficient
     }
   }
 
-  static final class InvalidTarget extends FunctionPointerTarget implements Serializable {
+  static final class InvalidTarget implements FunctionPointerTarget, Serializable {
     private static final long serialVersionUID = 7067934518471075538L;
     private static final InvalidTarget instance = new InvalidTarget();
 
-    private InvalidTarget() { }
+    private InvalidTarget() {}
 
     @Override
     public String toString() {
@@ -93,11 +91,11 @@ public class FunctionPointerState
 
     @Override
     public int hashCode() {
-      return toString().hashCode();
+      return 1; // some constant value is sufficient
     }
   }
 
-  static final class NamedFunctionTarget extends FunctionPointerTarget implements Serializable{
+  static final class NamedFunctionTarget implements FunctionPointerTarget, Serializable {
 
     private static final long serialVersionUID = 9001748459212617220L;
     private final String functionName;
@@ -173,15 +171,12 @@ public class FunctionPointerState
   // cache hashCode
   private transient int hashCode;
 
-  private FunctionPointerState() {
-    pointerVariableValues = PathCopyingPersistentTreeMap.of();
-  }
-
   private FunctionPointerState(PersistentSortedMap<String, FunctionPointerTarget> pValues) {
     pointerVariableValues = pValues;
   }
 
-  private static final FunctionPointerState EMPTY_STATE = new FunctionPointerState(PathCopyingPersistentTreeMap.<String, FunctionPointerState.FunctionPointerTarget>of());
+  private static final FunctionPointerState EMPTY_STATE =
+      new FunctionPointerState(PathCopyingPersistentTreeMap.of());
 
   public static FunctionPointerState createEmptyState() {
     return EMPTY_STATE;
@@ -215,6 +210,10 @@ public class FunctionPointerState
     return pointerVariableValues.getOrDefault(variableName, UnknownTarget.getInstance());
   }
 
+  Set<String> getTrackedVariables() {
+    return pointerVariableValues.keySet();
+  }
+
   @Override
   public boolean isLessOrEqual(FunctionPointerState pElement) {
     // check if the other map is a subset of this map
@@ -222,7 +221,6 @@ public class FunctionPointerState
     if (this.pointerVariableValues.size() < pElement.pointerVariableValues.size()) {
       return false;
     }
-
     return this.pointerVariableValues.entrySet().containsAll(pElement.pointerVariableValues.entrySet());
   }
 
@@ -231,8 +229,6 @@ public class FunctionPointerState
     throw new UnsupportedOperationException();
   }
 
-
-  // Needed for NoOpReducer
   @Override
   public boolean equals(Object pObj) {
     if (pObj == this) {
@@ -250,4 +246,6 @@ public class FunctionPointerState
     }
     return hashCode;
   }
+
+
 }
