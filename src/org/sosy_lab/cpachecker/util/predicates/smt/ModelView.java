@@ -93,6 +93,13 @@ class ModelView implements Model {
   }
 
   @Override
+  @Nullable
+  public <T extends Formula> T eval(T f) {
+    return wrappingHandler.wrap(
+        wrappingHandler.getFormulaType(f), delegate.eval(wrappingHandler.unwrap(f)));
+  }
+
+  @Override
   public Iterator<ValueAssignment> iterator() {
     return Iterators.filter(delegate.iterator(), FILTER_MODEL_TERM);
   }

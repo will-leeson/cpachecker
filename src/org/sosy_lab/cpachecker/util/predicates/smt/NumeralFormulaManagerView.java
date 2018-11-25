@@ -69,11 +69,6 @@ public class NumeralFormulaManagerView
     return manager.divide(pNumber1, pNumber2);
   }
   @Override
-  public ResultFormulaType modulo(ParamFormulaType pNumber1, ParamFormulaType pNumber2) {
-    return manager.modulo(pNumber1, pNumber2);
-  }
-
-  @Override
   public ResultFormulaType multiply(ParamFormulaType pNumber1, ParamFormulaType pNumber2) {
     return manager.multiply(pNumber1, pNumber2);
   }

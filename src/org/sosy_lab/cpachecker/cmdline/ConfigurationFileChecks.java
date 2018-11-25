@@ -119,12 +119,15 @@ public class ConfigurationFileChecks {
           "differential.program",
           // handled by code outside of CPAchecker class
           "output.disable",
+          "statistics.print",
           "limits.time.cpu",
           "limits.time.cpu::required",
           "limits.time.cpu.thread",
           "memorysafety.config",
+          "memorycleanup.config",
           "overflow.config",
           "termination.config",
+          "termination.violation.witness",
           "witness.validation.violation.config",
           "witness.validation.correctness.config",
           "pcc.proofgen.doPCC",
@@ -398,7 +401,8 @@ public class ConfigurationFileChecks {
     } else if (isOptionEnabled(config, "cfa.checkNullPointers")) {
       assertThat(spec).endsWith("specification/null-deref.spc");
     } else if (isOptionEnabled(config, "analysis.algorithm.termination")
-        || isOptionEnabled(config, "analysis.algorithm.nonterminationWitnessCheck")) {
+        || isOptionEnabled(config, "analysis.algorithm.nonterminationWitnessCheck")
+        || basePath.toString().contains("validation-termination")) {
       assertThat(spec).isEmpty();
     } else if (basePath.toString().contains("overflow")) {
       if (isSvcompConfig) {
@@ -411,9 +415,14 @@ public class ConfigurationFileChecks {
       assertThat(spec).endsWith("specification/UninitializedVariables.spc");
     } else if (cpas.contains("cpa.smg.SMGCPA")) {
       if (isSvcompConfig) {
-        assertThat(spec).contains("specification/sv-comp-memorysafety.spc");
+        assertThat(spec)
+            .isAnyOf(
+                "specification/sv-comp-memorysafety.spc",
+                "specification/sv-comp-memorycleanup.spc");
       } else {
-        assertThat(spec).contains("specification/memorysafety.spc");
+        if (!spec.contains("specification/sv-comp-memorycleanup.spc")) {
+          assertThat(spec).contains("specification/memorysafety.spc");
+        }
       }
     } else if (basePath.toString().startsWith("ldv")) {
       assertThat(spec).endsWith("specification/sv-comp-errorlabel.spc");

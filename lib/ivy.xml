@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+        xmlns:e="http://ant.apache.org/ivy/extra"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
     <info organisation="org.sosy_lab" module="CPAchecker"/>
     <configurations>
         <!-- All dependencies that are only needed during build. -->
@@ -133,6 +134,9 @@
             <exclude org="org.apache.xmlgraphics" module="batik-util"/>
         </dependency>
 
+        <!-- JavaSMT has an erroneous dependency on a newer Guava which causes SpotBugs to fail.
+             Temporarily override to at least get CPAchecker's build to be working again. -->
+        <override org="com.google.guava" module="guava" rev="24.1-jre"/>
 
         <!-- Guava has a dependency on error_prone_annotations without a revision number, need an override. -->
         <override org="com.google.errorprone" module="error_prone_annotations" rev="2.3.1"/>

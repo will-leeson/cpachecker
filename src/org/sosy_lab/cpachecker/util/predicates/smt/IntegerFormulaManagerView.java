@@ -51,4 +51,9 @@ public class IntegerFormulaManagerView
       IntegerFormula number1, IntegerFormula number2, BigInteger n) {
     return integerFormulaManager.modularCongruence(number1, number2, n);
   }
+
+  @Override
+  public IntegerFormula modulo(IntegerFormula pNumber1, IntegerFormula pNumber2) {
+    return integerFormulaManager.modulo(pNumber1, pNumber2);
+  }
 }

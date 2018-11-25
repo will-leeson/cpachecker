@@ -23,7 +23,9 @@
  */
 package org.sosy_lab.cpachecker.cpa.arg.counterexamples;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.log.LogManager;
@@ -35,14 +37,18 @@ import org.sosy_lab.cpachecker.core.interfaces.ConfigurableProgramAnalysis;
  * A {@link CounterexampleFilter} that defines paths as similar
  * if their representation as a list of {@link CFAEdge}s is equal.
  */
-public class PathEqualityCounterexampleFilter extends AbstractSetBasedCounterexampleFilter<ImmutableList<CFAEdge>> {
+public class PathEqualityCounterexampleFilter
+    extends AbstractSetBasedCounterexampleFilter<List<CFAEdge>> {
 
   public PathEqualityCounterexampleFilter(Configuration pConfig, LogManager pLogger, ConfigurableProgramAnalysis pCpa) {
     super(pConfig, pLogger, pCpa);
   }
 
   @Override
-  protected Optional<ImmutableList<CFAEdge>> getCounterexampleRepresentation(CounterexampleInfo counterexample) {
-    return Optional.of(ImmutableList.copyOf(counterexample.getTargetPath().getInnerEdges()));
+  protected Optional<List<CFAEdge>> getCounterexampleRepresentation(
+      CounterexampleInfo counterexample) {
+    return Optional.of(
+        Collections.unmodifiableList(
+            Lists.newArrayList(counterexample.getTargetPath().getInnerEdges())));
   }
 }

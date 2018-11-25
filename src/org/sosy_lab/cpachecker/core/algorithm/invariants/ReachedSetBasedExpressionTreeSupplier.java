@@ -25,6 +25,8 @@ package org.sosy_lab.cpachecker.core.algorithm.invariants;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -51,7 +53,6 @@ public class ReachedSetBasedExpressionTreeSupplier implements ExpressionTreeSupp
 
   @Override
   public ExpressionTree<Object> getInvariantFor(CFANode pLocation) {
-    ExpressionTree<Object> locationInvariant = ExpressionTrees.getFalse();
 
     Set<InvariantsState> invStates = Sets.newHashSet();
     boolean otherReportingStates = false;
@@ -65,6 +66,7 @@ public class ReachedSetBasedExpressionTreeSupplier implements ExpressionTreeSupp
       return ExpressionTrees.getTrue();
     }
 
+    List<ExpressionTree<Object>> locationInvariants = new ArrayList<>();
     for (AbstractState locState : locationStates) {
       ExpressionTree<Object> stateInvariant = ExpressionTrees.getTrue();
 
@@ -93,9 +95,9 @@ public class ReachedSetBasedExpressionTreeSupplier implements ExpressionTreeSupp
                 expressionTreeReportingState.getFormulaApproximation(
                     cfa.getFunctionHead(pLocation.getFunctionName()), pLocation));
       }
-
-      locationInvariant = Or.of(locationInvariant, stateInvariant);
+      locationInvariants.add(stateInvariant);
     }
+    ExpressionTree<Object> locationInvariant = Or.of(locationInvariants);
 
     if (!otherReportingStates && invStates.size() > 1) {
       Set<InvariantsState> newInvStates = Sets.newHashSet();
