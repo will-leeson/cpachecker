@@ -36,6 +36,10 @@ public class HeuristicsFactory {
       return new BAMHeuristic();
     }
 
+    if(name.equalsIgnoreCase("skip2end")){
+      return new Skip2EndHeuristic();
+    }
+
     return null;
   }
 

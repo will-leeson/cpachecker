@@ -150,6 +150,12 @@ public class ManagedOracle implements IConfigOracle {
       return annotatedValue;
     }
 
+    if(label.equalsIgnoreCase("skip")){
+      Path p = Paths.get("SKIP");
+      AnnotatedValue<Path> annotatedValue = AnnotatedValue.create(p);
+      return annotatedValue;
+    }
+
     if(labelToPath.containsKey(label)){
       return labelToPath.get(label);
     }
