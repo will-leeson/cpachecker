@@ -65,6 +65,10 @@ public class PredictorFactory {
       predictor = new JaccardLabelPredictor(config, logger, pSampleRegistry, pShutdownNotifier, sample);
     }
 
+    if(oracle.equals("fallback")){
+      predictor = new FallbackPredictor(config);
+    }
+
     return predictor;
   }
 

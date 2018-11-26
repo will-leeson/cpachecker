@@ -25,6 +25,7 @@ package org.sosy_lab.cpachecker.intelligence.oracle.ranking;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ import org.sosy_lab.cpachecker.intelligence.oracle.IConfigOracle;
 import org.sosy_lab.cpachecker.intelligence.oracle.OracleFactory;
 import org.sosy_lab.cpachecker.intelligence.oracle.ranking.heuristics.RankHeuristic;
 import org.sosy_lab.cpachecker.intelligence.oracle.ranking.heuristics.impl.HeuristicsFactory;
+import org.sosy_lab.cpachecker.intelligence.util.PathFinder;
 
 @Options(prefix = "managedOracle")
 public class ManagedOracle implements IConfigOracle {
@@ -158,6 +160,12 @@ public class ManagedOracle implements IConfigOracle {
 
     if(labelToPath.containsKey(label)){
       return labelToPath.get(label);
+    }
+
+    if(Files.exists(PathFinder.find("config/%s", label))){
+      Path p = Paths.get("config/"+label);
+      AnnotatedValue<Path> annotatedValue = AnnotatedValue.create(p);
+      return annotatedValue;
     }
 
     return null;
