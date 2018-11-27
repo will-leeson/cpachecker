@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.logging.Level;
 import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.common.ShutdownNotifier;
+import org.sosy_lab.common.ShutdownNotifier.ShutdownRequestListener;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
@@ -62,6 +63,7 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
   private ShutdownNotifier shutdownNotifier;
   private ShutdownManager ownManager;
   private IProgramSample currentSample;
+  private ShutdownRequestListener logShutdownListener;
 
   private OracleStatistics statistics = new OracleStatistics(getName()+ " Oracle");
 
@@ -81,6 +83,14 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
 
   private void enableTimeout(){
     if(timeout < 0)return;
+
+    logShutdownListener =
+        reason ->
+            logger.logf(
+                Level.WARNING,
+                "Shutdown of jaccard predictor requested (%s).",
+                reason);
+    shutdownNotifier.register(logShutdownListener);
 
     try {
       Configuration configuration = Configuration.builder()
@@ -122,6 +132,9 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
       return new ArrayList<>();
     }
     List<List<String>> predictions = learner.predict(samples);
+
+    if(logShutdownListener != null)
+      shutdownNotifier.unregister(logShutdownListener);
 
     if(predictions.size() < 1){
       logger.log(Level.WARNING, "Oracle stopped as prediction is empty");

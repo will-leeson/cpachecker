@@ -25,22 +25,28 @@ package org.sosy_lab.cpachecker.intelligence.ast;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 
 public class CFAIterator {
 
+  private ShutdownNotifier notifier;
   private List<IEdgeListener> listeners = new ArrayList<>();
 
 
-  public CFAIterator(List<IEdgeListener> pListeners) {
+  public CFAIterator(List<IEdgeListener> pListeners, ShutdownNotifier pShutdownNotifier) {
+    this.notifier = pShutdownNotifier;
     this.listeners = pListeners;
   }
 
-  public void iterate(CFA pCFA){
+  public void iterate(CFA pCFA) throws InterruptedException {
     for(CFANode node: pCFA.getAllNodes()){
       for(int i = 0; i < node.getNumLeavingEdges(); i++){
           for(IEdgeListener listener: listeners){
+              if(notifier != null){
+                notifier.shutdownIfNecessary();
+              }
               listener.listen(node.getLeavingEdge(i));
           }
       }

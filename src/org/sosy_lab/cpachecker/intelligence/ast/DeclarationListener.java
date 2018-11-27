@@ -27,6 +27,7 @@ package org.sosy_lab.cpachecker.intelligence.ast;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CDeclarationEdge;
@@ -38,8 +39,11 @@ import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class DeclarationListener extends AEdgeListener {
 
-  public DeclarationListener(int pDepth, StructureGraph pGraph) {
-    super(pDepth, pGraph);
+  public DeclarationListener(
+      int pDepth,
+      StructureGraph pGraph,
+      ShutdownNotifier pShutdownNotifier) {
+    super(pDepth, pGraph, pShutdownNotifier);
   }
 
   @Override
@@ -59,16 +63,38 @@ public class DeclarationListener extends AEdgeListener {
       graph.addNode(idS);
       graph.addCFGEdge(id, idS);
 
+      if(notifier != null)
+        try{
+          notifier.shutdownIfNecessary();
+        }catch (InterruptedException pE){
+          return;
+        }
+
       try {
         String subTreeId = decl.accept(new CSimpleDeclASTVisitor(
             graph, depth
         ));
         graph.addSEdge(subTreeId, id);
 
+        if(notifier != null)
+          try{
+            notifier.shutdownIfNecessary();
+          }catch (InterruptedException pE){
+            return;
+          }
+
         Map<String, Object> options = graph.getNode(id).getOptions();
         Set<String> vars = decl.accept(new CDeclarationUseCollectorVisitor(edge.getPredecessor()));
         if(vars != null && !vars.isEmpty())
           options.put("variables", vars);
+
+        if(notifier != null)
+          try{
+            notifier.shutdownIfNecessary();
+          }catch (InterruptedException pE){
+            return;
+          }
+
         String declVar = decl.accept(new CDeclarationDefCollectorVisitor());
         if(declVar != null) {
           Set<String> declVars = new HashSet<>();

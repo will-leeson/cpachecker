@@ -23,15 +23,19 @@
  */
 package org.sosy_lab.cpachecker.intelligence.ast;
 
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.model.BlankEdge;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class BlankEdgeListener extends AEdgeListener {
+
+
   public BlankEdgeListener(
       int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+      StructureGraph pGraph,
+      ShutdownNotifier pShutdownNotifier) {
+    super(pDepth, pGraph, pShutdownNotifier);
   }
 
   @Override

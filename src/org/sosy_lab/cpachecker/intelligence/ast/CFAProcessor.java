@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
@@ -100,45 +101,53 @@ public class CFAProcessor {
 
   private Set<Listener> config;
 
-  private List<IEdgeListener> construct(StructureGraph pGraph, int depth){
+  private List<IEdgeListener> construct(StructureGraph pGraph, int depth, ShutdownNotifier pShutdownNotifier){
     List<IEdgeListener> e = new ArrayList<>();
 
     if(config.contains(Listener.INIT_EXIT)){
-      e.add(new InitExitListener(depth, pGraph));
+      e.add(new InitExitListener(depth, pGraph, pShutdownNotifier));
     }
 
     if(config.contains(Listener.ASSUMPTION)){
-      e.add(new AssumptionListener(depth, pGraph));
+      e.add(new AssumptionListener(depth, pGraph, pShutdownNotifier));
     }
 
     if(config.contains(Listener.BLANK)){
-      e.add(new BlankEdgeListener(depth, pGraph));
+      e.add(new BlankEdgeListener(depth, pGraph, pShutdownNotifier));
     }
 
     if(config.contains(Listener.DECLARATION)){
-      e.add(new DeclarationListener(depth, pGraph));
+      e.add(new DeclarationListener(depth, pGraph, pShutdownNotifier));
     }
 
     if(config.contains(Listener.FUNC_CALL)){
-      e.add(new FunctionCallListener(depth, pGraph));
-      e.add(new ReturnFunctionListener(depth, pGraph));
+      e.add(new FunctionCallListener(depth, pGraph, pShutdownNotifier));
+      e.add(new ReturnFunctionListener(depth, pGraph, pShutdownNotifier));
     }
 
     if(config.contains(Listener.STATEMENT)){
-      e.add(new StatementListener(depth, pGraph));
-      e.add(new ReturnStatementListener(depth, pGraph));
+      e.add(new StatementListener(depth, pGraph, pShutdownNotifier));
+      e.add(new ReturnStatementListener(depth, pGraph, pShutdownNotifier));
     }
 
     return e;
   }
 
+  public StructureGraph process(CFA pCFA, int depth, ShutdownNotifier pShutdownNotifier) throws InterruptedException{
+    StructureGraph out = new StructureGraph();
+    List<IEdgeListener> listeners = construct(out, depth, pShutdownNotifier);
+    CFAIterator it = new CFAIterator(listeners, pShutdownNotifier);
+    it.iterate(pCFA);
+    return out;
+  }
+
 
   public StructureGraph process(CFA pCFA, int depth){
-      StructureGraph out = new StructureGraph();
-      List<IEdgeListener> listeners = construct(out, depth);
-      CFAIterator it = new CFAIterator(listeners);
-      it.iterate(pCFA);
-      return out;
+    try {
+      return process(pCFA, depth, null);
+    } catch (InterruptedException pE) {
+      return new StructureGraph();
+    }
   }
 
 }

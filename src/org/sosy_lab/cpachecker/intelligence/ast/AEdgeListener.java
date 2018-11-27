@@ -23,16 +23,19 @@
  */
 package org.sosy_lab.cpachecker.intelligence.ast;
 
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public abstract class AEdgeListener implements IEdgeListener {
 
   protected int depth;
   protected StructureGraph graph;
+  protected ShutdownNotifier notifier;
 
-  public AEdgeListener(int pDepth, StructureGraph pGraph) {
+  public AEdgeListener(int pDepth, StructureGraph pGraph, ShutdownNotifier pShutdownNotifier) {
     depth = pDepth;
     graph = pGraph;
+    notifier = pShutdownNotifier;
   }
 
 }

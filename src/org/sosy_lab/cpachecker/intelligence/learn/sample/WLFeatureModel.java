@@ -94,13 +94,17 @@ public class WLFeatureModel {
       return astDepth;
     }
 
-    private Map<String, Integer> iteration0(){
-      graph = getGraph();
+    private Map<String, Integer> iteration0(ShutdownNotifier pShutdownNotifier)
+        throws InterruptedException {
+      graph = getGraph(pShutdownNotifier);
 
       Map<String, Integer> count = new HashMap<>();
 
       for(String n: graph.nodes()){
         String label = graph.getNode(n).getLabel();
+
+        if(pShutdownNotifier != null)
+          pShutdownNotifier.shutdownIfNecessary();
 
         //if(relabelLabel().containsKey(label))
           //label = relabelLabel().get(label);
@@ -114,9 +118,9 @@ public class WLFeatureModel {
       return count;
     }
 
-    public StructureGraph getGraph() {
+    public StructureGraph getGraph(ShutdownNotifier pShutdownNotifier) throws InterruptedException {
       if(graph == null){
-        graph = new CFAProcessor().process(cfa, astDepth);
+        graph = new CFAProcessor().process(cfa, astDepth, pShutdownNotifier);
       }
       return graph;
     }
@@ -184,7 +188,7 @@ public class WLFeatureModel {
         throws InterruptedException {
       iteration++;
       if(iteration == 0){
-        return iteration0();
+        return iteration0(pShutdownNotifier);
       }else if(iteration == 1){
         GraphAnalyser.pruneGraph(graph);
         GraphAnalyser.applyDummyEdges(graph, pShutdownNotifier);

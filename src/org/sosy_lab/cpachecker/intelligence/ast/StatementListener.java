@@ -23,6 +23,7 @@
  */
 package org.sosy_lab.cpachecker.intelligence.ast;
 
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.ast.c.CStatement;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CStatementEdge;
@@ -34,10 +35,12 @@ import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class StatementListener extends AEdgeListener {
+
   public StatementListener(
       int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+      StructureGraph pGraph,
+      ShutdownNotifier pShutdownNotifier) {
+    super(pDepth, pGraph, pShutdownNotifier);
   }
 
   @Override
@@ -61,8 +64,23 @@ public class StatementListener extends AEdgeListener {
         }
         graph.removeNode(astId);
 
+        if(notifier != null)
+          try{
+            notifier.shutdownIfNecessary();
+          }catch (InterruptedException pE){
+            return;
+          }
+
         graph.getNode(id).getOptions().put("variables",
             statement.accept(new CStatementVariablesCollectingVisitor(edge.getPredecessor())));
+
+        if(notifier != null)
+          try{
+            notifier.shutdownIfNecessary();
+          }catch (InterruptedException pE){
+            return;
+          }
+
         graph.getNode(id).getOptions().put("output",
             statement.accept(new CAssignVariablesCollector(edge.getPredecessor())));
 

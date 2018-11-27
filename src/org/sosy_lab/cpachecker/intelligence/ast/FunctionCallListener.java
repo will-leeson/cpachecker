@@ -27,6 +27,7 @@ import com.google.common.base.Optional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionCallEdge;
@@ -38,8 +39,11 @@ import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 public class FunctionCallListener extends AEdgeListener {
 
 
-  public FunctionCallListener(int pDepth, StructureGraph pGraph) {
-    super(pDepth, pGraph);
+  public FunctionCallListener(
+      int pDepth,
+      StructureGraph pGraph,
+      ShutdownNotifier pShutdownNotifier) {
+    super(pDepth, pGraph, pShutdownNotifier);
   }
 
   @Override
@@ -62,6 +66,12 @@ public class FunctionCallListener extends AEdgeListener {
       graph.addNode(idS);
       graph.addCFGEdge(id, idS);
 
+      if(notifier != null)
+        try{
+          notifier.shutdownIfNecessary();
+        }catch (InterruptedException pE){
+          return;
+        }
 
       if(arguments.size() > 0) {
         String tId = graph.genId("A");
@@ -73,6 +83,14 @@ public class FunctionCallListener extends AEdgeListener {
 
         if(depth >= 2) {
           for (CExpression arg : arguments) {
+
+            if(notifier != null)
+              try{
+                notifier.shutdownIfNecessary();
+              }catch (InterruptedException pE){
+                return;
+              }
+
             try {
               String tree = arg.accept(new CExpressionASTVisitor(graph, depth - 2 ));
               graph.addSEdge(tree, tId);

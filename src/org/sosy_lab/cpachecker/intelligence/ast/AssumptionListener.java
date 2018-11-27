@@ -25,6 +25,7 @@ package org.sosy_lab.cpachecker.intelligence.ast;
 
 import java.util.Map;
 import java.util.Set;
+import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CAssumeEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
@@ -33,10 +34,13 @@ import org.sosy_lab.cpachecker.intelligence.ast.visitors.CVariablesCollectingVis
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class AssumptionListener extends AEdgeListener {
+
+
   public AssumptionListener(
       int pDepth,
-      StructureGraph pGraph) {
-    super(pDepth, pGraph);
+      StructureGraph pGraph,
+      ShutdownNotifier pShutdownNotifier) {
+    super(pDepth, pGraph, pShutdownNotifier);
   }
 
   public static ASTNodeLabel extractControlLabel(CFAEdge pCFAEdge) {
@@ -60,11 +64,26 @@ public class AssumptionListener extends AEdgeListener {
       graph.addNode(idS);
       graph.addCFGEdge(id, idS);
 
+      if(notifier != null)
+        try{
+          notifier.shutdownIfNecessary();
+        }catch (InterruptedException pE){
+          return;
+        }
+
       Set<String> vars = assume.getExpression().accept(new CVariablesCollectingVisitor(assume.getPredecessor()));
       options.put("variables", vars);
 
       if(assume.getTruthAssumption()) {
         if (depth >= 1) {
+
+          if(notifier != null)
+            try{
+              notifier.shutdownIfNecessary();
+            }catch (InterruptedException pE){
+              return;
+            }
+
           try {
             String assumeExpTree = assume.getExpression().accept(
                 new CExpressionASTVisitor(graph, depth - 1)
