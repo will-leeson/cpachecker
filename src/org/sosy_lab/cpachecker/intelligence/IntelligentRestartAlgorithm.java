@@ -238,6 +238,12 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
   private String instancePath = null;
 
 
+  @Option(
+      secure = true,
+      description = "DEBUG OPTION: Only predict a ranking without executing the tools"
+  )
+  private boolean onlyPrediction = false;
+
   private final LogManager logger;
   private final ShutdownNotifier shutdownNotifier;
   private final ShutdownManager predictionShutdown;
@@ -381,6 +387,8 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
 
       try {
         AnnotatedValue<Path> current = configFilesIterator.next();
+
+        if(onlyPrediction)return AlgorithmStatus.UNSOUND_AND_PRECISE.withPrecise(false);
 
         failWithUnknown = (current.annotation().isPresent()) && current.annotation().get().equals("shutdownAfter");
 
