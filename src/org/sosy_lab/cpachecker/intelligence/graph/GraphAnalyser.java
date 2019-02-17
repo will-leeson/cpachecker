@@ -23,6 +23,7 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -32,7 +33,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.Stack;
 import java.util.logging.Level;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
@@ -200,7 +200,7 @@ public class GraphAnalyser {
                                  String start){
 
     Set<String> nodes = new HashSet<>(pNodes);
-    Stack<String> search = new Stack<>();
+    ArrayDeque<String> search = new ArrayDeque<>();
     search.push(start);
 
     while(!search.isEmpty()){
@@ -328,7 +328,7 @@ public class GraphAnalyser {
   private Map<String, Integer> rpo(){
 
     Set<String> seen = new HashSet<>();
-    Stack<String> stack = new Stack<>();
+    ArrayDeque<String> stack = new ArrayDeque<>();
     Map<String, Integer> rpo = new HashMap<>();
     int count = navigator.nodes().size();
 
@@ -383,12 +383,12 @@ public class GraphAnalyser {
 
       Object out = options.get("output");
       if(out != null && out instanceof Set){
-        output.put(n, (Set<String>)out);
+        output.put(n, (Set)out);
       }
 
       Object var = options.get("variables");
       if(var != null && var instanceof Set){
-        variables.put(n, (Set<String>)var);
+        variables.put(n, (Set)var);
       }
 
       queue.add(n);
@@ -478,7 +478,7 @@ public class GraphAnalyser {
 
     Map<String, String> pred = new HashMap<>();
 
-    Stack<String> stack = new Stack<>();
+    ArrayDeque<String> stack = new ArrayDeque<>();
     Set<String> onlyCycle = new HashSet<>();
     stack.add(start);
 

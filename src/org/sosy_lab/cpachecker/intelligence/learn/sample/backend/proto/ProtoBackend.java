@@ -29,8 +29,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.ISampleBackend;

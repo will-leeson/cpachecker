@@ -41,7 +41,6 @@ import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.StaticGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class WLFeatureModel {

@@ -39,6 +39,7 @@ import org.sosy_lab.common.configuration.AnnotatedValue;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
+import org.sosy_lab.common.configuration.Options;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
@@ -46,6 +47,7 @@ import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
 
+@Options(prefix = "abstractPredictiveOracle")
 public abstract class APredictiveOracle implements IConfigOracle {
   @Option(secure = true,
       description = "file path to label-path mapping")

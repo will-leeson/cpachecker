@@ -27,11 +27,11 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import org.sosy_lab.common.ShutdownNotifier;
 
 public class TarjanDominator implements IDominator {
@@ -85,7 +85,7 @@ public class TarjanDominator implements IDominator {
 
   private void dfs() throws InterruptedException {
     this.index = HashBiMap.create();
-    Stack<String> stack = new Stack<>();
+    ArrayDeque<String> stack = new ArrayDeque<>();
     stack.add(start);
 
     int i = 0;
@@ -233,9 +233,9 @@ public class TarjanDominator implements IDominator {
 
     private void compress(String v){
 
-      Stack<String> toCompress = new Stack<>();
+      ArrayDeque<String> toCompress = new ArrayDeque<>();
       toCompress.add(v);
-      Stack<String> process = new Stack<>();
+      ArrayDeque<String> process = new ArrayDeque<>();
 
       while(!toCompress.isEmpty()){
         String act = toCompress.pop();

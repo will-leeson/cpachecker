@@ -35,7 +35,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -127,7 +130,7 @@ public class LinearPretrainedType implements IBinaryPredictorType {
     });
     Gson gson = builder.create();
     try {
-      TrainModel model = gson.fromJson(new FileReader(p.toFile()), TrainModel.class);
+      TrainModel model = gson.fromJson(Files.newBufferedReader(p.toFile().toPath(), Charset.forName("UTF-8")), TrainModel.class);
 
       alpha = engine.zeros(model.getTable().size(), model.getFeatureSize() + 1);
 
@@ -150,9 +153,10 @@ public class LinearPretrainedType implements IBinaryPredictorType {
 
 
     } catch (FileNotFoundException pE) {
-      pE.printStackTrace();
+      System.out.println(pE.getMessage());
+    } catch (IOException pE) {
+      System.out.println(pE.getMessage());
     }
-
 
 
   }

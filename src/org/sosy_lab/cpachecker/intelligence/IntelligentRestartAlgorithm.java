@@ -84,7 +84,6 @@ import org.sosy_lab.cpachecker.exceptions.CounterexampleAnalysisFailed;
 import org.sosy_lab.cpachecker.exceptions.RefinementFailedException;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.FeatureRegistry;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.SampleRegistry;
-import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.CINBackend;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.ISampleBackend;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.InMemBackend;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.proto.ProtoBackend;

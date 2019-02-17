@@ -85,9 +85,9 @@ public class RPCLearner implements IRankLearner {
       return rankings;
 
     } catch (InterruptedException pE) {
-      pE.printStackTrace();
+      System.out.println(pE.getMessage());
     } catch (ExecutionException pE) {
-      pE.printStackTrace();
+      System.out.println(pE.getMessage());
     }
 
     return new ArrayList<>();

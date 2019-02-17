@@ -24,18 +24,14 @@
 package org.sosy_lab.cpachecker.intelligence.graph;
 
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -227,6 +223,7 @@ public class StructureGraph {
               .flatMap(Collection::stream);
     }
 
+    @Override
     public String toString(){
       String s =  "Graph (Nodes "+nodes().size()+"):\n";
       for(Cell<String, String, Map<String, GEdge>> cell: edges.cellSet()){
@@ -303,7 +300,7 @@ public class StructureGraph {
       }
 
       int counter = 0;
-      Stack<String> stack = new Stack<>();
+      ArrayDeque<String> stack = new ArrayDeque<>();
       stack.push(startId);
 
       while (!stack.isEmpty()){
@@ -362,7 +359,7 @@ public class StructureGraph {
 
     }
 
-    private class DFSReprNode{
+    private static class DFSReprNode{
 
       public DFSReprNode(
           int pSourceIndex,

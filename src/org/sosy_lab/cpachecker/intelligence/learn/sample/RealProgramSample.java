@@ -23,7 +23,6 @@
  */
 package org.sosy_lab.cpachecker.intelligence.learn.sample;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

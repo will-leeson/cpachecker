@@ -28,15 +28,11 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
 
 public class IterativeDominator implements IDominator {
 
@@ -96,7 +92,7 @@ public class IterativeDominator implements IDominator {
     if(!rpost.isEmpty())return;
 
     Set<String> seen = new HashSet<>();
-    Stack<String> stack = new Stack<>();
+    ArrayDeque<String> stack = new ArrayDeque<>();
     int count = navigator.nodes().size();
     counter = count;
 

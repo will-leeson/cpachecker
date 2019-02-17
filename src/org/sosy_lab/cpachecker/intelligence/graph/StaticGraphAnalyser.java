@@ -41,8 +41,8 @@ import org.sosy_lab.cpachecker.intelligence.graph.dominator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.InverseGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IterativeDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.SGraphNavigator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.TarjanDominator;
 
+@Deprecated
 public class StaticGraphAnalyser {
 
   public static void pruneGraph(StructureGraph pGraph){

@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.sosy_lab.cpachecker.intelligence.graph.CFGEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class SGraphNavigator implements IGraphNavigator {

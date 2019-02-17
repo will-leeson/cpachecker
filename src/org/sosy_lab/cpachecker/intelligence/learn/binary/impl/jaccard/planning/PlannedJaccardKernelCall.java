@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import net.bytebuddy.implementation.bind.annotation.Empty;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.EmptySample;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IFeature;

@@ -33,8 +33,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.Map.Entry;
@@ -108,13 +110,18 @@ public class JaccardPretrainedType implements IBinaryPredictorType {
     Gson gson = builder.create();
 
     try {
-      TrainJaccModel model = gson.fromJson(new FileReader(p.toFile()), TrainJaccModel.class);
+      InputStreamReader reader = new InputStreamReader(
+          new FileInputStream(p.toFile()), "UTF-8"
+      );
+      TrainJaccModel model = gson.fromJson(reader, TrainJaccModel.class);
       config = model.getTable();
     }catch(JsonSyntaxException pE){
-      pE.printStackTrace();
+      System.out.println(pE.getMessage());
       config = HashBasedTable.create();
     } catch (FileNotFoundException pE) {
-      pE.printStackTrace();
+      System.out.println(pE.getMessage());
+    } catch (UnsupportedEncodingException pE) {
+      System.out.println(pE.getMessage());
     }
 
 

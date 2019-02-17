@@ -96,7 +96,7 @@ public class OracleFactory {
             logger, config, pShutdownNotifier, configPaths, pSampleRegistry, pCFA, PredictorFactory.getInstance()
         );
 
-        return new ManagedOracle(factory);
+        return new ManagedOracle(config, factory);
 
       }
 

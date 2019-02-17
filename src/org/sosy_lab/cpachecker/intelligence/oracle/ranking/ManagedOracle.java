@@ -36,6 +36,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import org.sosy_lab.common.configuration.AnnotatedValue;
+import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
 import org.sosy_lab.common.configuration.Options;
@@ -82,9 +83,9 @@ public class ManagedOracle implements IConfigOracle {
 
   private PeekingIterator<AnnotatedValue<Path>> unknownIterator;
 
-  public ManagedOracle(PackedPredictorFactory pFactory) throws InvalidConfigurationException {
+  public ManagedOracle(Configuration config, PackedPredictorFactory pFactory) throws InvalidConfigurationException {
 
-    pFactory.getConfig().inject(this);
+    config.inject(this);
     logger = pFactory.getLogger();
     initLabelToPath(pFactory.getConfigPaths());
     manager = buildManager(pFactory);

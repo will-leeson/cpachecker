@@ -165,7 +165,7 @@ public class GraphGenAlgorithm implements Algorithm {
 
   }
 
-  private class EdgeWriter{
+  private static class EdgeWriter{
 
     Map<String, Integer> index = new HashMap<>();
     int counter = 0;

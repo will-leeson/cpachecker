@@ -23,6 +23,7 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,13 +33,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
-import java.util.regex.Matcher;
 
 public class SCCUtil {
 
   private StructureGraph graph;
 
-  private Stack<SCCNode> stack;
+  private ArrayDeque<SCCNode> stack;
   private Map<String, SCCNode> nodeMap = new HashMap<>();
   private int pubIndex = 0;
 
@@ -59,7 +59,7 @@ public class SCCUtil {
     if(sccs != null)return sccs;
 
     sccs = new ArrayList<>();
-    stack = new Stack<>();
+    stack = new ArrayDeque<>();
 
 
     for(String vId: graph.nodes()) {
@@ -127,7 +127,7 @@ public class SCCUtil {
 
   }
 
-  private class SCCNode{
+  private static class SCCNode{
 
     @Override
     public boolean equals(Object pO) {
@@ -160,7 +160,7 @@ public class SCCUtil {
 
   }
 
-  public class SCC{
+  public static class SCC{
 
     public Set<String> getNodes() {
       return nodes;
