@@ -24,13 +24,20 @@
 package org.sosy_lab.cpachecker.intelligence.graph;
 
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class StructureGraph {
 
@@ -40,12 +47,14 @@ public class StructureGraph {
 
     private Map<String, GNode> nodes;
     private Table<String, String, Map<String, GEdge>> edges;
+    private Table<String, String, Map<String, GEdge>> reverseEdges;
 
     private int lastGen = 0;
 
     public StructureGraph(){
       nodes = new HashMap<>();
       edges = HashBasedTable.create();
+      reverseEdges = HashBasedTable.create();
     }
 
     public boolean addNode(String id){
@@ -70,12 +79,15 @@ public class StructureGraph {
       String source = e.getSource().getId();
 
       if(!edges.contains(source, sink)){
-        edges.put(source, sink, new HashMap<>());
+        Map<String, GEdge> map = new HashMap<>();
+        edges.put(source, sink, map);
+        reverseEdges.put(sink, source, map);
       }
       Map<String, GEdge> edge = edges.get(source, sink);
 
       if(edge.containsKey(e.getId()))return  false;
       edge.put(e.getId(), e);
+
       return true;
     }
 
@@ -110,26 +122,28 @@ public class StructureGraph {
       return addEdge(new SEdge(nodes.get(source), nodes.get(target)));
     }
 
-    public Set<GEdge> getIngoing(String target){
-        Map<String, Map<String, GEdge>> E = edges.column(target);
-        Set<GEdge> set = new HashSet<>();
+    public boolean addDummyEdge(String source, String target){
+      if(!nodes.containsKey(source))return false;
+      if(!nodes.containsKey(target))return false;
+      return addEdge(new DummyEdge(nodes.get(source), nodes.get(target)));
+    }
 
-        for(Map<String, GEdge> m: E.values()){
-          set.addAll(m.values());
-        }
+    public Stream<GEdge> getIngoingStream(String target){
+      return reverseEdges.row(target).values().stream()
+          .map(m -> m.values()).flatMap(Collection::stream);
+    }
 
-        return set;
+    public Set<GEdge> getIngoing(String target) {
+      return getIngoingStream(target).collect(Collectors.toSet());
+    }
+
+    public Stream<GEdge> getOutgoingStream(String source){
+      return edges.row(source).values().stream()
+          .map(m -> m.values()).flatMap(Collection::stream);
     }
 
     public Set<GEdge> getOutgoing(String source){
-      Map<String, Map<String, GEdge>> E = edges.row(source);
-      Set<GEdge> set = new HashSet<>();
-
-      for(Map<String, GEdge> m: E.values()){
-        set.addAll(m.values());
-      }
-
-      return set;
+      return getOutgoingStream(source).collect(Collectors.toSet());
     }
 
     public GEdge getEdge(String source, String target, String id){
@@ -178,6 +192,7 @@ public class StructureGraph {
           m.remove(pGEdge.getId());
           if(m.isEmpty()){
             edges.remove(pGEdge.getSource().getId(), pGEdge.getSink().getId());
+            reverseEdges.remove(pGEdge.getSink().getId(), pGEdge.getSource().getId());
           }
           return true;
         }
@@ -204,6 +219,12 @@ public class StructureGraph {
 
     public Set<String> nodes(){
       return nodes.keySet();
+    }
+
+    public Stream<GEdge> edgeStream(){
+      return edges.values().stream()
+              .map(M -> M.values())
+              .flatMap(Collection::stream);
     }
 
     public String toString(){
@@ -235,7 +256,9 @@ public class StructureGraph {
         if(n.startsWith("N")){
 
           for(GEdge e: this.getOutgoing(n)){
-            if(e instanceof CFGEdge){
+            if(e instanceof DummyEdge){
+              s += n+" -> "+e.getSink().getId()+"[color=grey];\n";
+            }else if(e instanceof CFGEdge){
               s += n+" -> "+e.getSink().getId()+";\n";
             }
             if(e instanceof DDEdge){
@@ -255,6 +278,7 @@ public class StructureGraph {
 
       return s + "}";
     }
+
 
     public String toDFSRepresentation(){
       Map<String, Integer> index = new HashMap<>();

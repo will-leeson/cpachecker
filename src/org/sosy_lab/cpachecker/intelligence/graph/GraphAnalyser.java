@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,18 +23,22 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph;
 
-
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.logging.Level;
 import org.sosy_lab.common.ShutdownNotifier;
+import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.graph.SCCUtil.SCC;
+import org.sosy_lab.cpachecker.intelligence.graph.dominator.CachedGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.InverseGraphNavigator;
@@ -43,110 +47,109 @@ import org.sosy_lab.cpachecker.intelligence.graph.dominator.TarjanDominator;
 
 public class GraphAnalyser {
 
-  public static void pruneGraph(StructureGraph pGraph){
-    //pruneUnusedGlobal(pGraph);
-    pruneFloating(pGraph);
-  }
+  private LogManager logger;
+  private StructureGraph graph;
+  private ShutdownNotifier shutdownNotifier;
+
+  private String startNode;
+  private String endNode;
+  private IGraphNavigator navigator;
 
 
-  private static void pruneUnusedGlobal(StructureGraph pGraph){
+  public GraphAnalyser(LogManager pLogger, StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+      throws InterruptedException {
+    logger = pLogger;
+    graph = pGraph;
+    shutdownNotifier = pShutdownNotifier;
 
-    Set<String> globalIds = new HashSet<>();
-    Set<String> localIds = new HashSet<>();
+    initNavigator();
 
-    for(String nodeId: pGraph.nodes()){
-      if(nodeId.startsWith("N")) {
+    for(String n: navigator.nodes()){
 
-        GNode node = pGraph.getNode(nodeId);
+      if(pShutdownNotifier != null){
+        pShutdownNotifier.shutdownIfNecessary();
+      }
 
-        if(node.getLabel().toLowerCase().contains("global")){
-          globalIds.add(nodeId);
-        }else{
-          localIds.add(nodeId);
-        }
-
-
+      if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
+        startNode = n;
+        break;
       }
     }
 
-
+    endNode = findEndOrFix();
+    initNavigator();
 
   }
 
+  public GraphAnalyser(LogManager pLogger, StructureGraph pGraph) throws InterruptedException {
+    this(pLogger, pGraph, null);
+  }
 
-  private static void pruneFloating(StructureGraph pGraph){
+
+  private void initNavigator(){
+    navigator = new CachedGraphNavigator(new SGraphNavigator(graph));
+  }
+
+
+  private void pruneFloating(){
     //Floating nodes
 
     Set<String> floatingNodes = new HashSet<>();
 
-    for(String nodeId: pGraph.nodes()){
-      GNode node = pGraph.getNode(nodeId);
+    for(String nodeId: navigator.nodes()){
+      GNode node = graph.getNode(nodeId);
 
-      if(!node.getLabel().equalsIgnoreCase("START") &&
-          !nodeId.startsWith("A") && pGraph.getIngoing(nodeId).isEmpty()){
+      if(!node.getLabel().equalsIgnoreCase("START") && navigator.predecessor(nodeId).isEmpty()){
         floatingNodes.add(nodeId);
       }
 
     }
 
     for(String nodeId: floatingNodes)
-      pGraph.removeNode(nodeId);
+      graph.removeNode(nodeId);
+
+    initNavigator();
   }
 
-  public static void applyDummyEdges(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+  public void pruneGraph(){
+    pruneFloating();
+  }
+
+  public void applyDummyEdges()
       throws InterruptedException {
 
-    String endId = null;
-
-    for(String id: pGraph.nodes()){
-      GNode node = pGraph.getNode(id);
-
-      if(pShutdownNotifier != null)
-        pShutdownNotifier.shutdownIfNecessary();
-
-      if(node.getLabel().equalsIgnoreCase(ASTNodeLabel.END.name())){
-        endId = id;
-        break;
-      }
-    }
-
-    if(endId == null){
-      endId = pGraph.genId("N");
-      pGraph.addNode(endId);
-    }
-
-    if(pShutdownNotifier != null)
-      pShutdownNotifier.shutdownIfNecessary();
+    if(shutdownNotifier != null)
+      shutdownNotifier.shutdownIfNecessary();
 
     Set<GEdge> toDelete = new HashSet<>();
 
-    for(String id: pGraph.nodes()){
-      GNode node = pGraph.getNode(id);
+    for(String id: graph.nodes()){
+      GNode node = graph.getNode(id);
 
-      if(pShutdownNotifier != null)
-        pShutdownNotifier.shutdownIfNecessary();
+      if(shutdownNotifier != null)
+        shutdownNotifier.shutdownIfNecessary();
 
-      if(id.equalsIgnoreCase(endId))continue;
+      if(id.equalsIgnoreCase(endNode))continue;
 
-      if(pGraph.getOutgoing(id).isEmpty() || (node.getLabel().contains("FUNC_CALL") && node.getLabel().contains("VERIFIER_ERROR"))){
+      if(graph.getOutgoing(id).isEmpty() || (node.getLabel().contains("FUNC_CALL") && node.getLabel().contains("VERIFIER_ERROR"))){
 
-        for(GEdge e: pGraph.getOutgoing(id)){
+        for(GEdge e: graph.getOutgoing(id)){
           toDelete.add(e);
         }
 
-        pGraph.addCFGEdge(id, endId);
+        graph.addCFGEdge(id, endNode);
 
       }
 
     }
 
     for(GEdge delete: toDelete)
-      pGraph.removeEdge(delete);
+      graph.removeEdge(delete);
 
-    if(pShutdownNotifier != null)
-      pShutdownNotifier.shutdownIfNecessary();
+    if(shutdownNotifier != null)
+      shutdownNotifier.shutdownIfNecessary();
 
-    SCCUtil sccUtil = new SCCUtil(pGraph);
+    SCCUtil sccUtil = new SCCUtil(graph);
 
     for(SCC scc: sccUtil.getStronglyConnectedComponents()){
 
@@ -158,10 +161,10 @@ public class GraphAnalyser {
       boolean terminate = false;
 
       for(String nId: scc.getNodes()){
-        if(pShutdownNotifier != null)
-          pShutdownNotifier.shutdownIfNecessary();
+        if(shutdownNotifier != null)
+          shutdownNotifier.shutdownIfNecessary();
 
-        for(GEdge e: pGraph.getOutgoing(nId)){
+        for(GEdge e: graph.getOutgoing(nId)){
           if(!scc.getNodes().contains(e.getSink().getId())){
             terminate = true;
             break;
@@ -171,7 +174,7 @@ public class GraphAnalyser {
         if(terminate)
           break;
 
-        Set<GEdge> out = pGraph.getOutgoing(nId);
+        Set<GEdge> out = graph.getOutgoing(nId);
 
         if(out.size() < 2){
           sourceId = nId;
@@ -181,113 +184,290 @@ public class GraphAnalyser {
       }
 
       if(!terminate){
-        pGraph.addCFGEdge(sourceId, endId);
+        graph.addCFGEdge(sourceId, endNode);
       }
 
+    }
+
+    initNavigator();
+
+
+  }
+
+
+  private Set<String> diffComponent(Set<String> pNodes,
+                                 IGraphNavigator pGraphNavigator,
+                                 String start){
+
+    Set<String> nodes = new HashSet<>(pNodes);
+    Stack<String> search = new Stack<>();
+    search.push(start);
+
+    while(!search.isEmpty()){
+      String c = search.pop();
+
+      if(!nodes.remove(c))
+        continue;
+
+      for(String s : pGraphNavigator.successor(c))
+        search.add(s);
 
     }
 
-
-
+    return nodes;
   }
 
+  private String connectComponent(
+      IGraphNavigator pGraphNavigator,
+      String start, boolean forward){
 
-  public static void applyDD(StructureGraph pGraph){
-    try {
-      applyDD(pGraph, null);
-    } catch (InterruptedException pE) {
+    Set<String> diff = diffComponent(
+        pGraphNavigator.nodes(), pGraphNavigator, start
+    );
+
+    if(!diff.isEmpty()){
+      String id = graph.genId("N");
+      graph.addNode(id, graph.getNode(start).getLabel());
+
+      if(forward)
+        graph.addDummyEdge(id, start);
+      else
+        graph.addDummyEdge(start, id);
+
+
+      start = id;
     }
+
+
+    List<String> discComp = new ArrayList<>();
+
+    while (!diff.isEmpty()){
+
+      int size = diff.size();
+
+      String minNode = null;
+      int min = Integer.MAX_VALUE;
+
+      for(String d : diff){
+        int pred = pGraphNavigator.predecessor(d).size();
+        if(pred < min){
+          minNode = d;
+          min = pred;
+        }
+      }
+
+      diff = diffComponent(diff, pGraphNavigator, minNode);
+
+      discComp.add(graph.getNode(minNode).getLabel()+"-"+(size - diff.size()));
+
+      if(forward)
+        graph.addDummyEdge(start, minNode);
+      else
+        graph.addDummyEdge(minNode, start);
+
+    }
+
+    if(!discComp.isEmpty()){
+
+      String s = "Found disconnected components: ";
+      for(String size : discComp)
+        s = s + "[-"+size+"-] ";
+
+      logger.log(Level.INFO, s);
+
+    }
+
+    return start;
+
   }
 
-  public static void applyDD(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
-      throws InterruptedException {
-    applyDD(pGraph, pGraph.nodes().size() * 10, pShutdownNotifier);
+
+  public void connectComponents(){
+
+    startNode = connectComponent(
+        navigator, startNode, true
+    );
+
+    endNode = connectComponent(
+        new InverseGraphNavigator(navigator), endNode, false
+    );
+
+    initNavigator();
   }
 
+  public void pruneBlank(){
 
-  public static void applyDD(StructureGraph pGraph, int cooldown, ShutdownNotifier pShutdownNotifier)
-      throws InterruptedException {
+    for(String n : navigator.nodes()){
 
-    Table<String, String, String> lastDef = HashBasedTable.create();
+      if(graph.getNode(n).getLabel().equals(ASTNodeLabel.BLANK.name())){
+
+        Set<String> pred = navigator.predecessor(n);
+        Set<String> succ = navigator.successor(n);
+
+        graph.removeNode(n);
+        for(String p : pred){
+          for(String s : succ){
+            graph.addCFGEdge(p, s);
+          }
+        }
+
+      }
+
+    }
+    initNavigator();
+
+  }
+
+  private Map<String, Integer> rpo(){
+
     Set<String> seen = new HashSet<>();
     Stack<String> stack = new Stack<>();
+    Map<String, Integer> rpo = new HashMap<>();
+    int count = navigator.nodes().size();
 
-    for(String n: pGraph.nodes()){
+    stack.push(startNode);
 
-      if(pShutdownNotifier != null){
-        pShutdownNotifier.shutdownIfNecessary();
+    while(!stack.isEmpty()){
+
+      while(!stack.isEmpty() && seen.contains(stack.peek())){
+        String s = stack.pop();
+        if(!rpo.containsKey(s))
+          rpo.put(s, count--);
       }
 
-      if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
-        stack.add(n);
-        break;
+      if(stack.isEmpty())break;
+
+      String current = stack.peek();
+      seen.add(current);
+
+      for(String succesor : navigator.successor(current)){
+        if(!seen.contains(succesor))
+          stack.push(succesor);
       }
     }
 
-    int cooling = cooldown;
+    return rpo;
 
-    while(cooling > 0 && !stack.isEmpty()){
-
-      if(pShutdownNotifier != null){
-        pShutdownNotifier.shutdownIfNecessary();
-      }
-
-      cooling--;
-
-      String position = stack.pop();
-      Map<String, Object> options = pGraph.getNode(position).getOptions();
-
-      if(options.containsKey("variables")){
-        Object o = options.get("variables");
-        if(o instanceof Set) {
-          for (String v : (Set<String>) o) {
-            String last = lastDef.get(position, v);
-            if (last != null && pGraph.addDDEdge(position, last)) {
-              cooling = cooldown;
-            }
-          }
-        }
-      }
-
-      Map<String, String> newDef = new HashMap<>(lastDef.row(position));
-      if(options.containsKey("output")){
-        Object o = options.get("output");
-        if(o instanceof Set) {
-          for (String v : (Set<String>) o) {
-            newDef.put(v, position);
-          }
-        }
-      }
-
-      for(GEdge e: pGraph.getOutgoing(position)){
-
-        if(pShutdownNotifier != null){
-          pShutdownNotifier.shutdownIfNecessary();
-        }
-
-        if(e instanceof CFGEdge){
-          String next = e.getSink().getId();
-          boolean change = !seen.contains(next);
-          for(Entry<String, String> def: newDef.entrySet()){
-            String v = def.getKey();
-            change |= !lastDef.contains(next, v) || !lastDef.get(next, v).equals(def.getValue());
-            lastDef.put(next, v, def.getValue());
-          }
-
-          if(change){
-            seen.add(next);
-            stack.add(next);
-          }
-
-        }
-      }
-
-
-    }
   }
 
 
-  private static Set<String> findOnlyCyle(StructureGraph pGraph, String start){
+  public void applyDD() throws InterruptedException {
+
+    Map<String, Integer> rpo = rpo();
+
+    Map<String, Set<String>> output = new HashMap<>();
+    Map<String, Set<String>> variables = new HashMap<>();
+
+    PriorityQueue<String> queue = new PriorityQueue<>(
+        new Comparator<String>() {
+          @Override
+          public int compare(String o1, String o2) {
+            return Integer.compare(rpo.get(o1), rpo.get(o2));
+          }
+        }
+    );
+
+    for(String n : navigator.nodes()){
+
+      if(shutdownNotifier != null)
+        shutdownNotifier.shutdownIfNecessary();
+
+      Map<String, Object> options = graph.getNode(n).getOptions();
+
+      Object out = options.get("output");
+      if(out != null && out instanceof Set){
+        output.put(n, (Set<String>)out);
+      }
+
+      Object var = options.get("variables");
+      if(var != null && var instanceof Set){
+        variables.put(n, (Set<String>)var);
+      }
+
+      queue.add(n);
+    }
+
+
+    Map<String, Map<String, Set<String>>> reachingDef = new HashMap<>();
+
+
+    while (!queue.isEmpty()){
+
+        if(shutdownNotifier != null)
+          shutdownNotifier.shutdownIfNecessary();
+
+        String current = queue.poll();
+
+        Map<String, Set<String>> last =
+            new HashMap<>(reachingDef.getOrDefault(current, new HashMap<>()));
+
+        Set<String> out = output.getOrDefault(current, new HashSet<>());
+
+        //Al-Phi
+        for (String variable : out) {
+          //Kill and generate...
+          Set<String> pointer = new HashSet<>();
+          pointer.add(current);
+          last.put(variable, pointer);
+        }
+
+        for(String successor : navigator.successor(current)) {
+
+          boolean change = false;
+
+          if(!reachingDef.containsKey(successor)){
+            reachingDef.put(successor, last);
+            change = true;
+          }else{
+
+            Map<String, Set<String>> next = reachingDef.get(successor);
+
+            for(Entry<String, Set<String>> k : last.entrySet()){
+
+              if(!next.containsKey(k.getKey())){
+                next.put(k.getKey(), k.getValue());
+                change = true;
+              }else{
+
+                Set<String> pointer = next.get(k.getKey());
+
+                for(String i : k.getValue()){
+                  change |= pointer.add(i);
+                }
+              }
+            }
+          }
+
+          if (change) {
+            queue.add(successor);
+          }
+
+        }
+      }
+
+      for(Entry<String, Set<String>> use : variables.entrySet()){
+
+        if(shutdownNotifier != null)
+          shutdownNotifier.shutdownIfNecessary();
+
+        Map<String, Set<String>> reaching = reachingDef.get(use.getKey());
+
+        if(reaching == null)continue;
+
+        for(String v : use.getValue()){
+
+          for(String pointer : reaching.getOrDefault(v, new HashSet<>())){
+            graph.addDDEdge(pointer, use.getKey());
+          }
+
+        }
+
+
+      }
+
+  }
+
+  private Set<String> findOnlyCyle(String start){
 
     Map<String, String> pred = new HashMap<>();
 
@@ -310,23 +490,15 @@ public class GraphAnalyser {
 
       Set<String> cylces = new HashSet<>();
 
-      for(GEdge e: pGraph.getOutgoing(s)){
-        if(e instanceof CFGEdge){
-          String next = e.getSink().getId();
-
-          if(path.contains(next)){
-            cylces.add(next);
-          }
-
+      for(String next: navigator.successor(s)){
+        if(path.contains(next)){
+          cylces.add(next);
         }
       }
 
       boolean oCycle = cylces.size() > 0;
 
-      for(GEdge e: pGraph.getOutgoing(s)){
-        if(e instanceof CFGEdge){
-          String next = e.getSink().getId();
-
+      for(String next: navigator.successor(s)){
           if(!pred.containsKey(next)){
             stack.add(next);
             pred.put(next, s);
@@ -334,8 +506,6 @@ public class GraphAnalyser {
 
           if(!cylces.contains(next))
             oCycle = false;
-
-        }
       }
 
       if(oCycle)
@@ -347,17 +517,14 @@ public class GraphAnalyser {
 
   }
 
-  private static String findEndOrFix(StructureGraph pGraph){
-    String start = "";
+  private String findEndOrFix(){
+    String start = startNode;
     String end = "";
 
-    for(String n: pGraph.nodes()){
-      if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.END.name())){
+    for(String n: navigator.nodes()){
+      if(graph.getNode(n).getLabel().equals(ASTNodeLabel.END.name())){
         end = n;
         break;
-      }
-      if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
-        start = n;
       }
     }
 
@@ -365,104 +532,64 @@ public class GraphAnalyser {
       return end;
     }
 
-    Set<String> possibleEnds = findOnlyCyle(pGraph, start);
+    Set<String> possibleEnds = findOnlyCyle(start);
 
-
-    String id = pGraph.genId("N");
-    pGraph.addNode(id, ASTNodeLabel.END.name());
+    String id = graph.genId("N");
+    graph.addNode(id, ASTNodeLabel.END.name());
 
     for(String n: possibleEnds){
-      pGraph.addCFGEdge(n, id);
+      graph.addCFGEdge(n, id);
     }
+
+    initNavigator();
 
     return id;
   }
 
 
-  public static void applyCD(StructureGraph pGraph){
-    try {
-      applyCD(pGraph, null);
-    } catch (InterruptedException pE) {
-    }
-  }
+  public void applyCD() throws InterruptedException {
 
+    IGraphNavigator navi = new InverseGraphNavigator(navigator);
+    IDominator dominator = new TarjanDominator(navi, endNode);
 
-  public static void applyCD(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
-      throws InterruptedException {
+    for(String n : navi.nodes()){
+      Set<String> pred = navi.predecessor(n);
 
-    String end = findEndOrFix(pGraph);
+      if(shutdownNotifier != null)
+        shutdownNotifier.shutdownIfNecessary();
 
-    if(pShutdownNotifier != null){
-      pShutdownNotifier.shutdownIfNecessary();
-    }
+      if(pred.size() <= 1)continue;
+      if(graph.getNode(n).getLabel().equals(ASTNodeLabel.START.name()))continue;
 
-    IGraphNavigator navigator = new InverseGraphNavigator(
-        new SGraphNavigator(pGraph)
-    );
+      String idom = dominator.getIDom(n);
 
-    IDominator dominator = new TarjanDominator(navigator, end);
+      for(String p : pred){
 
-    Stack<CDTravelor> stack = new Stack<>();
-    Set<String> branches = new HashSet<>();
-    Set<String> seen = new HashSet<>();
+        String runner = p;
 
-    for(String n: navigator.nodes()){
-
-      if(pShutdownNotifier != null){
-        pShutdownNotifier.shutdownIfNecessary();
-      }
-
-      if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
-        stack.add(new CDTravelor(n, new HashSet<>()));
-      }
-      if(navigator.predecessor(n).size() >= 1){
-        branches.add(n);
-      }
-    }
-
-    while(!stack.isEmpty()){
-
-      if(pShutdownNotifier != null){
-        pShutdownNotifier.shutdownIfNecessary();
-      }
-
-      CDTravelor travelor = stack.pop();
-
-      Set<String> nPost = dominator.getDom(travelor.pos);
-      nPost.retainAll(travelor.lastPostDomination);
-      nPost.retainAll(branches);
-
-      Set<String> rest = new HashSet<>(travelor.lastPostDomination);
-      rest.removeAll(nPost);
-
-      for(String r: rest){
-        if(!r.equals(travelor.pos)){
-          pGraph.addCDEdge(travelor.pos, r);
+        while (!runner.equals(idom)){
+          graph.addCDEdge(n , runner);
+          runner = dominator.getIDom(runner);
         }
+
+
       }
 
-      if(seen.contains(travelor.pos))
-        continue;
-      seen.add(travelor.pos);
-
-      for(String next: navigator.predecessor(travelor.pos)){
-        stack.add(new CDTravelor(next, new HashSet<>(nPost)));
-      }
 
     }
-  }
 
-  private static class CDTravelor{
-    String pos;
-    Set<String> lastPostDomination;
-
-    public CDTravelor(String pPos, Set<String> pLastPostDomination) {
-      pos = pPos;
-      lastPostDomination = pLastPostDomination;
-      lastPostDomination.add(pos);
-    }
 
   }
+
+  public void defaultAnalysis() throws InterruptedException {
+    pruneBlank();
+    connectComponents();
+    applyDummyEdges();
+    applyDD();
+    applyCD();
+  }
+
+
+
 
 }
-

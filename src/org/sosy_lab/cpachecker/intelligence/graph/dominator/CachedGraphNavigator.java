@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,44 +23,42 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph.dominator;
 
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import org.sosy_lab.cpachecker.intelligence.graph.CFGEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
-public class SGraphNavigator implements IGraphNavigator {
+public class CachedGraphNavigator implements IGraphNavigator {
+
+  private IGraphNavigator base;
+
+  private Map<String, Set<String>> successor = new HashMap<>();
+  private Map<String, Set<String>> predecessor = new HashMap<>();
 
 
-  private StructureGraph graph;
-
-  public SGraphNavigator(StructureGraph pGraph) {
-    graph = pGraph;
+  public CachedGraphNavigator(IGraphNavigator pBase) {
+    base = pBase;
   }
 
   @Override
   public Set<String> successor(String node) {
-    if(graph.getNode(node) == null)return new HashSet<>();
-    return graph.getOutgoingStream(node).filter(edge -> edge instanceof CFGEdge)
-              .map(edge -> edge.getSink().getId()).collect(Collectors.toSet());
+
+    if(!successor.containsKey(node)){
+      successor.put(node, base.successor(node));
+    }
+
+    return successor.get(node);
   }
 
   @Override
   public Set<String> predecessor(String node) {
-    if(graph.getNode(node) == null)return new HashSet<>();
-    return graph.getIngoingStream(node).filter(edge -> edge instanceof CFGEdge)
-        .map(edge -> edge.getSource().getId()).collect(Collectors.toSet());
+    if(!predecessor.containsKey(node)){
+      predecessor.put(node, base.predecessor(node));
+    }
+    return predecessor.get(node);
   }
 
   @Override
   public Set<String> nodes() {
-    Set<String> out = new HashSet<>();
-
-    for(String node: graph.nodes())
-      if(node.startsWith("N"))
-        out.add(node);
-
-    return out;
+    return base.nodes();
   }
 }

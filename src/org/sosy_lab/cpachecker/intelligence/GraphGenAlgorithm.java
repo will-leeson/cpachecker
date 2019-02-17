@@ -23,13 +23,18 @@
  */
 package org.sosy_lab.cpachecker.intelligence;
 
-import java.io.BufferedWriter;
-import java.io.File;
+import com.google.common.base.Stopwatch;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -42,6 +47,8 @@ import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
+import org.sosy_lab.cpachecker.intelligence.graph.CDEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
@@ -76,17 +83,34 @@ public class GraphGenAlgorithm implements Algorithm {
   public AlgorithmStatus run(ReachedSet reachedSet)
       throws CPAException, InterruptedException, CPAEnabledAnalysisPropertyViolationException {
 
+    Stopwatch stopwatch = Stopwatch.createStarted();
+
     logger.log(Level.INFO, "Start CFA processing....");
     StructureGraph graph = new CFAProcessor().process(cfa, astDepth);
 
+    System.out.println("Time for CFA: "+stopwatch.elapsed());
+    stopwatch.reset();
+
+    GraphAnalyser analyser = new GraphAnalyser(logger, graph, notifier);
+
     logger.log(Level.INFO, "Add Dummy edges");
-    GraphAnalyser.applyDummyEdges(graph, notifier);
+    analyser.pruneBlank();
+    analyser.connectComponents();
+    analyser.applyDummyEdges();
+
+    stopwatch.start();
 
     logger.log(Level.INFO, "Add data dependencies");
-    GraphAnalyser.applyDD(graph, notifier);
+    analyser.applyDD();
+
+    System.out.println("Time for DD: "+stopwatch.elapsed());
+    stopwatch.reset().start();
 
     logger.log(Level.INFO, "Add control dependencies");
-    GraphAnalyser.applyCD(graph, notifier);
+    analyser.applyCD();
+
+    System.out.println("Time for CD: "+stopwatch.elapsed());
+    stopwatch = stopwatch.reset();
 
     logger.log(Level.INFO, "Write graph to "+output.toString());
     try {
@@ -106,12 +130,81 @@ public class GraphGenAlgorithm implements Algorithm {
       Files.createDirectory(parent);
     }
 
-    BufferedWriter writer = Files.newBufferedWriter(out);
+    EdgeWriter edgeSer = new EdgeWriter();
+
+    String serial = pGraph.edgeStream().map(
+        edge -> edgeSer.write(edge)
+    ).collect(Collectors.joining(", "));
+
+    serial = "["+serial+"]";
+
+    writeWithNIO(out, serial);
+  }
+
+  private void writeWithNIO(Path pPath, String text)
+      throws IOException {
+
+    RandomAccessFile file = null;
+    FileChannel channel = null;
 
     try {
-      writer.write(pGraph.toDFSRepresentation());
+      file = new RandomAccessFile(pPath.toString(), "rw");
+      channel = file.getChannel();
+
+      byte[] bytes = text.getBytes("UTF-8");
+      ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length);
+      byteBuffer.put(bytes);
+      byteBuffer.flip();
+      channel.write(byteBuffer);
     }finally {
-      writer.close();
+      if(file != null)file.close();
+      if(channel != null)channel.close();
+    }
+
+
+
+  }
+
+  private class EdgeWriter{
+
+    Map<String, Integer> index = new HashMap<>();
+    int counter = 0;
+
+    private int index(String s){
+      if(!index.containsKey(s)){
+        index.put(s, counter++);
+      }
+      return index.get(s);
+    }
+
+    public String write(GEdge pGEdge){
+
+      int a = index(pGEdge.getSource().getId());
+      String aLabel = pGEdge.getSource().getLabel();
+
+      int b = index(pGEdge.getSink().getId());
+      String bLabel = pGEdge.getSink().getLabel();
+
+      boolean forward = a <= b;
+      String edgeLabel = pGEdge.getId();
+
+      if(pGEdge instanceof CDEdge){
+
+        Map<String, Object> options = pGEdge.getSource().getOptions();
+        if(options.containsKey("truth")){
+          edgeLabel+= "_"+((boolean)options.get("truth")?"t":"f");
+        }
+
+      }
+
+
+
+      if(forward){
+        return String.format("[%d, %d, \"%s\", \"%s\", \"%s\"]", a, b, aLabel, edgeLabel+"|>", bLabel);
+      }else{
+        return String.format("[%d, %d, \"%s\", \"%s\", \"%s\"]", b, a, bLabel, "<|"+edgeLabel, aLabel);
+      }
+
     }
 
   }

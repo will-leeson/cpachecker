@@ -60,6 +60,7 @@ public class FunctionCallListener extends AEdgeListener {
       if(specialLabel.isPresent())
         label = label + "_" + specialLabel.get();
 
+
       String id = "N"+edge.getPredecessor().getNodeNumber();
       String idS = "N"+edge.getSuccessor().getNodeNumber();
       graph.addNode(id, label);

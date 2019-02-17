@@ -40,7 +40,7 @@ import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.StaticGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class WLFeatureModel {
@@ -190,10 +190,10 @@ public class WLFeatureModel {
       if(iteration == 0){
         return iteration0(pShutdownNotifier);
       }else if(iteration == 1){
-        GraphAnalyser.pruneGraph(graph);
-        GraphAnalyser.applyDummyEdges(graph, pShutdownNotifier);
-        GraphAnalyser.applyDD(graph, pShutdownNotifier);
-        GraphAnalyser.applyCD(graph, pShutdownNotifier);
+        StaticGraphAnalyser.pruneGraph(graph);
+        StaticGraphAnalyser.applyDummyEdges(graph, pShutdownNotifier);
+        StaticGraphAnalyser.applyDD(graph, pShutdownNotifier);
+        StaticGraphAnalyser.applyCD(graph, pShutdownNotifier);
       }
 
       if(pShutdownNotifier != null){
