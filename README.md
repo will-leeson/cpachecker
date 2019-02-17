@@ -91,3 +91,16 @@ There are also additional output files in the directory `output/`:
 Note that not all of these files will be available for all configurations.
 Also some of these files are only produced if an error is found (or vice-versa).
 CPAchecker will overwrite files in this directory!
+
+## Exporting software verification graphs with  PeSCo
+Before we can start the verification process, PeSCo needs a pretrained model.
+PeSCo is able to use one of the shipped pretrained models (resources/Train_Jacc.json).
+In the case that a custom model is needed, PeSCo is able to export an internal 
+representation of a verification task.
+
+Command:
+```commandline
+scripts/cpa.sh -graphgen -setprop graphGen.output=<TARGET_FILE> <SOURCE_FILE>
+```
+
+To train a custom model, refer to [pySVRanker](https://github.com/cedricrupb/pySVRanker).

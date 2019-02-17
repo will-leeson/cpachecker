@@ -56,7 +56,7 @@ public class GraphAnalyser {
   private IGraphNavigator navigator;
 
 
-  public GraphAnalyser(LogManager pLogger, StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+  public GraphAnalyser(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier, LogManager pLogger)
       throws InterruptedException {
     logger = pLogger;
     graph = pGraph;
@@ -81,8 +81,8 @@ public class GraphAnalyser {
 
   }
 
-  public GraphAnalyser(LogManager pLogger, StructureGraph pGraph) throws InterruptedException {
-    this(pLogger, pGraph, null);
+  public GraphAnalyser( StructureGraph pGraph) throws InterruptedException {
+    this(pGraph, null, null);
   }
 
 
@@ -258,7 +258,14 @@ public class GraphAnalyser {
 
       diff = diffComponent(diff, pGraphNavigator, minNode);
 
-      discComp.add(graph.getNode(minNode).getLabel()+"-"+(size - diff.size()));
+      int difference = size - diff.size();
+
+      if(difference == 1){
+        graph.removeNode(minNode);
+        continue;
+      }
+
+      discComp.add(graph.getNode(minNode).getLabel()+"-"+(difference));
 
       if(forward)
         graph.addDummyEdge(start, minNode);
@@ -267,7 +274,7 @@ public class GraphAnalyser {
 
     }
 
-    if(!discComp.isEmpty()){
+    if(logger != null && !discComp.isEmpty()){
 
       String s = "Found disconnected components: ";
       for(String size : discComp)

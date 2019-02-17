@@ -40,6 +40,7 @@ import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.StaticGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
@@ -82,6 +83,7 @@ public class WLFeatureModel {
     private int astDepth;
 
     private StructureGraph graph;
+    private GraphAnalyser analyser;
     private Map<String, String> relabel = new HashMap<>();
     private int iteration = -1;
 
@@ -123,6 +125,15 @@ public class WLFeatureModel {
         graph = new CFAProcessor().process(cfa, astDepth, pShutdownNotifier);
       }
       return graph;
+    }
+
+    private GraphAnalyser getGraphAnalyser(ShutdownNotifier pShutdownNotifier)
+        throws InterruptedException {
+      if(analyser == null) {
+        StructureGraph g = getGraph(pShutdownNotifier);
+        analyser = new GraphAnalyser(g, pShutdownNotifier, null);
+      }
+      return analyser;
     }
 
     private String hash(String str){
@@ -187,13 +198,15 @@ public class WLFeatureModel {
     public Map<String, Integer> iterate(ShutdownNotifier pShutdownNotifier)
         throws InterruptedException {
       iteration++;
+      GraphAnalyser localAnalyser = getGraphAnalyser(pShutdownNotifier);
       if(iteration == 0){
+        localAnalyser.pruneBlank();
+        localAnalyser.connectComponents();
         return iteration0(pShutdownNotifier);
       }else if(iteration == 1){
-        StaticGraphAnalyser.pruneGraph(graph);
-        StaticGraphAnalyser.applyDummyEdges(graph, pShutdownNotifier);
-        StaticGraphAnalyser.applyDD(graph, pShutdownNotifier);
-        StaticGraphAnalyser.applyCD(graph, pShutdownNotifier);
+        localAnalyser.applyDummyEdges();
+        localAnalyser.applyDD();
+        localAnalyser.applyCD();
       }
 
       if(pShutdownNotifier != null){

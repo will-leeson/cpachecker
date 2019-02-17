@@ -141,7 +141,7 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
       return null;
     }
 
-    List<String> out = learner.predict(samples).get(0);
+    List<String> out = predictions.get(0);
 
     if(out.get(out.size() - 1 ).equalsIgnoreCase("Unknown")){
       out.remove(out.size() - 1);

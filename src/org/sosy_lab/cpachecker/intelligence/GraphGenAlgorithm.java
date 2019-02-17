@@ -91,7 +91,7 @@ public class GraphGenAlgorithm implements Algorithm {
     System.out.println("Time for CFA: "+stopwatch.elapsed());
     stopwatch.reset();
 
-    GraphAnalyser analyser = new GraphAnalyser(logger, graph, notifier);
+    GraphAnalyser analyser = new GraphAnalyser(graph, notifier, logger);
 
     logger.log(Level.INFO, "Add Dummy edges");
     analyser.pruneBlank();
