@@ -204,6 +204,7 @@ public class WLFeatureModel {
         return iteration0(pShutdownNotifier);
       }else if(iteration == 1){
         localAnalyser.applyDummyEdges();
+        localAnalyser.pruneGraph();
         localAnalyser.applyDD();
         localAnalyser.applyCD();
       }

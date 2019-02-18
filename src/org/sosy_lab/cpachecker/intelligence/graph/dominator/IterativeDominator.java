@@ -94,7 +94,7 @@ public class IterativeDominator implements IDominator {
     Set<String> seen = new HashSet<>();
     ArrayDeque<String> stack = new ArrayDeque<>();
     int count = navigator.nodes().size();
-    counter = count;
+    counter = count+1;
 
     stack.push(start);
 

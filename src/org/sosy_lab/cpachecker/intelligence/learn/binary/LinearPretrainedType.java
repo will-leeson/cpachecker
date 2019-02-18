@@ -34,7 +34,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
@@ -153,7 +152,7 @@ public class LinearPretrainedType implements IBinaryPredictorType {
 
 
     } catch (FileNotFoundException pE) {
-      System.out.println(pE.getMessage());
+      System.out.println("File not found: "+p.toString());
     } catch (IOException pE) {
       System.out.println(pE.getMessage());
     }

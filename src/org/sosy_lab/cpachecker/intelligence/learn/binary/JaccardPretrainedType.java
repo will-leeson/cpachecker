@@ -119,7 +119,7 @@ public class JaccardPretrainedType implements IBinaryPredictorType {
       System.out.println(pE.getMessage());
       config = HashBasedTable.create();
     } catch (FileNotFoundException pE) {
-      System.out.println(pE.getMessage());
+      System.out.println("File not found: "+p.toString());
     } catch (UnsupportedEncodingException pE) {
       System.out.println(pE.getMessage());
     }

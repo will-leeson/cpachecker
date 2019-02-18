@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.logging.Level;
@@ -42,8 +43,8 @@ import org.sosy_lab.cpachecker.intelligence.graph.dominator.CachedGraphNavigator
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.InverseGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.dominator.IterativeDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.SGraphNavigator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.TarjanDominator;
 
 public class GraphAnalyser {
 
@@ -54,6 +55,8 @@ public class GraphAnalyser {
   private String startNode;
   private String endNode;
   private IGraphNavigator navigator;
+
+  Map<String, Integer> rpoIndex;
 
 
   public GraphAnalyser(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier, LogManager pLogger)
@@ -260,11 +263,6 @@ public class GraphAnalyser {
 
       int difference = size - diff.size();
 
-      if(difference == 1){
-        graph.removeNode(minNode);
-        continue;
-      }
-
       discComp.add(graph.getNode(minNode).getLabel()+"-"+(difference));
 
       if(forward)
@@ -327,33 +325,37 @@ public class GraphAnalyser {
 
   private Map<String, Integer> rpo(){
 
-    Set<String> seen = new HashSet<>();
-    ArrayDeque<String> stack = new ArrayDeque<>();
-    Map<String, Integer> rpo = new HashMap<>();
-    int count = navigator.nodes().size();
+    if(rpoIndex == null) {
 
-    stack.push(startNode);
+      Set<String> seen = new HashSet<>();
+      ArrayDeque<String> stack = new ArrayDeque<>();
+      Map<String, Integer> rpo = new HashMap<>();
+      int count = navigator.nodes().size();
 
-    while(!stack.isEmpty()){
+      stack.push(startNode);
 
-      while(!stack.isEmpty() && seen.contains(stack.peek())){
-        String s = stack.pop();
-        if(!rpo.containsKey(s))
-          rpo.put(s, count--);
+      while (!stack.isEmpty()) {
+
+        while (!stack.isEmpty() && seen.contains(stack.peek())) {
+          String s = stack.pop();
+          if (!rpo.containsKey(s))
+            rpo.put(s, count--);
+        }
+
+        if (stack.isEmpty()) break;
+
+        String current = stack.peek();
+        seen.add(current);
+
+        for (String succesor : navigator.successor(current)) {
+          if (!seen.contains(succesor))
+            stack.push(succesor);
+        }
       }
-
-      if(stack.isEmpty())break;
-
-      String current = stack.peek();
-      seen.add(current);
-
-      for(String succesor : navigator.successor(current)){
-        if(!seen.contains(succesor))
-          stack.push(succesor);
-      }
+      rpoIndex = rpo;
     }
 
-    return rpo;
+    return rpoIndex;
 
   }
 
@@ -374,7 +376,7 @@ public class GraphAnalyser {
         }
     );
 
-    for(String n : navigator.nodes()){
+    for(String n : rpo.keySet()){
 
       if(shutdownNotifier != null)
         shutdownNotifier.shutdownIfNecessary();
@@ -556,8 +558,9 @@ public class GraphAnalyser {
 
   public void applyCD() throws InterruptedException {
 
+    initNavigator();
     IGraphNavigator navi = new InverseGraphNavigator(navigator);
-    IDominator dominator = new TarjanDominator(navi, endNode);
+    IDominator dominator = new IterativeDominator(navi, endNode);
 
     for(String n : navi.nodes()){
       Set<String> pred = navi.predecessor(n);
@@ -572,12 +575,25 @@ public class GraphAnalyser {
 
       for(String p : pred){
 
+        Set<String> runnerSet = new HashSet<>();
+
         String runner = p;
 
-        while (!runner.equals(idom)){
-          graph.addCDEdge(n , runner);
+        while (!Objects.equals(runner, idom)){
+          runnerSet.add(runner);
+
+          String pRunner = runner;
           runner = dominator.getIDom(runner);
+
+          if(runner == null || runner.equals(pRunner)) {
+            runnerSet.clear();
+            break;
+          }
+
         }
+
+        for(String r : runnerSet)
+          graph.addCDEdge(n, r);
 
 
       }
