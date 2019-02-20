@@ -37,6 +37,7 @@ import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.CINDecoder.Prog
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.proto.Svcomp18Schema.Feature;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.proto.Svcomp18Schema.Label;
 import org.sosy_lab.cpachecker.intelligence.learn.sample.backend.proto.Svcomp18Schema.Sample;
+import org.sosy_lab.cpachecker.util.Pair;
 
 public class ProtoSample implements IProgramSample {
 
@@ -45,6 +46,7 @@ public class ProtoSample implements IProgramSample {
 
   private Map<String, ProgramLabel> labels = new HashMap<>();
   private List<Map<IFeature, Double>> bags = new ArrayList<>();
+  private List<Pair<FeatureRegistry, Sample>> samples = new ArrayList<>();
 
 
   public ProtoSample(){}
@@ -60,6 +62,15 @@ public class ProtoSample implements IProgramSample {
 
     maxIteration = Math.max(pSample.getIteration(), maxIteration);
 
+    samples.add(pSample.getIteration(), Pair.of(registry, pSample));
+
+    //for(Label label: pSample.getLabelsList()){
+      //labels.put(label.getTool(), new ProgramLabel(label.getSolve() > 0, label.getTime()));
+    //}
+
+  }
+
+  private void parse(FeatureRegistry registry, Sample pSample){
     Map<IFeature, Double> bag = new HashMap<>();
     bags.add(pSample.getIteration(), bag);
 
@@ -67,11 +78,6 @@ public class ProtoSample implements IProgramSample {
       IFeature f = registry.index(feature.getName());
       bag.put(f, (double)feature.getCount());
     }
-
-    for(Label label: pSample.getLabelsList()){
-      labels.put(label.getTool(), new ProgramLabel(label.getSolve() > 0, label.getTime()));
-    }
-
   }
 
 
@@ -129,6 +135,12 @@ public class ProtoSample implements IProgramSample {
       return new HashMap<>();
     }
 
-    return bags.get(iteration);
+    try{
+      return bags.get(iteration);
+    }catch (IndexOutOfBoundsException e){
+      Pair<FeatureRegistry, Sample> p = samples.get(iteration);
+      parse(p.getFirst(), p.getSecond());
+      return bags.get(iteration);
+    }
   }
 }

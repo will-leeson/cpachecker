@@ -75,7 +75,7 @@ public class FeatureRegistry {
 
     @Override
     public int hashCode() {
-      return Objects.hash(id, feature);
+      return id;
     }
 
     @Override
