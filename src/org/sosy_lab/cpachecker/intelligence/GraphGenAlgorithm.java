@@ -110,7 +110,6 @@ public class GraphGenAlgorithm implements Algorithm {
     logger.log(Level.INFO, "Add control dependencies");
     analyser.applyCD();
 
-
     System.out.println("Time for CD: "+stopwatch.elapsed());
     stopwatch = stopwatch.reset();
 

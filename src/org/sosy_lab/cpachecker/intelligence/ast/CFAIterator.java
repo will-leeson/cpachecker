@@ -23,10 +23,14 @@
  */
 package org.sosy_lab.cpachecker.intelligence.ast;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
+import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 
 public class CFAIterator {
@@ -41,14 +45,28 @@ public class CFAIterator {
   }
 
   public void iterate(CFA pCFA) throws InterruptedException {
-    for(CFANode node: pCFA.getAllNodes()){
+
+    ArrayDeque<CFANode> stack = new ArrayDeque<>();
+    stack.add(pCFA.getMainFunction());
+    Set<CFANode> seen = new HashSet<>();
+
+    while (!stack.isEmpty()){
+      CFANode node = stack.pop();
+      seen.add(node);
+
       for(int i = 0; i < node.getNumLeavingEdges(); i++){
-          for(IEdgeListener listener: listeners){
-              if(notifier != null){
-                notifier.shutdownIfNecessary();
-              }
-              listener.listen(node.getLeavingEdge(i));
+        CFAEdge edge = node.getLeavingEdge(i);
+        for(IEdgeListener listener: listeners){
+          if(notifier != null){
+            notifier.shutdownIfNecessary();
           }
+          listener.listen(edge);
+        }
+
+        CFANode next = edge.getSuccessor();
+        if(!seen.contains(next))
+          stack.add(next);
+
       }
     }
   }
