@@ -121,6 +121,9 @@ solver.z3.usePhantomReferences = false
 # Refiner that SlicingDelegatingRefiner should delegate to
 SlicingDelegatingRefiner.refiner = no default value
 
+# file path to label-path mapping
+abstractPredictiveOracle.labelPath = no default value
+
 # maximum number of condition adjustments (-1 for infinite)
 adjustableconditions.adjustmentLimit = -1
 
@@ -142,6 +145,9 @@ analysis.algorithm.CBMC = false
 # You need to specify a refiner with the cegar.refiner option.
 # Currently all refiner require the use of the ARGCPA.
 analysis.algorithm.CEGAR = false
+
+# generate a software verification graph from CFA
+analysis.algorithm.GraphGen = false
 
 # use MPV algorithm for checking multiple properties
 analysis.algorithm.MPV = false
@@ -2964,6 +2970,15 @@ enabledanalysis.allowLazyRefinement = false
 enabledanalysis.enablerCPA = PREDICATE
   enum:     [APRON, INTERVAL, OCTAGON, PREDICATE, VALUE]
 
+# Configurations to fallback to
+fallbackPredictor.components = new ArrayList<>()
+
+# depth of AST tree
+graphGen.astDepth = 5
+
+# output path for Graph
+graphGen.output = "output/graph.dfs"
+
 # Configuration for programs containing more than @Option adressedRatio
 # addressed vars.
 heuristicSelection.addressedConfig = no default value
@@ -3018,6 +3033,9 @@ intelligentRestartAlgorithm.configFiles = no default value
 
 # path to file containing instances of the training set
 intelligentRestartAlgorithm.instancePath = no default value
+
+# DEBUG OPTION: Only predict a ranking without executing the tools
+intelligentRestartAlgorithm.onlyPrediction = false
 
 # Oracle to use
 intelligentRestartAlgorithm.oracle = "default"
@@ -3151,10 +3169,6 @@ locmapper.dumpTokenizedProgramToFile = no default value
 # all used options are printed
 log.usedOptions.export = false
 
-# When checking for memory cleanup properties, use this configuration file
-# instead of the current one.
-memorycleanup.config = no default value
-
 # Backup predictor. Sort list after prediction speed.
 managedOracle.backup = new ArrayList<>()
 
@@ -3173,6 +3187,10 @@ managedOracle.labelPath = no default value
 # Staged predictor. Sort list after precision level and prediction speed.
 managedOracle.staged = new ArrayList<>()
 
+# When checking for memory cleanup properties, use this configuration file
+# instead of the current one.
+memorycleanup.config = no default value
+
 # When checking for memory safety properties, use this configuration file
 # instead of the current one.
 memorysafety.config = no default value
@@ -3180,9 +3198,6 @@ memorysafety.config = no default value
 # which merge operator to use for LiveVariablesCPA
 merge = "JOIN"
   allowed values: [SEP, JOIN]
-
-# file path to label-path mapping
-oracle.labelPath = no default value
 
 # Find all violations of each checked property.
 mpv.findAllViolations = false
@@ -3236,6 +3251,9 @@ mpv.partitionOperator = no default value
 # - AUTOMATON: each automaton represent a single property.
 mpv.propertySeparator = FILE
   enum:     [FILE, AUTOMATON]
+
+# file path to label-path mapping
+oracle.labelPath = no default value
 
 # When checking for the overflow property, use this configuration file
 # instead of the current one.

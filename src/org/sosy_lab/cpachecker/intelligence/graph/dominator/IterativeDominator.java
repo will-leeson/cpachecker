@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
 
 public class IterativeDominator implements IDominator {
 

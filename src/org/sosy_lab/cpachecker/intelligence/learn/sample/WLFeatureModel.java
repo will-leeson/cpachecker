@@ -41,7 +41,9 @@ import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.NativeGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
 
 public class WLFeatureModel {
 
@@ -130,7 +132,7 @@ public class WLFeatureModel {
         throws InterruptedException {
       if(analyser == null) {
         StructureGraph g = getGraph(pShutdownNotifier);
-        analyser = new GraphAnalyser(g, pShutdownNotifier, null);
+        analyser = new NativeGraphAnalyser(cfa, g, pShutdownNotifier, null);
       }
       return analyser;
     }
@@ -200,7 +202,6 @@ public class WLFeatureModel {
       GraphAnalyser localAnalyser = getGraphAnalyser(pShutdownNotifier);
       if(iteration == 0){
         localAnalyser.pruneBlank();
-        localAnalyser.connectComponents();
         return iteration0(pShutdownNotifier);
       }else if(iteration == 1){
         localAnalyser.applyDummyEdges();

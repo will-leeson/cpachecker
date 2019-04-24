@@ -50,6 +50,7 @@ import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.CDEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.NativeGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 @Options(prefix = "graphGen")
@@ -91,11 +92,11 @@ public class GraphGenAlgorithm implements Algorithm {
     System.out.println("Time for CFA: "+stopwatch.elapsed());
     stopwatch.reset();
 
-    GraphAnalyser analyser = new GraphAnalyser(graph, notifier, logger);
+    GraphAnalyser analyser = new NativeGraphAnalyser(cfa, graph, notifier, logger);
 
     logger.log(Level.INFO, "Add Dummy edges");
     analyser.pruneBlank();
-    analyser.connectComponents();
+    //analyser.connectComponents();
     analyser.applyDummyEdges();
     analyser.pruneGraph();
 
@@ -162,8 +163,6 @@ public class GraphGenAlgorithm implements Algorithm {
       if(channel != null)channel.close();
     }
 
-
-
   }
 
   private static class EdgeWriter{
@@ -197,8 +196,6 @@ public class GraphGenAlgorithm implements Algorithm {
         }
 
       }
-
-
 
       if(forward){
         return String.format("[%d, %d, \"%s\", \"%s\", \"%s\"]", a, b, aLabel, edgeLabel+"|>", bLabel);

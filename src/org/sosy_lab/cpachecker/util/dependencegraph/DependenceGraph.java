@@ -170,7 +170,7 @@ public class DependenceGraph implements Serializable {
         .collect(Collectors.toSet());
   }
 
-  private Map<DGNode, DependenceType> getAdjacentNodes(
+  public Map<DGNode, DependenceType> getAdjacentNodes(
       DGNode pNode, TraversalDirection pDirection) {
     Map<DGNode, DependenceType> adjacentEdges;
     switch (pDirection) {

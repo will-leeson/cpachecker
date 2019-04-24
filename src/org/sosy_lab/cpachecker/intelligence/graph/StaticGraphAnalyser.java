@@ -35,12 +35,12 @@ import java.util.Stack;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.graph.SCCUtil.SCC;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.CachedGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.CachedGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.IGraphNavigator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.InverseGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.InverseGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IterativeDominator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.SGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.SGraphNavigator;
 
 @Deprecated
 public class StaticGraphAnalyser {

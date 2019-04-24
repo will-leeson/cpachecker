@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,13 +21,14 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph.dominator;
+package org.sosy_lab.cpachecker.intelligence.graph.navigator;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.sosy_lab.cpachecker.intelligence.graph.CFGEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
 
 public class SGraphNavigator implements IGraphNavigator {
 

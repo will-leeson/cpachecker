@@ -21,11 +21,12 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph.dominator;
+package org.sosy_lab.cpachecker.intelligence.graph.navigator;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
 
 public class CachedGraphNavigator implements IGraphNavigator {
 

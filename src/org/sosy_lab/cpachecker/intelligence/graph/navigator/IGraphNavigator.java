@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,30 +21,16 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph.dominator;
+package org.sosy_lab.cpachecker.intelligence.graph.navigator;
 
 import java.util.Set;
 
-public class InverseGraphNavigator implements IGraphNavigator{
+public interface IGraphNavigator {
 
-  private IGraphNavigator delegate;
+  public Set<String> successor(String node);
 
-  public InverseGraphNavigator(IGraphNavigator pDelegate) {
-    delegate = pDelegate;
-  }
+  public Set<String> predecessor(String node);
 
-  @Override
-  public Set<String> successor(String node) {
-    return delegate.predecessor(node);
-  }
+  public Set<String> nodes();
 
-  @Override
-  public Set<String> predecessor(String node) {
-    return delegate.successor(node);
-  }
-
-  @Override
-  public Set<String> nodes() {
-    return delegate.nodes();
-  }
 }

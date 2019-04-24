@@ -39,18 +39,17 @@ import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.graph.SCCUtil.SCC;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.CachedGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.IGraphNavigator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.InverseGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.InverseGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IterativeDominator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.SGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.navigator.SGraphNavigator;
 
 public class GraphAnalyser {
 
   private LogManager logger;
-  private StructureGraph graph;
-  private ShutdownNotifier shutdownNotifier;
+  protected StructureGraph graph;
+  protected ShutdownNotifier shutdownNotifier;
 
   private String startNode;
   private String endNode;
@@ -90,7 +89,7 @@ public class GraphAnalyser {
 
 
   private void initNavigator(){
-    navigator = new CachedGraphNavigator(new SGraphNavigator(graph));
+    navigator = new SGraphNavigator(graph);
   }
 
 
