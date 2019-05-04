@@ -51,9 +51,9 @@ public class GraphAnalyser {
   protected StructureGraph graph;
   protected ShutdownNotifier shutdownNotifier;
 
-  private String startNode;
-  private String endNode;
-  private IGraphNavigator navigator;
+  protected String startNode;
+  protected String endNode;
+  protected IGraphNavigator navigator;
 
   Map<String, Integer> rpoIndex;
 
@@ -66,21 +66,26 @@ public class GraphAnalyser {
 
     initNavigator();
 
+    assignEntryAndExit();
+
+    initNavigator();
+
+  }
+
+  protected void assignEntryAndExit() throws InterruptedException {
     for(String n: navigator.nodes()){
 
-      if(pShutdownNotifier != null){
-        pShutdownNotifier.shutdownIfNecessary();
+      if(shutdownNotifier != null){
+        shutdownNotifier.shutdownIfNecessary();
       }
 
-      if(pGraph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
+      if(graph.getNode(n).getLabel().equals(ASTNodeLabel.START.name())){
         startNode = n;
         break;
       }
     }
 
     endNode = findEndOrFix();
-    initNavigator();
-
   }
 
   public GraphAnalyser( StructureGraph pGraph) throws InterruptedException {
@@ -88,7 +93,7 @@ public class GraphAnalyser {
   }
 
 
-  private void initNavigator(){
+  protected void initNavigator(){
     navigator = new SGraphNavigator(graph);
   }
 
@@ -151,6 +156,7 @@ public class GraphAnalyser {
     if(shutdownNotifier != null)
       shutdownNotifier.shutdownIfNecessary();
 
+    /*
     SCCUtil sccUtil = new SCCUtil(graph);
 
     for(SCC scc: sccUtil.getStronglyConnectedComponents()){
@@ -190,6 +196,7 @@ public class GraphAnalyser {
       }
 
     }
+    */
 
     initNavigator();
 

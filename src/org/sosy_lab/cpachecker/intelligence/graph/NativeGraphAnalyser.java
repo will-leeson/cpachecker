@@ -23,10 +23,14 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph;
 
+import java.util.Collection;
 import java.util.Map.Entry;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
+import org.sosy_lab.cpachecker.cfa.model.CFANode;
+import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
+import org.sosy_lab.cpachecker.util.CFAUtils;
 import org.sosy_lab.cpachecker.util.dependencegraph.DGNode;
 import org.sosy_lab.cpachecker.util.dependencegraph.DependenceGraph;
 import org.sosy_lab.cpachecker.util.dependencegraph.DependenceGraph.DependenceType;
@@ -46,10 +50,36 @@ public class NativeGraphAnalyser extends GraphAnalyser {
     cfa = pCFA;
     dependenceGraph = cfa.getDependenceGraph().orElse(null);
 
+    assignEntryAndExitAfterInit();
+    initNavigator();
+
   }
 
   public NativeGraphAnalyser(CFA pCFA, StructureGraph pGraph) throws InterruptedException {
     this(pCFA, pGraph, null, null);
+  }
+
+  @Override
+  protected void assignEntryAndExit() throws InterruptedException {}
+
+  protected void assignEntryAndExitAfterInit(){
+    startNode = "N"+cfa.getMainFunction().getNodeNumber();
+
+    Collection<CFANode> endNodes =
+        CFAUtils.getProgramSinks(cfa, cfa.getLoopStructure().get(), cfa.getMainFunction());
+
+    if(endNodes.size() == 1){
+      endNode = "N"+endNodes.iterator().next().getNodeNumber();
+    }else{
+
+      endNode = graph.genId("N");
+      graph.addNode("N", "END");
+      for(CFANode n : endNodes){
+        String id = "N"+n.getNodeNumber();
+        graph.addCFGEdge(id, endNode);
+      }
+
+    }
   }
 
 

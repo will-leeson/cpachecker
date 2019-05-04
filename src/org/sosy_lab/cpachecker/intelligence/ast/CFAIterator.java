@@ -49,10 +49,10 @@ public class CFAIterator {
     ArrayDeque<CFANode> stack = new ArrayDeque<>();
     stack.add(pCFA.getMainFunction());
     Set<CFANode> seen = new HashSet<>();
+    seen.add(pCFA.getMainFunction());
 
     while (!stack.isEmpty()){
       CFANode node = stack.pop();
-      seen.add(node);
 
       for(int i = 0; i < node.getNumLeavingEdges(); i++){
         CFAEdge edge = node.getLeavingEdge(i);
@@ -64,8 +64,10 @@ public class CFAIterator {
         }
 
         CFANode next = edge.getSuccessor();
-        if(!seen.contains(next))
+        if(!seen.contains(next)) {
+          seen.add(next);
           stack.add(next);
+        }
 
       }
     }
