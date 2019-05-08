@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,21 +21,29 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.ast.neural;
 
 import org.sosy_lab.common.ShutdownNotifier;
+import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
+import org.sosy_lab.cpachecker.cfa.model.CFANode;
+import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 
-public abstract class AEdgeListener implements IEdgeListener {
-
-  protected int depth;
-  protected SVGraph graph;
-  protected ShutdownNotifier notifier;
-
-  public AEdgeListener(int pDepth, SVGraph pGraph, ShutdownNotifier pShutdownNotifier) {
-    depth = pDepth;
-    graph = pGraph;
-    notifier = pShutdownNotifier;
+public class ParentListener extends AEdgeListener {
+  public ParentListener(
+      int pDepth,
+      SVGraph pGraph,
+      ShutdownNotifier pShutdownNotifier) {
+    super(pDepth, pGraph, pShutdownNotifier);
   }
 
+  @Override
+  public void listen(CFAEdge edge) {
+
+    CFANode node = edge.getPredecessor();
+    graph.addNode("N"+node.getNodeNumber());
+    graph.getNode("N"+node.getNodeNumber()).setOption(OptionKeys.PARENT_FUNC, node.getFunctionName());
+
+  }
 }

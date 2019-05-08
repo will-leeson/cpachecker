@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.ast.base;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Set;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
+import org.sosy_lab.cpachecker.intelligence.ast.CFAIterator;
+import org.sosy_lab.cpachecker.intelligence.ast.IEdgeListener;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 
 public class CFAProcessor {
@@ -101,7 +104,7 @@ public class CFAProcessor {
 
   private Set<Listener> config;
 
-  private List<IEdgeListener> construct(StructureGraph pGraph, int depth, ShutdownNotifier pShutdownNotifier){
+  private List<IEdgeListener> construct(SVGraph pGraph, int depth, ShutdownNotifier pShutdownNotifier){
     List<IEdgeListener> e = new ArrayList<>();
 
     if(config.contains(Listener.INIT_EXIT)){
@@ -133,8 +136,8 @@ public class CFAProcessor {
     return e;
   }
 
-  public StructureGraph process(CFA pCFA, int depth, ShutdownNotifier pShutdownNotifier) throws InterruptedException{
-    StructureGraph out = new StructureGraph();
+  public SVGraph process(CFA pCFA, int depth, ShutdownNotifier pShutdownNotifier) throws InterruptedException{
+    SVGraph out = new SVGraph();
     List<IEdgeListener> listeners = construct(out, depth, pShutdownNotifier);
     CFAIterator it = new CFAIterator(listeners, pShutdownNotifier);
     it.iterate(pCFA);
@@ -142,11 +145,11 @@ public class CFAProcessor {
   }
 
 
-  public StructureGraph process(CFA pCFA, int depth){
+  public SVGraph process(CFA pCFA, int depth){
     try {
       return process(pCFA, depth, null);
     } catch (InterruptedException pE) {
-      return new StructureGraph();
+      return new SVGraph();
     }
   }
 

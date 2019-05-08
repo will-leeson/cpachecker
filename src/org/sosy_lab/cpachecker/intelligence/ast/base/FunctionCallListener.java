@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.ast.base;
 
 import com.google.common.base.Optional;
 import java.util.HashSet;
@@ -32,16 +32,20 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionCallEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
+import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
+import org.sosy_lab.cpachecker.intelligence.ast.ASTCollectorUtils;
+import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CExpressionASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CVariablesCollectingVisitor;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 
 public class FunctionCallListener extends AEdgeListener {
 
 
   public FunctionCallListener(
       int pDepth,
-      StructureGraph pGraph,
+      SVGraph pGraph,
       ShutdownNotifier pShutdownNotifier) {
     super(pDepth, pGraph, pShutdownNotifier);
   }
@@ -105,7 +109,7 @@ public class FunctionCallListener extends AEdgeListener {
       Set<String> vars = new HashSet<>();
       for(CExpression exp : arguments)
         vars.addAll(exp.accept(new CVariablesCollectingVisitor(edge.getPredecessor())));
-      graph.getNode(id).getOptions().put("variables", vars);
+      graph.getNode(id).setOption(OptionKeys.VARS, vars);
 
     }
   }

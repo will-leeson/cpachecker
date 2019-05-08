@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,26 +21,28 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.ast.neural;
 
-import java.util.Map;
 import java.util.Set;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CAssumeEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
+import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
+import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CExpressionASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CVariablesCollectingVisitor;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 
 public class AssumptionListener extends AEdgeListener {
 
 
   public AssumptionListener(
-      int pDepth,
-      StructureGraph pGraph,
+      SVGraph pGraph,
       ShutdownNotifier pShutdownNotifier) {
-    super(pDepth, pGraph, pShutdownNotifier);
+    super(-1, pGraph, pShutdownNotifier);
   }
 
   public static ASTNodeLabel extractControlLabel(CFAEdge pCFAEdge) {
@@ -59,8 +61,8 @@ public class AssumptionListener extends AEdgeListener {
       String id = "N"+assume.getPredecessor().getNodeNumber();
       String idS = "N"+assume.getSuccessor().getNodeNumber();
       graph.addNode(id, label);
-      Map<String, Object> options = graph.getNode(id).getOptions();
-      options.put("truth", assume.getTruthAssumption());
+      GNode sourceNode = graph.getNode(id);
+      sourceNode.setOption(OptionKeys.TRUTH, assume.getTruthAssumption());
       graph.addNode(idS);
       graph.addCFGEdge(id, idS);
 
@@ -71,30 +73,13 @@ public class AssumptionListener extends AEdgeListener {
           return;
         }
 
-      Set<String> vars = assume.getExpression().accept(new CVariablesCollectingVisitor(assume.getPredecessor()));
-      options.put("variables", vars);
-
       if(assume.getTruthAssumption()) {
-        if (depth >= 1) {
 
-          if(notifier != null)
-            try{
-              notifier.shutdownIfNecessary();
-            }catch (InterruptedException pE){
-              return;
-            }
+        Set<String> vars = assume.getExpression().accept(new CVariablesCollectingVisitor(assume.getPredecessor()));
+        sourceNode.setOption(OptionKeys.VARS, vars);
 
-          try {
-            String assumeExpTree = assume.getExpression().accept(
-                new CExpressionASTVisitor(graph, depth - 1)
-            );
-            graph.addSEdge(assumeExpTree, id);
-          } catch (CPATransferException pE) {
-          }
-        }
+        sourceNode.setOption(OptionKeys.CEXPR, assume.getExpression());
       }
-
-
 
     }
   }

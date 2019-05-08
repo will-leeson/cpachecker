@@ -31,7 +31,7 @@ public class GNode {
 
   private String id;
   private String label;
-  private Map<String, Object> options;
+  private Options typedOptions = new Options();
 
   public GNode(String pId, String pLabel) {
     id = pId;
@@ -50,10 +50,16 @@ public class GNode {
     this.label = pLabel;
   }
 
-  public Map<String, Object> getOptions(){
-    if(options == null)
-      options = new HashMap<>();
-    return options;
+  public <T> void setOption(Options.Key<T> key, T option){
+    typedOptions.put(key, option);
+  }
+
+  public <T> T getOption(Options.Key<T> key){
+    return typedOptions.get(key);
+  }
+
+  public <T> boolean containsOption(Options.Key<T> key){
+    return getOption(key) != null;
   }
 
   @Override

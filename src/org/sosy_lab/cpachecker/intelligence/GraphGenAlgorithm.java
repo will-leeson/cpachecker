@@ -46,12 +46,17 @@ import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
 import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
-import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
+import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
+import org.sosy_lab.cpachecker.intelligence.ast.neural.CallGraphProcessor;
+import org.sosy_lab.cpachecker.intelligence.ast.neural.SVGraphProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.CDEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.CallGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.NativeGraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 
 @Options(prefix = "graphGen")
 public class GraphGenAlgorithm implements Algorithm {
@@ -84,10 +89,43 @@ public class GraphGenAlgorithm implements Algorithm {
   public AlgorithmStatus run(ReachedSet reachedSet)
       throws CPAException, InterruptedException, CPAEnabledAnalysisPropertyViolationException {
 
+
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     logger.log(Level.INFO, "Start CFA processing....");
-    StructureGraph graph = new CFAProcessor().process(cfa, astDepth);
+    SVGraph oGraph = new SVGraphProcessor().process(cfa, notifier);
+
+    System.out.println("Time for CFA: "+stopwatch.elapsed());
+    stopwatch.reset();
+
+    GraphAnalyser graphAnalyser = new GraphAnalyser(oGraph, notifier, logger);
+    graphAnalyser.simplify();
+    graphAnalyser.recursionDetection();
+
+
+    stopwatch.start();
+
+    logger.log(Level.INFO, "Add data dependencies");
+    graphAnalyser.applyDD();
+
+    System.out.println("Time for DD: "+stopwatch.elapsed());
+    stopwatch.reset().start();
+
+    graphAnalyser.disconnectFunctionsViaDependencies();
+    System.out.println("Time for Disconnect: "+stopwatch.elapsed());
+    stopwatch.reset().start();
+
+    logger.log(Level.INFO, "Add control dependencies");
+    graphAnalyser.applyCD();
+
+    System.out.println("Time for CD: "+stopwatch.elapsed());
+    stopwatch = stopwatch.reset().start();
+
+    System.out.println(oGraph.toDot());
+
+
+    logger.log(Level.INFO, "Start CFA processing....");
+    SVGraph graph = new CFAProcessor().process(cfa, astDepth);
 
     System.out.println("Time for CFA: "+stopwatch.elapsed());
     stopwatch.reset();
@@ -99,6 +137,7 @@ public class GraphGenAlgorithm implements Algorithm {
     //analyser.connectComponents();
     analyser.applyDummyEdges();
     analyser.pruneGraph();
+
 
     stopwatch.start();
 
@@ -124,7 +163,7 @@ public class GraphGenAlgorithm implements Algorithm {
     return AlgorithmStatus.UNSOUND_AND_PRECISE.withPrecise(false);
   }
 
-  private void exportGraph(StructureGraph pGraph) throws IOException {
+  private void exportGraph(SVGraph pGraph) throws IOException {
     Path out = Paths.get(output);
     Path parent = out.getParent();
 
@@ -190,9 +229,9 @@ public class GraphGenAlgorithm implements Algorithm {
 
       if(pGEdge instanceof CDEdge){
 
-        Map<String, Object> options = pGEdge.getSource().getOptions();
-        if(options.containsKey("truth")){
-          edgeLabel+= "_"+((boolean)options.get("truth")?"t":"f");
+        GNode source =  pGEdge.getSource();
+        if(source.containsOption(OptionKeys.TRUTH)){
+          edgeLabel+= "_"+(source.getOption(OptionKeys.TRUTH) ? "t" : "f");
         }
 
       }

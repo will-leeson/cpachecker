@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.Stack;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.graph.SCCUtil.SCC;
 import org.sosy_lab.cpachecker.intelligence.graph.navigator.CachedGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
@@ -45,13 +46,13 @@ import org.sosy_lab.cpachecker.intelligence.graph.navigator.SGraphNavigator;
 @Deprecated
 public class StaticGraphAnalyser {
 
-  public static void pruneGraph(StructureGraph pGraph){
+  public static void pruneGraph(SVGraph pGraph){
     //pruneUnusedGlobal(pGraph);
     pruneFloating(pGraph);
   }
 
 
-  private static void pruneUnusedGlobal(StructureGraph pGraph){
+  private static void pruneUnusedGlobal(SVGraph pGraph){
 
     Set<String> globalIds = new HashSet<>();
     Set<String> localIds = new HashSet<>();
@@ -76,7 +77,7 @@ public class StaticGraphAnalyser {
   }
 
 
-  private static void pruneFloating(StructureGraph pGraph){
+  private static void pruneFloating(SVGraph pGraph){
     //Floating nodes
 
     Set<String> floatingNodes = new HashSet<>();
@@ -95,7 +96,7 @@ public class StaticGraphAnalyser {
       pGraph.removeNode(nodeId);
   }
 
-  public static void applyDummyEdges(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+  public static void applyDummyEdges(SVGraph pGraph, ShutdownNotifier pShutdownNotifier)
       throws InterruptedException {
 
     String endId = null;
@@ -194,20 +195,20 @@ public class StaticGraphAnalyser {
   }
 
 
-  public static void applyDD(StructureGraph pGraph){
+  public static void applyDD(SVGraph pGraph){
     try {
       applyDD(pGraph, null);
     } catch (InterruptedException pE) {
     }
   }
 
-  public static void applyDD(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+  public static void applyDD(SVGraph pGraph, ShutdownNotifier pShutdownNotifier)
       throws InterruptedException {
     applyDD(pGraph, pGraph.nodes().size() * 10, pShutdownNotifier);
   }
 
 
-  public static void applyDD(StructureGraph pGraph, int cooldown, ShutdownNotifier pShutdownNotifier)
+  public static void applyDD(SVGraph pGraph, int cooldown, ShutdownNotifier pShutdownNotifier)
       throws InterruptedException {
 
     Table<String, String, String> lastDef = HashBasedTable.create();
@@ -237,27 +238,21 @@ public class StaticGraphAnalyser {
       cooling--;
 
       String position = stack.pop();
-      Map<String, Object> options = pGraph.getNode(position).getOptions();
+      GNode node = pGraph.getNode(position);
 
-      if(options.containsKey("variables")){
-        Object o = options.get("variables");
-        if(o instanceof Set) {
-          for (String v : (Set<String>) o) {
-            String last = lastDef.get(position, v);
-            if (last != null && pGraph.addDDEdge(position, last)) {
-              cooling = cooldown;
-            }
+      if(node.containsOption(OptionKeys.VARS)){
+        for (String v : node.getOption(OptionKeys.VARS)) {
+          String last = lastDef.get(position, v);
+          if (last != null && pGraph.addDDEdge(position, last)) {
+            cooling = cooldown;
           }
         }
       }
 
       Map<String, String> newDef = new HashMap<>(lastDef.row(position));
-      if(options.containsKey("output")){
-        Object o = options.get("output");
-        if(o instanceof Set) {
-          for (String v : (Set<String>) o) {
-            newDef.put(v, position);
-          }
+      if(node.containsOption(OptionKeys.DECL_VARS)){
+        for (String v : node.getOption(OptionKeys.DECL_VARS)) {
+          newDef.put(v, position);
         }
       }
 
@@ -289,7 +284,7 @@ public class StaticGraphAnalyser {
   }
 
 
-  private static Set<String> findOnlyCyle(StructureGraph pGraph, String start){
+  private static Set<String> findOnlyCyle(SVGraph pGraph, String start){
 
     Map<String, String> pred = new HashMap<>();
 
@@ -349,7 +344,7 @@ public class StaticGraphAnalyser {
 
   }
 
-  private static String findEndOrFix(StructureGraph pGraph){
+  private static String findEndOrFix(SVGraph pGraph){
     String start = "";
     String end = "";
 
@@ -381,7 +376,7 @@ public class StaticGraphAnalyser {
   }
 
 
-  public static void applyCD(StructureGraph pGraph){
+  public static void applyCD(SVGraph pGraph){
     try {
       applyCD(pGraph, null);
     } catch (InterruptedException pE) {
@@ -389,7 +384,7 @@ public class StaticGraphAnalyser {
   }
 
 
-  public static void applyCD(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier)
+  public static void applyCD(SVGraph pGraph, ShutdownNotifier pShutdownNotifier)
       throws InterruptedException {
 
     String end = findEndOrFix(pGraph);

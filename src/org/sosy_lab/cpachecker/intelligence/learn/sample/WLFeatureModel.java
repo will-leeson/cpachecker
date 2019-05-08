@@ -37,13 +37,13 @@ import java.util.List;
 import java.util.Map;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
-import org.sosy_lab.cpachecker.intelligence.ast.CFAProcessor;
+import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.NativeGraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
 
 public class WLFeatureModel {
 
@@ -83,7 +83,7 @@ public class WLFeatureModel {
     private CFA cfa;
     private int astDepth;
 
-    private StructureGraph graph;
+    private SVGraph graph;
     private GraphAnalyser analyser;
     private Map<String, String> relabel = new HashMap<>();
     private int iteration = -1;
@@ -121,7 +121,7 @@ public class WLFeatureModel {
       return count;
     }
 
-    public StructureGraph getGraph(ShutdownNotifier pShutdownNotifier) throws InterruptedException {
+    public SVGraph getGraph(ShutdownNotifier pShutdownNotifier) throws InterruptedException {
       if(graph == null){
         graph = new CFAProcessor().process(cfa, astDepth, pShutdownNotifier);
       }
@@ -131,7 +131,7 @@ public class WLFeatureModel {
     private GraphAnalyser getGraphAnalyser(ShutdownNotifier pShutdownNotifier)
         throws InterruptedException {
       if(analyser == null) {
-        StructureGraph g = getGraph(pShutdownNotifier);
+        SVGraph g = getGraph(pShutdownNotifier);
         analyser = new NativeGraphAnalyser(cfa, g, pShutdownNotifier, null);
       }
       return analyser;

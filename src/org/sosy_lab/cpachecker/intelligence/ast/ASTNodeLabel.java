@@ -29,6 +29,7 @@ public enum ASTNodeLabel implements Serializable {
 
 
   FUNCTION_START,
+  FUNCTION_EXIT,
   SKIP,
   GOTO,
   LABEL,
@@ -157,9 +158,13 @@ public enum ASTNodeLabel implements Serializable {
   VERIFIER_ASSUME,
   VERIFIER_ATOMIC_BEGIN,
   VERIFIER_ATOMIC_END,
+  RECURSIVE,
   INPUT,
   PTHREAD,
   MALLOC,
-  FREE
+  FREE,
+
+  ONE,
+  ZERO
 
 }

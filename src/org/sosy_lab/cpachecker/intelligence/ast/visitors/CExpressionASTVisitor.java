@@ -44,15 +44,15 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CUnaryExpression;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTCollectorUtils;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 
 
 public class CExpressionASTVisitor implements CExpressionVisitor<String, CPATransferException> {
 
-  private StructureGraph graph;
+  private SVGraph graph;
   private int depth;
 
-  public CExpressionASTVisitor(StructureGraph pGraph, int pDepth) {
+  public CExpressionASTVisitor(SVGraph pGraph, int pDepth) {
     this.graph = pGraph;
     this.depth = pDepth;
   }
@@ -198,7 +198,11 @@ public class CExpressionASTVisitor implements CExpressionVisitor<String, CPATran
     String id = graph.genId("A");
     String label = "";
     BigInteger value = pIastIntegerLiteralExpression.getValue();
-    if(value.compareTo(new BigInteger("256")) == -1)
+    if(value.compareTo(BigInteger.ZERO) == 0) {
+      label = ASTNodeLabel.ZERO.name();
+    }else if(value.compareTo(BigInteger.ONE) == 0) {
+      label = ASTNodeLabel.ONE.name();
+    }else if(value.compareTo(new BigInteger("256")) == -1)
       label = ASTNodeLabel.INT_LITERAL_SMALL.name();
     else if(value.compareTo(new BigInteger("1024")) == -1)
       label = ASTNodeLabel.INT_LITERAL_MEDIUM.name();

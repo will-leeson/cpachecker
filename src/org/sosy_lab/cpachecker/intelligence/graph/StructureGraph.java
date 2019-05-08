@@ -26,24 +26,27 @@ package org.sosy_lab.cpachecker.intelligence.graph;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
+import com.google.protobuf.Option;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.sosy_lab.cpachecker.intelligence.graph.Options.Key;
 
 public class StructureGraph {
-
-    public enum EdgeType{
-      CFG, CD, DD, S
-    }
 
     private Map<String, GNode> nodes;
     private Table<String, String, Map<String, GEdge>> edges;
     private Table<String, String, Map<String, GEdge>> reverseEdges;
+
+    private Options globalOptions = new Options();
 
     private int lastGen = 0;
 
@@ -70,7 +73,14 @@ public class StructureGraph {
       return true;
     }
 
-    private boolean addEdge(GEdge e){
+    protected boolean addEdge(GEdge e){
+      if(e.getSource() == null || e.getSink() == null){
+        return false;
+      }
+
+      if(!nodes.containsKey(e.getSource().getId()))return false;
+      if(!nodes.containsKey(e.getSink().getId()))return false;
+
       String sink = e.getSink().getId();
       String source = e.getSource().getId();
 
@@ -88,40 +98,15 @@ public class StructureGraph {
     }
 
     public boolean addEdge(String source, String target, String id){
-      if(!nodes.containsKey(source))return false;
-      if(!nodes.containsKey(target))return false;
       return addEdge(new GEdge(id, nodes.get(source), nodes.get(target)));
     }
 
-    public boolean addCFGEdge(String source, String target){
-      if(!nodes.containsKey(source))return false;
-      if(!nodes.containsKey(target))return false;
-      return addEdge(new CFGEdge(nodes.get(source), nodes.get(target)));
+    public <T> void setGlobalOption(Key<T> key, T option){
+      globalOptions.put(key, option);
     }
 
-    public boolean addCDEdge(String source, String target){
-      if(!nodes.containsKey(source))return false;
-      if(!nodes.containsKey(target))return false;
-      return addEdge(new CDEdge(nodes.get(source), nodes.get(target)));
-    }
-
-    public boolean addDDEdge(String source, String target){
-      if(!nodes.containsKey(source))return false;
-      if(!nodes.containsKey(target))return false;
-      return addEdge(new DDEdge(nodes.get(source), nodes.get(target)));
-    }
-
-
-    public boolean addSEdge(String source, String target){
-      if(!nodes.containsKey(source))return false;
-      if(!nodes.containsKey(target))return false;
-      return addEdge(new SEdge(nodes.get(source), nodes.get(target)));
-    }
-
-    public boolean addDummyEdge(String source, String target){
-      if(!nodes.containsKey(source))return false;
-      if(!nodes.containsKey(target))return false;
-      return addEdge(new DummyEdge(nodes.get(source), nodes.get(target)));
+    public <T> T getGlobalOption(Key<T> key){
+      return globalOptions.get(key);
     }
 
     public Stream<GEdge> getIngoingStream(String target){
@@ -151,28 +136,6 @@ public class StructureGraph {
         return null;
     }
 
-    public GEdge getEdge(String source, String target, EdgeType pEdgeType){
-        String id = "";
-        switch (pEdgeType){
-          case CFG:
-            id = "cfg";
-            break;
-          case CD:
-            id = "cd";
-            break;
-          case DD:
-            id = "dd";
-            break;
-          case S:
-            id = "s";
-            break;
-        }
-
-        if(id.isEmpty())
-          return null;
-
-        return getEdge(source, target, id);
-    }
 
     public GNode getNode(String id){
       if(nodes.containsKey(id)){
@@ -240,226 +203,69 @@ public class StructureGraph {
       return prefix+(lastGen++);
     }
 
-    public String toDot(){
+    public String toDot(Predicate<GNode> filter, Function<GEdge, String> colorFunction, Function<GNode, String> cluster){
       String s = "digraph G {\n";
 
-      for(String n: this.nodes()){
-        if(n.startsWith("N")){
-          s += n+"[ label="+this.nodes.get(n).getLabel()+" ];\n";
-        }
-      }
+      Map<String, Set<String>> clusterMap = new HashMap<>();
 
       for(String n: this.nodes()){
-        if(n.startsWith("N")){
+        GNode node = this.nodes.get(n);
+        if(filter.test(node)){
+          s += n+"[ label=\""+node.getLabel()+"\" ];\n";
 
-          for(GEdge e: this.getOutgoing(n)){
-            if(e instanceof DummyEdge){
-              s += n+" -> "+e.getSink().getId()+"[color=grey];\n";
-            }else if(e instanceof CFGEdge){
-              s += n+" -> "+e.getSink().getId()+";\n";
-            }
-            if(e instanceof DDEdge){
-              s += n+" -> "+e.getSink().getId()+"[color=red];\n";
-            }
-            if(e instanceof CDEdge){
-              s += n+" -> "+e.getSink().getId()+"[color=green];\n";
-            }
-            if(e instanceof SEdge){
-              s += n+" -> "+e.getSink().getId()+"[color=blue];\n";
-            }
-          }
+          String clusterId = cluster.apply(node);
+
+          if(!clusterMap.containsKey(clusterId))
+            clusterMap.put(clusterId, new HashSet<>());
+          clusterMap.get(clusterId).add(n);
 
         }
       }
 
+      for(Entry<String, Set<String>> clusterEntry : clusterMap.entrySet()) {
+        String clusterId = clusterEntry.getKey();
 
-      return s + "}";
+        if (!clusterId.equals("main")) {
+          s += "subgraph cluster_" + clusterId + " {\n label=\"" + clusterId
+              + "()\";\n color=black;\n";
+
+          for (String n : clusterEntry.getValue())
+            s += n+"; ";
+          s += "\n";
+
+          s += "}\n";
+
+        }
+
+
+      }
+
+
+      for(Entry<String, Set<String>> clusterEntry : clusterMap.entrySet()){
+
+        for(String n: clusterEntry.getValue()) {
+
+          for (GEdge e : this.getIngoing(n)) {
+
+            String color = colorFunction.apply(e);
+
+            if (color.equals("opaque"))
+              continue;
+
+            s +=
+                e.getSource().getId() + " -> " + n + (!color.equals("black") ? "[color=" + color + "]"
+                                                                           : "") + ";\n";
+          }
+        }
+      }
+
+      return s + "};";
     }
 
-
-    public String toDFSRepresentation(){
-      Map<String, Integer> index = new HashMap<>();
-
-      String startId = null;
-
-      for(String nodeId: this.nodes()){
-        GNode node = this.getNode(nodeId);
-        if(node.getLabel().equalsIgnoreCase("START")){
-          startId = nodeId;
-          break;
-        }
-      }
-
-      if(startId == null){
-        for(String nodeId: this.nodes()){
-          if(this.getIngoing(nodeId).isEmpty()){
-            startId = nodeId;
-            break;
-          }
-        }
-      }
-
-      int counter = 0;
-      ArrayDeque<String> stack = new ArrayDeque<>();
-      stack.push(startId);
-
-      while (!stack.isEmpty()){
-
-        String id = stack.pop();
-
-        if(index.containsKey(id))continue;
-
-        index.put(id, counter++);
-
-        for(GEdge e: this.getOutgoing(id)){
-          stack.push(e.getSink().getId());
-        }
-
-        for(GEdge e: this.getIngoing(id)){
-          stack.push(e.getSource().getId());
-        }
-
-      }
-
-      String s = "[";
-      stack.push(startId);
-      Set<String> seen = new HashSet<>();
-      Set<DFSReprNode> seenRepr = new HashSet<>();
-
-      while (!stack.isEmpty()){
-
-        String id = stack.pop();
-
-        if(seen.contains(id))continue;
-        seen.add(id);
-
-        for(GEdge e: this.getOutgoing(id)){
-          DFSReprNode node = new DFSReprNode(index.get(id), index.get(e.getSink().getId()), false,
-              e);
-          if(!seenRepr.contains(node)) {
-            seenRepr.add(node);
-            s = s + node.getRepresentation()+", ";
-          }
-          stack.push(e.getSink().getId());
-        }
-
-        for(GEdge e: this.getIngoing(id)){
-          DFSReprNode node = new DFSReprNode(index.get(id), index.get(e.getSource().getId()), true,
-              e);
-          if(!seenRepr.contains(node)) {
-            seenRepr.add(node);
-            s = s + node.getRepresentation()+", ";
-          }
-          stack.push(e.getSource().getId());
-        }
-
-      }
-
-      return s.substring(0, s.length()-2) +"]";
-
+    public String toDot(){
+      return toDot(
+          x -> true,
+          x -> "black",
+          x -> "main");
     }
-
-    private static class DFSReprNode{
-
-      public DFSReprNode(
-          int pSourceIndex,
-          int pSinkIndex,
-          boolean pIncoming,
-          GEdge pEdge) {
-        sourceIndex = pSourceIndex;
-        sinkIndex = pSinkIndex;
-        incoming = pIncoming;
-        edge = pEdge;
-      }
-
-      private int sourceIndex;
-      private int sinkIndex;
-      private boolean incoming;
-      private GEdge edge;
-
-      private String edgeRepr(){
-        if(sourceIndex <= sinkIndex){
-          if(incoming){
-            return "<|"+edge.getId();
-          }else{
-            return edge.getId()+"|>";
-          }
-        }else {
-          if(incoming){
-            return edge.getId()+"|>";
-          }else {
-            return "<|"+edge.getId();
-          }
-        }
-      }
-
-      private String getSourceLabel(){
-
-        if(sourceIndex <= sinkIndex){
-          if(incoming){
-            return edge.getSink().getLabel();
-          }else{
-            return edge.getSource().getLabel();
-          }
-        }else{
-          if(incoming){
-            return edge.getSource().getLabel();
-          }else{
-            return edge.getSink().getLabel();
-          }
-        }
-      }
-
-      private String getSinkLabel(){
-
-        if(sourceIndex <= sinkIndex){
-          if(incoming){
-            return edge.getSource().getLabel();
-          }else{
-            return edge.getSink().getLabel();
-          }
-        }else{
-          if(incoming){
-            return edge.getSink().getLabel();
-          }else{
-            return edge.getSource().getLabel();
-          }
-        }
-      }
-
-      public String getRepresentation(){
-        int source = (sourceIndex <= sinkIndex)?sourceIndex:sinkIndex;
-        int sink = (sourceIndex <= sinkIndex)?sinkIndex:sourceIndex;
-        String sourceLabel = getSourceLabel();
-        String sinkLabel  = getSinkLabel();
-
-        return "["+source+", "+sink+", \""+sourceLabel+"\", \""+edgeRepr()+"\", \""+sinkLabel+"\"]";
-
-      }
-
-      @Override
-      public int hashCode(){
-        int source = (sourceIndex <= sinkIndex)?sourceIndex:sinkIndex;
-        int sink = (sourceIndex <= sinkIndex)?sinkIndex:sourceIndex;
-        return source*13*13 + sink*13 + edgeRepr().hashCode();
-      }
-
-      @Override
-      public boolean equals(Object pDFSReprNode){
-        if(pDFSReprNode instanceof DFSReprNode){
-
-          DFSReprNode node = (DFSReprNode)pDFSReprNode;
-
-          int source = (sourceIndex <= sinkIndex)?sourceIndex:sinkIndex;
-          int sink = (sourceIndex <= sinkIndex)?sinkIndex:sourceIndex;
-          int oSource = (node.sourceIndex <= node.sinkIndex)?node.sourceIndex: node.sinkIndex;
-          int oSink = (node.sourceIndex <= node.sinkIndex)?node.sinkIndex: node.sourceIndex;
-
-          return source==oSource && sink == oSink && edgeRepr().equals(node.edgeRepr());
-        }
-        return false;
-      }
-
-    }
-
 }

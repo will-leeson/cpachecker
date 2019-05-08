@@ -29,7 +29,6 @@ import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
-import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.util.CFAUtils;
 import org.sosy_lab.cpachecker.util.dependencegraph.DGNode;
 import org.sosy_lab.cpachecker.util.dependencegraph.DependenceGraph;
@@ -43,7 +42,7 @@ public class NativeGraphAnalyser extends GraphAnalyser {
 
   public NativeGraphAnalyser(
       CFA pCFA,
-      StructureGraph pGraph,
+      SVGraph pGraph,
       ShutdownNotifier pShutdownNotifier,
       LogManager pLogger) throws InterruptedException {
     super(pGraph, pShutdownNotifier, pLogger);
@@ -55,7 +54,7 @@ public class NativeGraphAnalyser extends GraphAnalyser {
 
   }
 
-  public NativeGraphAnalyser(CFA pCFA, StructureGraph pGraph) throws InterruptedException {
+  public NativeGraphAnalyser(CFA pCFA, SVGraph pGraph) throws InterruptedException {
     this(pCFA, pGraph, null, null);
   }
 

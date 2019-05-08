@@ -23,6 +23,7 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph;
 
+import com.google.protobuf.Option;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -33,22 +34,26 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.graph.SCCUtil.SCC;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.navigator.InverseGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.dominator.IterativeDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.navigator.SGraphNavigator;
+import org.sosy_lab.cpachecker.util.Pair;
 
 public class GraphAnalyser {
 
   private LogManager logger;
-  protected StructureGraph graph;
+  protected SVGraph graph;
   protected ShutdownNotifier shutdownNotifier;
 
   protected String startNode;
@@ -58,7 +63,7 @@ public class GraphAnalyser {
   Map<String, Integer> rpoIndex;
 
 
-  public GraphAnalyser(StructureGraph pGraph, ShutdownNotifier pShutdownNotifier, LogManager pLogger)
+  public GraphAnalyser(SVGraph pGraph, ShutdownNotifier pShutdownNotifier, LogManager pLogger)
       throws InterruptedException {
     logger = pLogger;
     graph = pGraph;
@@ -88,7 +93,7 @@ public class GraphAnalyser {
     endNode = findEndOrFix();
   }
 
-  public GraphAnalyser( StructureGraph pGraph) throws InterruptedException {
+  public GraphAnalyser( SVGraph pGraph) throws InterruptedException {
     this(pGraph, null, null);
   }
 
@@ -387,16 +392,14 @@ public class GraphAnalyser {
       if(shutdownNotifier != null)
         shutdownNotifier.shutdownIfNecessary();
 
-      Map<String, Object> options = graph.getNode(n).getOptions();
+      GNode node = graph.getNode(n);
 
-      Object out = options.get("output");
-      if(out != null && out instanceof Set){
-        output.put(n, (Set)out);
+      if(node.containsOption(OptionKeys.DECL_VARS)){
+        output.put(n, node.getOption(OptionKeys.DECL_VARS));
       }
 
-      Object var = options.get("variables");
-      if(var != null && var instanceof Set){
-        variables.put(n, (Set)var);
+      if(node.containsOption(OptionKeys.VARS)){
+        variables.put(n, node.getOption(OptionKeys.VARS));
       }
 
       queue.add(n);
@@ -404,7 +407,6 @@ public class GraphAnalyser {
 
 
     Map<String, Map<String, Set<String>>> reachingDef = new HashMap<>();
-
 
     while (!queue.isEmpty()){
 
@@ -477,8 +479,10 @@ public class GraphAnalyser {
 
         }
 
-
       }
+
+
+
 
   }
 
@@ -561,52 +565,352 @@ public class GraphAnalyser {
     return id;
   }
 
-
-  public void applyCD() throws InterruptedException {
-
+  private void applyGeneralCD(String pStartNode, String pEndNode) throws InterruptedException {
     initNavigator();
     IGraphNavigator navi = new InverseGraphNavigator(navigator);
-    IDominator dominator = new IterativeDominator(navi, endNode);
+    IDominator dominator = new IterativeDominator(navi, pEndNode);
 
-    for(String n : navi.nodes()){
+    ArrayDeque<String> queue = new ArrayDeque<>();
+    queue.add(pStartNode);
+    Set<String> seen = new HashSet<>();
+
+    while (!queue.isEmpty()){
+      String n = queue.pop();
       Set<String> pred = navi.predecessor(n);
 
       if(shutdownNotifier != null)
         shutdownNotifier.shutdownIfNecessary();
 
-      if(pred.size() <= 1)continue;
-      if(graph.getNode(n).getLabel().equals(ASTNodeLabel.START.name()))continue;
+      if(pred.size() > 1 && !n.equals(pStartNode)) {
 
-      String idom = dominator.getIDom(n);
+        String idom = dominator.getIDom(n);
 
-      for(String p : pred){
+        for (String p : pred) {
 
-        Set<String> runnerSet = new HashSet<>();
+          Set<String> runnerSet = new HashSet<>();
 
-        String runner = p;
+          String runner = p;
 
-        while (!Objects.equals(runner, idom)){
-          runnerSet.add(runner);
+          while (!Objects.equals(runner, idom)) {
+            runnerSet.add(runner);
 
-          String pRunner = runner;
-          runner = dominator.getIDom(runner);
+            String pRunner = runner;
+            runner = dominator.getIDom(runner);
 
-          if(runner == null || runner.equals(pRunner)) {
-            runnerSet.clear();
-            break;
+            if (runner == null || runner.equals(pRunner)) {
+              runnerSet.clear();
+              break;
+            }
+
+          }
+
+
+          for (String r : runnerSet)
+            graph.addCDEdge(n, r);
+
+        }
+      }
+
+      for(GEdge next : graph.getOutgoing(n)){
+        String id = next.getSink().getId();
+        if(!seen.contains(id)){
+          seen.add(id);
+          queue.add(id);
+        }
+      }
+    }
+  }
+
+  private void applyContextCD(String context, String pStartNode, String pEndNode)
+      throws InterruptedException {
+
+    initNavigator();
+    IGraphNavigator navi = new InverseGraphNavigator(navigator);
+    IDominator dominator = new IterativeDominator(navi, pEndNode);
+
+    for(String n : graph.nodes()){
+      GNode node = graph.getNode(n);
+
+      if(node.getOption(OptionKeys.PARENT_FUNC) == null) {
+        if(!context.equals("main"))
+          continue;
+
+      }else if(!node.getOption(OptionKeys.PARENT_FUNC).equals(context))
+        continue;
+
+      Set<String> pred = navi.predecessor(n);
+
+      if(shutdownNotifier != null)
+        shutdownNotifier.shutdownIfNecessary();
+
+      if(pred.size() > 1 && !n.equals(pStartNode)) {
+
+        String idom = dominator.getIDom(n);
+
+        for (String p : pred) {
+
+          Set<String> runnerSet = new HashSet<>();
+
+          String runner = p;
+
+          while (!Objects.equals(runner, idom)) {
+            runnerSet.add(runner);
+
+            String pRunner = runner;
+            runner = dominator.getIDom(runner);
+
+            if (runner == null || runner.equals(pRunner)) {
+              runnerSet.clear();
+              break;
+            }
+
+          }
+
+
+          for (String r : runnerSet)
+            graph.addCDEdge(n, r);
+
+        }
+      }
+
+    }
+  }
+
+  private void applyCD(String pStartNode, String pEndNode) throws InterruptedException {
+    GNode start = graph.getNode(pStartNode);
+
+    if(start.containsOption(OptionKeys.PARENT_FUNC)){
+      applyContextCD(start.getOption(OptionKeys.PARENT_FUNC), pStartNode, pEndNode);
+    }else{
+      applyGeneralCD(pStartNode, pEndNode);
+    }
+  }
+
+
+  public void applyCD() throws InterruptedException {
+
+    if(graph.getGlobalOption(OptionKeys.FUNC_BOUNDRY) != null){
+
+      for(Entry<String, Pair<String, String>> e : graph.getGlobalOption(OptionKeys.FUNC_BOUNDRY).entrySet()){
+
+        applyCD(e.getValue().getFirst(), e.getValue().getSecond());
+
+      }
+
+    }
+    applyCD(startNode, endNode);
+  }
+
+  private void pruneNodes(Set<String> prune){
+
+    Map<String, Set<String>> succ = new HashMap<>();
+
+    for(String id : prune){
+
+      for(GEdge incoming : graph.getIngoing(id)){
+
+        if(prune.contains(incoming.getSource().getId()))
+          continue;
+
+        if(!succ.containsKey(incoming.getSource().getId())){
+          succ.put(incoming.getSource().getId(), new HashSet<>());
+        }
+        Set<String> next = succ.get(incoming.getSource().getId());
+
+        Queue<String> possible = new ArrayDeque<>(
+            graph.getOutgoingStream(id).map(e -> e.getSink().getId()).collect(Collectors.toSet())
+        );
+        Set<String> seen = new HashSet<>();
+
+        while (!possible.isEmpty()){
+
+          String current = possible.poll();
+          seen.add(current);
+
+          if(prune.contains(current)){
+            for(String succs : graph.getOutgoingStream(current).map(e -> e.getSink().getId()).collect(
+                Collectors.toSet())){
+
+              if(!next.contains(succs) && !seen.contains(succs))
+                possible.add(succs);
+
+            }
+          }else {
+            next.add(current);
           }
 
         }
 
-        for(String r : runnerSet)
-          graph.addCDEdge(n, r);
+      }
 
+    }
+
+    for(String r : prune)
+      graph.removeNode(r);
+
+    for(Entry<String, Set<String>> entry : succ.entrySet()){
+      for(String n : entry.getValue())
+        graph.addCFGEdge(entry.getKey(), n);
+    }
+
+
+  }
+
+  public void simplify() throws InterruptedException {
+    applyDummyEdges();
+
+    Set<String> prune = new HashSet<>();
+
+    for(String id : graph.nodes()){
+      if(id.startsWith("N")){
+        GNode node = graph.getNode(id);
+        if(node.getLabel().equals("BLANK") || node.getLabel().equals("LABEL") || node.getLabel().equals("SKIP")){
+          prune.add(id);
+        }
+      }
+    }
+
+    Queue<String> possible = new ArrayDeque<>(graph.nodes());
+
+    while(!possible.isEmpty()){
+
+      String id = possible.poll();
+
+      if(prune.contains(id))
+        continue;
+
+      GNode node = graph.getNode(id);
+
+      if(node.getLabel().equals("START"))
+        continue;
+
+      boolean remain = false;
+
+      for(GEdge pre : graph.getIngoing(id))
+        if(!prune.contains(pre)){
+          remain = true;
+          break;
+        }
+
+      if(!remain){
+        prune.add(node.getId());
+        possible.addAll(graph.getOutgoingStream(node.getId()).map(e -> e.getSink().getId()).collect(
+            Collectors.toSet()));
+      }
+    }
+
+
+    pruneNodes(prune);
+  }
+
+  public void recursionDetection(){
+
+      StructureGraph callGraph = new StructureGraph();
+
+      int i = 0;
+
+      for(String n : graph.nodes()){
+        GNode node = graph.getNode(n);
+
+        if(node.containsOption(OptionKeys.FUNC_CALL)){
+          String parent = node.getOption(OptionKeys.PARENT_FUNC);
+
+          if(parent == null){
+            logger.log(Level.WARNING, "ParentListener needs to be included for recursion detection.");
+            return;
+          }
+
+          String call = node.getOption(OptionKeys.FUNC_CALL);
+          callGraph.addNode(parent);
+          callGraph.addNode(call);
+          callGraph.addEdge(
+              new CallEdge("call_"+(i++), n, callGraph.getNode(parent), callGraph.getNode(call))
+          );
+        }
+      }
+
+      SCCUtil sccUtil = new SCCUtil(callGraph);
+
+      for(SCC scc: sccUtil.getStronglyConnectedComponents()){
+
+        Set<String> nodes = scc.getNodes();
+
+        for(String n : nodes){
+
+          for(GEdge edge : callGraph.getOutgoingStream(n).filter(e -> nodes.contains(e.getSink().getId())).collect(
+              Collectors.toSet())){
+
+            CallEdge call = (CallEdge)edge;
+            GNode funcCall = graph.getNode(call.func_call);
+
+            funcCall.setLabel(
+                funcCall.getLabel() + "_"+ASTNodeLabel.RECURSIVE.name()
+            );
+
+
+          }
+
+        }
 
       }
 
 
+  }
+
+  public void disconnectFunctionsViaDependencies(){
+
+    Map<String, String> start = new HashMap<>();
+    Map<String, String> stop = new HashMap<>();
+
+    for(String n : graph.nodes()){
+
+      GNode node = graph.getNode(n);
+
+      if(node.getLabel().equals("FUNCTION_START")){
+        for(GEdge pe : graph.getIngoing(n)){
+
+          if(!pe.getId().equals("cfg"))continue;
+
+          GNode p = pe.getSource();
+          if(p.getLabel().contains("FUNC_CALL")) {
+            graph.removeEdge(pe);
+            graph.addDDEdge(p.getId(), n);
+            graph.addCDEdge(p.getId(), n);
+          }
+
+        }
+
+        if(node.containsOption(OptionKeys.PARENT_FUNC)){
+          start.put(node.getOption(OptionKeys.PARENT_FUNC), n);
+        }
+
+      }else if(node.getLabel().equals("FUNCTION_EXIT")){
+        for(GEdge pe : graph.getOutgoing(n)){
+
+          if(!pe.getId().equals("cfg"))continue;
+
+          GNode p = pe.getSink();
+          graph.removeEdge(pe);
+          graph.addDDEdge(n, p.getId());
+
+        }
+
+        if(node.containsOption(OptionKeys.PARENT_FUNC)){
+          stop.put(node.getOption(OptionKeys.PARENT_FUNC), n);
+        }
+      }
+
     }
 
+    Map<String, Pair<String, String>> boundry = new HashMap<>();
+
+    for(Entry<String, String> e : start.entrySet()){
+      if(stop.containsKey(e.getKey())){
+        boundry.put(e.getKey(), Pair.of(e.getValue(), stop.get(e.getKey())));
+      }
+    }
+
+    graph.setGlobalOption(OptionKeys.FUNC_BOUNDRY, boundry);
 
   }
 
@@ -618,6 +922,16 @@ public class GraphAnalyser {
     applyCD();
   }
 
+
+  private class CallEdge extends GEdge{
+
+    private String func_call;
+
+    public CallEdge(String pID, String pFuncCall, GNode pSource, GNode pSink) {
+      super(pID, pSource, pSink);
+      this.func_call = pFuncCall;
+    }
+  }
 
 
 

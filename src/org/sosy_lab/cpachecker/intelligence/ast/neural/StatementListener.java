@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,26 +21,28 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.ast.neural;
 
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.ast.c.CStatement;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CStatementEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
+import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CAssignVariablesCollector;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementVariablesCollectingVisitor;
 import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 
 public class StatementListener extends AEdgeListener {
 
   public StatementListener(
-      int pDepth,
-      StructureGraph pGraph,
+      SVGraph pGraph,
       ShutdownNotifier pShutdownNotifier) {
-    super(pDepth, pGraph, pShutdownNotifier);
+    super(-1, pGraph, pShutdownNotifier);
   }
 
   @Override
@@ -51,18 +53,16 @@ public class StatementListener extends AEdgeListener {
       CStatement statement = cfaEdge.getStatement();
 
       try {
-        String astId = statement.accept(new CStatementASTVisitor(graph, depth));
+        String label = statement.accept(new CStatementStumpVisitor());
 
         String id = "N"+edge.getPredecessor().getNodeNumber();
         String idS = "N"+edge.getSuccessor().getNodeNumber();
-        graph.addNode(id, graph.getNode(astId).getLabel());
+        graph.addNode(id, label);
         graph.addNode(idS);
         graph.addCFGEdge(id, idS);
 
-        for(GEdge e: graph.getIngoing(astId)){
-          graph.addSEdge(e.getSource().getId(), id);
-        }
-        graph.removeNode(astId);
+        GNode node = graph.getNode(id);
+        node.setOption(OptionKeys.CSTATEMENT, statement);
 
         if(notifier != null)
           try{
@@ -71,7 +71,7 @@ public class StatementListener extends AEdgeListener {
             return;
           }
 
-        graph.getNode(id).getOptions().put("variables",
+        node.setOption(OptionKeys.VARS,
             statement.accept(new CStatementVariablesCollectingVisitor(edge.getPredecessor())));
 
         if(notifier != null)
@@ -81,11 +81,10 @@ public class StatementListener extends AEdgeListener {
             return;
           }
 
-        graph.getNode(id).getOptions().put("output",
+        node.setOption(OptionKeys.DECL_VARS,
             statement.accept(new CAssignVariablesCollector(edge.getPredecessor())));
 
-      } catch (CPATransferException pE) {
-      }
+      } catch (CPATransferException pE) {}
 
 
     }

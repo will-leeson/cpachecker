@@ -41,16 +41,16 @@ import org.sosy_lab.cpachecker.cfa.types.c.CTypedefType;
 import org.sosy_lab.cpachecker.cfa.types.c.CVoidType;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 
 
 
 public class CTypeASTVisitor implements CTypeVisitor<String, CPATransferException> {
 
-  private final StructureGraph graph;
+  private final SVGraph graph;
   private final int depth;
 
-  public CTypeASTVisitor(StructureGraph pGraph, int pDepth) {
+  public CTypeASTVisitor(SVGraph pGraph, int pDepth) {
     this.graph = pGraph;
     this.depth = pDepth;
   }
@@ -305,18 +305,6 @@ public class CTypeASTVisitor implements CTypeVisitor<String, CPATransferExceptio
         labels.add(ASTNodeLabel.DOUBLE.name());
         break;
       default:
-        if (pSimpleType.isLong()) {
-          labels.add(ASTNodeLabel.LONG.name());
-          break;
-        }
-        if (pSimpleType.isLongLong()) {
-          labels.add(ASTNodeLabel.LONGLONG.name());
-          break;
-        }
-        if (pSimpleType.isUnsigned()) {
-          labels.add(ASTNodeLabel.UNSIGNED.name());
-          break;
-        }
         if (pSimpleType.isShort()) {
           labels.add(ASTNodeLabel.SHORT.name());
           break;

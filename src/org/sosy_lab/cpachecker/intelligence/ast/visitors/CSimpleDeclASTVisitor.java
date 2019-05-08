@@ -34,15 +34,15 @@ import org.sosy_lab.cpachecker.cfa.types.c.CEnumType.CEnumerator;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTCollectorUtils;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 
 public class CSimpleDeclASTVisitor
     implements CSimpleDeclarationVisitor<String, CPATransferException> {
 
-  private final StructureGraph graph;
+  private final SVGraph graph;
   private final int depth;
 
-  public CSimpleDeclASTVisitor(StructureGraph pGraph, int pDepth) {
+  public CSimpleDeclASTVisitor(SVGraph pGraph, int pDepth) {
     this.graph = pGraph;
     this.depth = pDepth;
   }

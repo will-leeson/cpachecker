@@ -27,15 +27,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.sosy_lab.cpachecker.intelligence.graph.CFGEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
 
 public class SGraphNavigator implements IGraphNavigator {
 
 
-  private StructureGraph graph;
+  private SVGraph graph;
 
-  public SGraphNavigator(StructureGraph pGraph) {
+  public SGraphNavigator(SVGraph pGraph) {
     graph = pGraph;
   }
 
