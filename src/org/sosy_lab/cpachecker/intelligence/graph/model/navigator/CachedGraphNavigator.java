@@ -21,35 +21,44 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph;
+package org.sosy_lab.cpachecker.intelligence.graph.model.navigator;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-public class Options {
+public class CachedGraphNavigator implements IGraphNavigator {
 
-  private final Map<String, Object> map = new HashMap<>();
+  private IGraphNavigator base;
 
-  public <T> T put(Key<T> key, T value){
-    return (T) map.put(key.getName(), value);
+  private Map<String, Set<String>> successor = new HashMap<>();
+  private Map<String, Set<String>> predecessor = new HashMap<>();
+
+
+  public CachedGraphNavigator(IGraphNavigator pBase) {
+    base = pBase;
   }
 
-  public <T> T get(Key<T> key){
-    return (T) map.get(key.getName());
+  @Override
+  public Set<String> successor(String node) {
+
+    if(!successor.containsKey(node)){
+      successor.put(node, base.successor(node));
+    }
+
+    return successor.get(node);
   }
 
-
-  public static class Key<T> {
-
-    private final String name;
-
-    public Key(String pName) {
-      this.name = pName;
+  @Override
+  public Set<String> predecessor(String node) {
+    if(!predecessor.containsKey(node)){
+      predecessor.put(node, base.predecessor(node));
     }
+    return predecessor.get(node);
+  }
 
-    public String getName(){
-      return name;
-    }
-
+  @Override
+  public Set<String> nodes() {
+    return base.nodes();
   }
 }

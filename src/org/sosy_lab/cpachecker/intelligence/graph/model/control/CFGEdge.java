@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,14 +21,13 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph.dominator;
+package org.sosy_lab.cpachecker.intelligence.graph.model.control;
 
-import java.util.Set;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 
-public interface IDominator {
-
-  public Set<String> getDom(String v);
-
-  public String getIDom(String v);
-
+public class CFGEdge extends GEdge {
+  public CFGEdge(GNode pSource, GNode pSink) {
+    super("cfg", pSource, pSink);
+  }
 }

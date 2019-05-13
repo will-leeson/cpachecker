@@ -21,9 +21,8 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph;
+package org.sosy_lab.cpachecker.intelligence.graph.analysis;
 
-import com.google.protobuf.Option;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,12 +41,16 @@ import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.graph.SCCUtil.SCC;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.IDominator;
-import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
-import org.sosy_lab.cpachecker.intelligence.graph.navigator.InverseGraphNavigator;
-import org.sosy_lab.cpachecker.intelligence.graph.dominator.IterativeDominator;
-import org.sosy_lab.cpachecker.intelligence.graph.navigator.SGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.FunctionGraph.CallEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.SCCUtil.SCC;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.dominator.IDominator;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.IGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.InverseGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.dominator.IterativeDominator;
+import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.SGraphNavigator;
 import org.sosy_lab.cpachecker.util.Pair;
 
 public class GraphAnalyser {
@@ -93,7 +96,7 @@ public class GraphAnalyser {
     endNode = findEndOrFix();
   }
 
-  public GraphAnalyser( SVGraph pGraph) throws InterruptedException {
+  public GraphAnalyser(SVGraph pGraph) throws InterruptedException {
     this(pGraph, null, null);
   }
 
@@ -160,48 +163,6 @@ public class GraphAnalyser {
 
     if(shutdownNotifier != null)
       shutdownNotifier.shutdownIfNecessary();
-
-    /*
-    SCCUtil sccUtil = new SCCUtil(graph);
-
-    for(SCC scc: sccUtil.getStronglyConnectedComponents()){
-
-      if(scc.getNodes().size() < 2){
-        continue;
-      }
-
-      String sourceId = null;
-      boolean terminate = false;
-
-      for(String nId: scc.getNodes()){
-        if(shutdownNotifier != null)
-          shutdownNotifier.shutdownIfNecessary();
-
-        for(GEdge e: graph.getOutgoing(nId)){
-          if(!scc.getNodes().contains(e.getSink().getId())){
-            terminate = true;
-            break;
-          }
-        }
-
-        if(terminate)
-          break;
-
-        Set<GEdge> out = graph.getOutgoing(nId);
-
-        if(out.size() < 2){
-          sourceId = nId;
-        }
-
-
-      }
-
-      if(!terminate){
-        graph.addCFGEdge(sourceId, endNode);
-      }
-
-    }
-    */
 
     initNavigator();
 
@@ -481,9 +442,6 @@ public class GraphAnalyser {
 
       }
 
-
-
-
   }
 
   private Set<String> findOnlyCyle(String start){
@@ -692,9 +650,7 @@ public class GraphAnalyser {
     if(graph.getGlobalOption(OptionKeys.FUNC_BOUNDRY) != null){
 
       for(Entry<String, Pair<String, String>> e : graph.getGlobalOption(OptionKeys.FUNC_BOUNDRY).entrySet()){
-
         applyCD(e.getValue().getFirst(), e.getValue().getSecond());
-
       }
 
     }
@@ -805,7 +761,7 @@ public class GraphAnalyser {
 
   public void recursionDetection(){
 
-      StructureGraph callGraph = new StructureGraph();
+      FunctionGraph functionGraph = new FunctionGraph();
 
       int i = 0;
 
@@ -821,15 +777,13 @@ public class GraphAnalyser {
           }
 
           String call = node.getOption(OptionKeys.FUNC_CALL);
-          callGraph.addNode(parent);
-          callGraph.addNode(call);
-          callGraph.addEdge(
-              new CallEdge("call_"+(i++), n, callGraph.getNode(parent), callGraph.getNode(call))
-          );
+          functionGraph.addNode(parent);
+          functionGraph.addNode(call);
+          functionGraph.addEdge(parent, call, n);
         }
       }
 
-      SCCUtil sccUtil = new SCCUtil(callGraph);
+      SCCUtil sccUtil = new SCCUtil(functionGraph);
 
       for(SCC scc: sccUtil.getStronglyConnectedComponents()){
 
@@ -837,11 +791,11 @@ public class GraphAnalyser {
 
         for(String n : nodes){
 
-          for(GEdge edge : callGraph.getOutgoingStream(n).filter(e -> nodes.contains(e.getSink().getId())).collect(
+          for(GEdge edge : functionGraph.getOutgoingStream(n).filter(e -> nodes.contains(e.getSink().getId())).collect(
               Collectors.toSet())){
 
             CallEdge call = (CallEdge)edge;
-            GNode funcCall = graph.getNode(call.func_call);
+            GNode funcCall = graph.getNode(call.getFunctionCall());
 
             funcCall.setLabel(
                 funcCall.getLabel() + "_"+ASTNodeLabel.RECURSIVE.name()
@@ -922,16 +876,6 @@ public class GraphAnalyser {
     applyCD();
   }
 
-
-  private class CallEdge extends GEdge{
-
-    private String func_call;
-
-    public CallEdge(String pID, String pFuncCall, GNode pSource, GNode pSink) {
-      super(pID, pSource, pSink);
-      this.func_call = pFuncCall;
-    }
-  }
 
 
 

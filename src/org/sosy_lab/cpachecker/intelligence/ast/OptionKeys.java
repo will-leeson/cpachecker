@@ -28,15 +28,15 @@ import java.util.Map;
 import java.util.Set;
 import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
-import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CStatement;
-import org.sosy_lab.cpachecker.intelligence.graph.Options;
-import org.sosy_lab.cpachecker.intelligence.graph.Options.Key;
+import org.sosy_lab.cpachecker.intelligence.graph.model.Options;
+import org.sosy_lab.cpachecker.intelligence.graph.model.Options.Key;
 import org.sosy_lab.cpachecker.util.Pair;
 
 public class OptionKeys {
 
   public static final Options.Key<Boolean> TRUTH = new Key<>("truth");
+  public static final Options.Key<Integer> RPO = new Key<>("reversePostorder");
 
   public static final Options.Key<Set<String>> VARS = new Key<>("variables");
 

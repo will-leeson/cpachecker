@@ -21,31 +21,32 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph.navigator;
+package org.sosy_lab.cpachecker.intelligence.ast.neural;
 
-import java.util.Set;
-import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
+import org.sosy_lab.common.ShutdownNotifier;
+import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
+import org.sosy_lab.cpachecker.cfa.model.CFANode;
+import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
-public class InverseGraphNavigator implements IGraphNavigator {
+public class RPOListener extends AEdgeListener {
 
-  private IGraphNavigator delegate;
 
-  public InverseGraphNavigator(IGraphNavigator pDelegate) {
-    delegate = pDelegate;
+  public RPOListener(
+      SVGraph pGraph,
+      ShutdownNotifier pShutdownNotifier) {
+    super(-1, pGraph, pShutdownNotifier);
   }
 
   @Override
-  public Set<String> successor(String node) {
-    return delegate.predecessor(node);
-  }
+  public void listen(CFAEdge edge) {
 
-  @Override
-  public Set<String> predecessor(String node) {
-    return delegate.successor(node);
-  }
+    CFANode cfaNode = edge.getPredecessor();
+    String id = "N"+cfaNode.getNodeNumber();
 
-  @Override
-  public Set<String> nodes() {
-    return delegate.nodes();
+    graph.addNode(id);
+    graph.getNode(id).setOption(OptionKeys.RPO, cfaNode.getReversePostorderId());
+
   }
 }

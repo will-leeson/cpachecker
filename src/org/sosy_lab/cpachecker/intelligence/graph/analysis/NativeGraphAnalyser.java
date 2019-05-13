@@ -21,7 +21,7 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph;
+package org.sosy_lab.cpachecker.intelligence.graph.analysis;
 
 import java.util.Collection;
 import java.util.Map.Entry;
@@ -29,6 +29,7 @@ import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 import org.sosy_lab.cpachecker.util.CFAUtils;
 import org.sosy_lab.cpachecker.util.dependencegraph.DGNode;
 import org.sosy_lab.cpachecker.util.dependencegraph.DependenceGraph;

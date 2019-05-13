@@ -28,8 +28,7 @@ import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CReturnStatementEdge;
 import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class ReturnStatementListener extends AEdgeListener {
 

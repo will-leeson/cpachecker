@@ -28,8 +28,6 @@ import java.util.HashSet;
 import java.util.Set;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
-import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionDeclaration;
-import org.sosy_lab.cpachecker.cfa.ast.c.CVariableDeclaration;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CDeclarationEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
@@ -38,9 +36,8 @@ import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationDefCollectorVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationUseCollectorVisitor;
-import org.sosy_lab.cpachecker.intelligence.ast.visitors.CSimpleDeclASTVisitor;
-import org.sosy_lab.cpachecker.intelligence.graph.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class DeclarationListener extends AEdgeListener {
 

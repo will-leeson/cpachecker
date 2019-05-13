@@ -32,8 +32,8 @@ import org.sosy_lab.cpachecker.cfa.model.FunctionEntryNode;
 import org.sosy_lab.cpachecker.intelligence.ast.CFAIterator;
 import org.sosy_lab.cpachecker.intelligence.ast.IEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.graph.CallGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.CallGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class CallGraphProcessor {
 

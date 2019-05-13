@@ -28,7 +28,7 @@ import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class ParentListener extends AEdgeListener {
   public ParentListener(

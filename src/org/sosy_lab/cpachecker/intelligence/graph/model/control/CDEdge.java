@@ -21,15 +21,13 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph;
+package org.sosy_lab.cpachecker.intelligence.graph.model.control;
 
-public class DummyEdge extends CFGEdge {
-  public DummyEdge(GNode pSource, GNode pSink) {
-    super(pSource, pSink);
-  }
+import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 
-  @Override
-  public String getId(){
-    return "du";
+public class CDEdge extends GEdge {
+  public CDEdge(GNode pSource, GNode pSink) {
+    super("cd", pSource, pSink);
   }
 }

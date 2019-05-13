@@ -38,12 +38,11 @@ import java.util.Map;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
-import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.GraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.NativeGraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.NativeGraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class WLFeatureModel {
 

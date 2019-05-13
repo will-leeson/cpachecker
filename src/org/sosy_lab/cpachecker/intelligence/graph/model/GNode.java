@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,32 +21,43 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph;
+package org.sosy_lab.cpachecker.intelligence.graph.model;
 
 import java.util.Objects;
 
-public class GEdge {
+public class GNode {
 
   private String id;
-  private GNode source;
-  private GNode sink;
+  private String label;
+  private Options typedOptions = new Options();
 
-  public GEdge(String pID, GNode pSource, GNode pSink) {
-    source = pSource;
-    sink = pSink;
-    id = pID;
+  public GNode(String pId, String pLabel) {
+    id = pId;
+    label = pLabel;
   }
 
-  public String getId(){
+  public String getId() {
     return id;
   }
 
-  public GNode getSource() {
-    return source;
+  public String getLabel() {
+    return label;
   }
 
-  public GNode getSink() {
-    return sink;
+  public void setLabel(String pLabel){
+    this.label = pLabel;
+  }
+
+  public <T> void setOption(Options.Key<T> key, T option){
+    typedOptions.put(key, option);
+  }
+
+  public <T> T getOption(Options.Key<T> key){
+    return typedOptions.get(key);
+  }
+
+  public <T> boolean containsOption(Options.Key<T> key){
+    return getOption(key) != null;
   }
 
   @Override
@@ -57,16 +68,20 @@ public class GEdge {
     if (pO == null || getClass() != pO.getClass()) {
       return false;
     }
-    GEdge gEdge = (GEdge) pO;
-    return Objects.equals(id, gEdge.id) &&
-        Objects.equals(source, gEdge.source) &&
-        Objects.equals(sink, gEdge.sink);
+    GNode gNode = (GNode) pO;
+    return Objects.equals(id, gNode.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, source, sink);
+    return Objects.hash(id);
   }
+
+  @Override
+  public String toString(){
+    return getId()+" [ "+getLabel()+" ]";
+  }
+
 
 
 }

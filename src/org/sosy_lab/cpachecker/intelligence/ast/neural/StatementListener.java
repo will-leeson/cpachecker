@@ -31,11 +31,9 @@ import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CAssignVariablesCollector;
-import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementVariablesCollectingVisitor;
-import org.sosy_lab.cpachecker.intelligence.graph.GEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class StatementListener extends AEdgeListener {
 

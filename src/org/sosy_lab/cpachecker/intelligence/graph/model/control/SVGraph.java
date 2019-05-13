@@ -21,9 +21,20 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph;
+package org.sosy_lab.cpachecker.intelligence.graph.model.control;
 
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.CDEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.CFGEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.DDEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.DummyEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SEdge;
 
 public class SVGraph extends StructureGraph {
 
@@ -51,7 +62,7 @@ public class SVGraph extends StructureGraph {
     return addEdge(new DummyEdge(super.getNode(source), super.getNode(target)));
   }
 
-  public GEdge getEdge(String source, String target, EdgeType pEdgeType){
+  private String stringId(EdgeType pEdgeType){
     String id = "";
     switch (pEdgeType){
       case CFG:
@@ -68,11 +79,43 @@ public class SVGraph extends StructureGraph {
         break;
     }
 
+    return id;
+  }
+
+  public GEdge getEdge(String source, String target, EdgeType pEdgeType){
+    String id = stringId(pEdgeType);
+
     if(id.isEmpty())
       return null;
 
     return getEdge(source, target, id);
   }
+
+  public Stream<GEdge> getIngoingTypedStream(String target, EdgeType pEdgeType){
+    String id = stringId(pEdgeType);
+
+    return reverseEdges.row(target).values().stream()
+              .map(m -> m.get(id))
+              .filter(m -> (m != null));
+  }
+
+  public Set<GEdge> getIngoingTyped(String target, EdgeType pEdgeType) {
+    return getIngoingTypedStream(target, pEdgeType).collect(Collectors.toSet());
+  }
+
+  public Stream<GEdge> getOutgoingTypedStream(String source, EdgeType pEdgeType){
+
+    String id = stringId(pEdgeType);
+
+    return edges.row(source).values().stream()
+                .map(m -> m.get(id))
+                .filter(m -> (m != null));
+  }
+
+  public Set<GEdge> getOutgoingTyped(String source, EdgeType pEdgeType){
+    return getOutgoingTypedStream(source, pEdgeType).collect(Collectors.toSet());
+  }
+
 
   public String toDot(){
     return super.toDot(

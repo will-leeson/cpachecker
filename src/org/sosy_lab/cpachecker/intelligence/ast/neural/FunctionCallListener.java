@@ -24,7 +24,6 @@
 package org.sosy_lab.cpachecker.intelligence.ast.neural;
 
 import com.google.common.base.Optional;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,8 +31,6 @@ import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionCall;
 import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionCallAssignmentStatement;
-import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionDeclaration;
-import org.sosy_lab.cpachecker.cfa.ast.c.CParameterDeclaration;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionCallEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
@@ -42,10 +39,9 @@ import org.sosy_lab.cpachecker.intelligence.ast.ASTCollectorUtils;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CAssignVariablesCollector;
-import org.sosy_lab.cpachecker.intelligence.ast.visitors.CExpressionASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CVariablesCollectingVisitor;
-import org.sosy_lab.cpachecker.intelligence.graph.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class FunctionCallListener extends AEdgeListener {
 

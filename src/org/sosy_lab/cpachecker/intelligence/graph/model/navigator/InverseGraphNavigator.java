@@ -21,45 +21,30 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph.navigator;
+package org.sosy_lab.cpachecker.intelligence.graph.model.navigator;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
-import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
 
-public class CachedGraphNavigator implements IGraphNavigator {
+public class InverseGraphNavigator implements IGraphNavigator {
 
-  private IGraphNavigator base;
+  private IGraphNavigator delegate;
 
-  private Map<String, Set<String>> successor = new HashMap<>();
-  private Map<String, Set<String>> predecessor = new HashMap<>();
-
-
-  public CachedGraphNavigator(IGraphNavigator pBase) {
-    base = pBase;
+  public InverseGraphNavigator(IGraphNavigator pDelegate) {
+    delegate = pDelegate;
   }
 
   @Override
   public Set<String> successor(String node) {
-
-    if(!successor.containsKey(node)){
-      successor.put(node, base.successor(node));
-    }
-
-    return successor.get(node);
+    return delegate.predecessor(node);
   }
 
   @Override
   public Set<String> predecessor(String node) {
-    if(!predecessor.containsKey(node)){
-      predecessor.put(node, base.predecessor(node));
-    }
-    return predecessor.get(node);
+    return delegate.successor(node);
   }
 
   @Override
   public Set<String> nodes() {
-    return base.nodes();
+    return delegate.nodes();
   }
 }

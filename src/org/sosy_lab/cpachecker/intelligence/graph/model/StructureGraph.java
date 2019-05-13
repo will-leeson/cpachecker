@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,13 +21,11 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph;
+package org.sosy_lab.cpachecker.intelligence.graph.model;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
-import com.google.protobuf.Option;
-import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,13 +36,14 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.sosy_lab.cpachecker.intelligence.graph.Options.Key;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
+import org.sosy_lab.cpachecker.intelligence.graph.model.Options.Key;
 
 public class StructureGraph {
 
     private Map<String, GNode> nodes;
-    private Table<String, String, Map<String, GEdge>> edges;
-    private Table<String, String, Map<String, GEdge>> reverseEdges;
+    protected Table<String, String, Map<String, GEdge>> edges;
+    protected Table<String, String, Map<String, GEdge>> reverseEdges;
 
     private Options globalOptions = new Options();
 
@@ -91,7 +90,7 @@ public class StructureGraph {
       }
       Map<String, GEdge> edge = edges.get(source, sink);
 
-      if(edge.containsKey(e.getId()))return  false;
+      if(edge.containsKey(e.getId()))return false;
       edge.put(e.getId(), e);
 
       return true;

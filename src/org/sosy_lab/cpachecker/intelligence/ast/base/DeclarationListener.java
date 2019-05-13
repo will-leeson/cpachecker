@@ -37,9 +37,8 @@ import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationDefCollectorVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationUseCollectorVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CSimpleDeclASTVisitor;
-import org.sosy_lab.cpachecker.intelligence.graph.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class DeclarationListener extends AEdgeListener {
 

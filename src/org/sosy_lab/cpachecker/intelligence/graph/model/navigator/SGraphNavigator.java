@@ -21,14 +21,14 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph.navigator;
+package org.sosy_lab.cpachecker.intelligence.graph.model.navigator;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.sosy_lab.cpachecker.intelligence.graph.CFGEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.navigator.IGraphNavigator;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.CFGEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph.EdgeType;
 
 public class SGraphNavigator implements IGraphNavigator {
 
@@ -42,14 +42,13 @@ public class SGraphNavigator implements IGraphNavigator {
   @Override
   public Set<String> successor(String node) {
     if(graph.getNode(node) == null)return new HashSet<>();
-    return graph.getOutgoingStream(node).filter(edge -> edge instanceof CFGEdge)
-              .map(edge -> edge.getSink().getId()).collect(Collectors.toSet());
+    return graph.getOutgoingTypedStream(node, EdgeType.CFG).map(edge -> edge.getSink().getId()).collect(Collectors.toSet());
   }
 
   @Override
   public Set<String> predecessor(String node) {
     if(graph.getNode(node) == null)return new HashSet<>();
-    return graph.getIngoingStream(node).filter(edge -> edge instanceof CFGEdge)
+    return graph.getIngoingTypedStream(node, EdgeType.CFG)
         .map(edge -> edge.getSource().getId()).collect(Collectors.toSet());
   }
 

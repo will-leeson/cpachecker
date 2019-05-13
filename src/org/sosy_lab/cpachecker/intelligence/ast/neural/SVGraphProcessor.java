@@ -24,17 +24,14 @@
 package org.sosy_lab.cpachecker.intelligence.ast.neural;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
-import org.sosy_lab.cpachecker.cfa.model.FunctionEntryNode;
 import org.sosy_lab.cpachecker.intelligence.ast.CFAIterator;
 import org.sosy_lab.cpachecker.intelligence.ast.IEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.graph.CallGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class SVGraphProcessor {
 
@@ -42,6 +39,7 @@ public class SVGraphProcessor {
 
     return new ArrayList<IEdgeListener>(){{
       add(new ParentListener(-1, pGraph, pShutdownNotifier));
+      add(new RPOListener(pGraph, pShutdownNotifier));
       add(new InitExitListener(pGraph, pShutdownNotifier));
       add(new AssumptionListener(pGraph, pShutdownNotifier));
       add(new BlankEdgeListener(pGraph, pShutdownNotifier));

@@ -33,7 +33,7 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CStatementVisitor;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTCollectorUtils;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 
 public class CStatementASTVisitor implements CStatementVisitor<String, CPATransferException> {

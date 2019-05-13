@@ -31,8 +31,7 @@ import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.ast.CFAIterator;
 import org.sosy_lab.cpachecker.intelligence.ast.IEdgeListener;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class CFAProcessor {
 

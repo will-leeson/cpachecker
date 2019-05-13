@@ -38,7 +38,7 @@ import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CExpressionASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CVariablesCollectingVisitor;
-import org.sosy_lab.cpachecker.intelligence.graph.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class FunctionCallListener extends AEdgeListener {
 

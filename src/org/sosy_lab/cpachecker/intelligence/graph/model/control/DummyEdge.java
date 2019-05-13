@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,10 +21,17 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.graph;
+package org.sosy_lab.cpachecker.intelligence.graph.model.control;
 
-public class CDEdge extends GEdge {
-  public CDEdge(GNode pSource, GNode pSink) {
-    super("cd", pSource, pSink);
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+
+public class DummyEdge extends CFGEdge {
+  public DummyEdge(GNode pSource, GNode pSink) {
+    super(pSource, pSink);
+  }
+
+  @Override
+  public String getId(){
+    return "du";
   }
 }
