@@ -42,8 +42,6 @@ import org.sosy_lab.cpachecker.intelligence.graph.model.Options.Key;
 public class StructureGraph {
 
     private Map<String, GNode> nodes;
-    protected Table<String, String, Map<String, GEdge>> edges;
-    protected Table<String, String, Map<String, GEdge>> reverseEdges;
 
     private Options globalOptions = new Options();
 
@@ -51,8 +49,6 @@ public class StructureGraph {
 
     public StructureGraph(){
       nodes = new HashMap<>();
-      edges = HashBasedTable.create();
-      reverseEdges = HashBasedTable.create();
     }
 
     public boolean addNode(String id){
@@ -72,6 +68,13 @@ public class StructureGraph {
       return true;
     }
 
+    private void add(Map<String, Map<String, GEdge>> map, String id, GEdge pGEdge){
+      if(!map.containsKey(pGEdge.getId())){
+        map.put(pGEdge.getId(), new HashMap<>());
+      }
+      map.get(pGEdge.getId()).put(id, pGEdge);
+    }
+
     protected boolean addEdge(GEdge e){
       if(e.getSource() == null || e.getSink() == null){
         return false;
@@ -80,18 +83,10 @@ public class StructureGraph {
       if(!nodes.containsKey(e.getSource().getId()))return false;
       if(!nodes.containsKey(e.getSink().getId()))return false;
 
-      String sink = e.getSink().getId();
-      String source = e.getSource().getId();
+      if(e.getSource().out.containsKey(e.getId()) && e.getSource().out.get(e.getId()).containsKey(e.getSink().getId())) return false;
+      add(e.getSource().out, e.getSink().getId(), e);
+      add(e.getSink().in, e.getSource().getId(), e);
 
-      if(!edges.contains(source, sink)){
-        Map<String, GEdge> map = new HashMap<>();
-        edges.put(source, sink, map);
-        reverseEdges.put(sink, source, map);
-      }
-      Map<String, GEdge> edge = edges.get(source, sink);
-
-      if(edge.containsKey(e.getId()))return false;
-      edge.put(e.getId(), e);
 
       return true;
     }
@@ -109,8 +104,10 @@ public class StructureGraph {
     }
 
     public Stream<GEdge> getIngoingStream(String target){
-      return reverseEdges.row(target).values().stream()
-          .map(m -> m.values()).flatMap(Collection::stream);
+      if(!nodes.containsKey(target))
+        return Stream.empty();
+      return nodes.get(target).in.values().stream()
+            .map(m -> m.values()).flatMap(Collection::stream);
     }
 
     public Set<GEdge> getIngoing(String target) {
@@ -118,19 +115,51 @@ public class StructureGraph {
     }
 
     public Stream<GEdge> getOutgoingStream(String source){
-      return edges.row(source).values().stream()
-          .map(m -> m.values()).flatMap(Collection::stream);
+      if(!nodes.containsKey(source))
+        return Stream.empty();
+      return nodes.get(source).out.values()
+          .stream().map(m -> m.values()).flatMap(Collection::stream);
     }
 
     public Set<GEdge> getOutgoing(String source){
       return getOutgoingStream(source).collect(Collectors.toSet());
     }
 
+
+    public Stream<GEdge> getIngoingTypedStream(String target, String type){
+      if(!nodes.containsKey(target))
+        return Stream.empty();
+      return nodes.get(target).in.getOrDefault(type, new HashMap<>()).values()
+            .stream();
+    }
+
+    public Set<GEdge> getIngoingTyped(String target, String type) {
+      return getIngoingTypedStream(target, type).collect(Collectors.toSet());
+    }
+
+    public Stream<GEdge> getOutgoingTypedStream(String source, String type){
+      if(!nodes.containsKey(source))
+        return Stream.empty();
+      return nodes.get(source).out.getOrDefault(type, new HashMap<>()).values()
+          .stream();
+    }
+
+    public Set<GEdge> getOutgoingTyped(String source, String type){
+      return getOutgoingTypedStream(source, type).collect(Collectors.toSet());
+    }
+
     public GEdge getEdge(String source, String target, String id){
-        if(edges.contains(source, target)){
-          Map<String, GEdge> eMap = edges.get(source, target);
-          if(eMap.containsKey(id))
-            return eMap.get(id);
+        if(nodes.containsKey(source)){
+          GNode node = getNode(source);
+
+          if(node.out.containsKey(id)){
+            Map<String, GEdge> out = node.out.get(id);
+            if(out.containsKey(target)){
+              return out.get(target);
+            }
+          }
+
+
         }
         return null;
     }
@@ -144,23 +173,19 @@ public class StructureGraph {
     }
 
     public boolean removeEdge(GEdge pGEdge){
-      if(edges.contains(pGEdge.getSource().getId(), pGEdge.getSink().getId())){
-        Map<String, GEdge> m = edges.get(pGEdge.getSource().getId(), pGEdge.getSink().getId());
-        if(m.containsKey(pGEdge.getId())){
-          m.remove(pGEdge.getId());
-          if(m.isEmpty()){
-            edges.remove(pGEdge.getSource().getId(), pGEdge.getSink().getId());
-            reverseEdges.remove(pGEdge.getSink().getId(), pGEdge.getSource().getId());
-          }
-          return true;
-        }
+      if(pGEdge.getSource().out.containsKey(pGEdge.getId())){
+        pGEdge.getSource().out.get(pGEdge.getId()).remove(pGEdge.getSink().getId());
       }
-      return false;
+
+      if(pGEdge.getSink().in.containsKey(pGEdge.getId())){
+        pGEdge.getSink().in.get(pGEdge.getId()).remove(pGEdge.getSource().getId());
+      }
+
+      return true;
     }
 
     public boolean removeNode(String id){
       if(!nodes.containsKey(id))return false;
-      nodes.remove(id);
 
       for(GEdge e: getIngoing(id)){
         removeEdge(e);
@@ -169,6 +194,8 @@ public class StructureGraph {
       for(GEdge e: getOutgoing(id)){
         removeEdge(e);
       }
+
+      nodes.remove(id);
 
       return true;
     }
@@ -180,18 +207,17 @@ public class StructureGraph {
     }
 
     public Stream<GEdge> edgeStream(){
-      return edges.values().stream()
-              .map(M -> M.values())
-              .flatMap(Collection::stream);
+      return nodes.values().stream()
+                .map(n -> n.out.values()).flatMap(Collection::stream)
+                .map(m -> m.values()).flatMap(Collection::stream);
     }
+
 
     @Override
     public String toString(){
       String s =  "Graph (Nodes "+nodes().size()+"):\n";
-      for(Cell<String, String, Map<String, GEdge>> cell: edges.cellSet()){
-        for(String k: cell.getValue().keySet()){
-          s += cell.getRowKey()+"[ "+nodes.get(cell.getRowKey()).getLabel()+" ] -- "+k+" --> "+cell.getColumnKey()+"[ "+nodes.get(cell.getColumnKey()).getLabel()+" ]\n";
-        }
+      for(GEdge edge: edgeStream().collect(Collectors.toSet())){
+        s += edge.getSource().getId()+"[ "+edge.getSource().getLabel()+" ] -- "+edge.getId()+" --> "+edge.getSink().getId()+"[ "+edge.getSink().getLabel()+" ]\n";
       }
       return s;
     }

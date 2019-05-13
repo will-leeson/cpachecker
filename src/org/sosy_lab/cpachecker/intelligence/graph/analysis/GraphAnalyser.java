@@ -310,6 +310,8 @@ public class GraphAnalyser {
 
         while (!stack.isEmpty() && seen.contains(stack.peek())) {
           String s = stack.pop();
+          if(graph.getNode(s) == null)
+            System.out.println(s);
           if (!rpo.containsKey(s))
             rpo.put(s, count--);
         }
@@ -422,6 +424,8 @@ public class GraphAnalyser {
 
         }
       }
+
+
 
       for(Entry<String, Set<String>> use : variables.entrySet()){
 

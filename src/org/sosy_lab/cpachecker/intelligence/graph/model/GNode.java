@@ -23,6 +23,8 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph.model;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class GNode {
@@ -30,6 +32,9 @@ public class GNode {
   private String id;
   private String label;
   private Options typedOptions = new Options();
+
+  Map<String, Map<String, GEdge>> out = new HashMap<>();
+  Map<String, Map<String, GEdge>> in = new HashMap<>();
 
   public GNode(String pId, String pLabel) {
     id = pId;

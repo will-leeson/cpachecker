@@ -82,40 +82,6 @@ public class SVGraph extends StructureGraph {
     return id;
   }
 
-  public GEdge getEdge(String source, String target, EdgeType pEdgeType){
-    String id = stringId(pEdgeType);
-
-    if(id.isEmpty())
-      return null;
-
-    return getEdge(source, target, id);
-  }
-
-  public Stream<GEdge> getIngoingTypedStream(String target, EdgeType pEdgeType){
-    String id = stringId(pEdgeType);
-
-    return reverseEdges.row(target).values().stream()
-              .map(m -> m.get(id))
-              .filter(m -> (m != null));
-  }
-
-  public Set<GEdge> getIngoingTyped(String target, EdgeType pEdgeType) {
-    return getIngoingTypedStream(target, pEdgeType).collect(Collectors.toSet());
-  }
-
-  public Stream<GEdge> getOutgoingTypedStream(String source, EdgeType pEdgeType){
-
-    String id = stringId(pEdgeType);
-
-    return edges.row(source).values().stream()
-                .map(m -> m.get(id))
-                .filter(m -> (m != null));
-  }
-
-  public Set<GEdge> getOutgoingTyped(String source, EdgeType pEdgeType){
-    return getOutgoingTypedStream(source, pEdgeType).collect(Collectors.toSet());
-  }
-
 
   public String toDot(){
     return super.toDot(
