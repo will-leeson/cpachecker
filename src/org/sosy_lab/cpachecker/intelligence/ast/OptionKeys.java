@@ -29,8 +29,10 @@ import java.util.Set;
 import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CStatement;
+import org.sosy_lab.cpachecker.cfa.ast.c.CVariableDeclaration;
 import org.sosy_lab.cpachecker.intelligence.graph.model.Options;
 import org.sosy_lab.cpachecker.intelligence.graph.model.Options.Key;
+import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
 import org.sosy_lab.cpachecker.util.Pair;
 
 public class OptionKeys {
@@ -48,6 +50,10 @@ public class OptionKeys {
   public static final Options.Key<String> PARENT_FUNC = new Key<>("global.parent");
   public static final Options.Key<List<CExpression>> ARGS = new Key<>("function_args");
   public static final Options.Key<CStatement> CSTATEMENT = new Key<>("statement");
+
+  public static final Options.Key<StructureGraph> AST = new Key<>("ast_tree");
+  public static final Options.Key<String> AST_ROOT = new Key<>("ast_root");
+  public static final Options.Key<Boolean> REPLACE_ID = new Key<>("global.replace_id");
 
   public static final Options.Key<Set<String>> INVOKED_FUNCS = new Key<>("global.invokes");
   public static final Options.Key<Map<String, Pair<String, String>>> FUNC_BOUNDRY = new Key<>("global.func_boundry");

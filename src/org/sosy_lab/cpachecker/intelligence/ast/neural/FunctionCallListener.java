@@ -39,6 +39,7 @@ import org.sosy_lab.cpachecker.intelligence.ast.ASTCollectorUtils;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CAssignVariablesCollector;
+import org.sosy_lab.cpachecker.intelligence.ast.visitors.CExpressionASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CVariablesCollectingVisitor;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
@@ -111,6 +112,34 @@ public class FunctionCallListener extends AEdgeListener {
         }
 
       }
+
+      SVGraph ast = new SVGraph();
+      ast.setGlobalOption(OptionKeys.REPLACE_ID, true);
+      if(arguments.size() > 0) {
+        String tId = ast.genId("A");
+
+        ast.addNode(tId, ASTNodeLabel.ARGUMENTS.name());
+        ast.addSEdge(tId, id);
+
+        for (CExpression arg : arguments) {
+
+          if(notifier != null)
+            try{
+              notifier.shutdownIfNecessary();
+            }catch (InterruptedException pE){
+              return;
+            }
+
+          try {
+            String tree = arg.accept(new CExpressionASTVisitor(ast, Integer.MAX_VALUE));
+            ast.addSEdge(tree, tId);
+          } catch (CPATransferException pE) {
+          }
+        }
+        node.setOption(OptionKeys.AST_ROOT, tId);
+
+      }
+      node.setOption(OptionKeys.AST, ast);
 
     }
   }

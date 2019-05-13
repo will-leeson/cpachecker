@@ -31,6 +31,7 @@ import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CAssignVariablesCollector;
+import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CStatementVariablesCollectingVisitor;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
@@ -81,6 +82,12 @@ public class StatementListener extends AEdgeListener {
 
         node.setOption(OptionKeys.DECL_VARS,
             statement.accept(new CAssignVariablesCollector(edge.getPredecessor())));
+
+        SVGraph ast = new SVGraph();
+        ast.setGlobalOption(OptionKeys.REPLACE_ID, true);
+        String astId = statement.accept(new CStatementASTVisitor(ast, Integer.MAX_VALUE));
+        node.setOption(OptionKeys.AST, ast);
+        node.setOption(OptionKeys.AST_ROOT, astId);
 
       } catch (CPATransferException pE) {}
 

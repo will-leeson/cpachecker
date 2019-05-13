@@ -36,6 +36,7 @@ import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationDefCollectorVisitor;
 import org.sosy_lab.cpachecker.intelligence.ast.visitors.CDeclarationUseCollectorVisitor;
+import org.sosy_lab.cpachecker.intelligence.ast.visitors.CSimpleDeclASTVisitor;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
@@ -93,6 +94,14 @@ public class DeclarationListener extends AEdgeListener {
           declVars.add(declVar);
           sourceNode.setOption(OptionKeys.DECL_VARS, declVars);
         }
+
+        SVGraph ast = new SVGraph();
+        ast.setGlobalOption(OptionKeys.REPLACE_ID, true);
+        String root = decl.accept(new CSimpleDeclASTVisitor(
+            ast, Integer.MAX_VALUE
+        ));
+        sourceNode.setOption(OptionKeys.AST, ast);
+        sourceNode.setOption(OptionKeys.AST_ROOT, root);
 
       } catch (CPATransferException pE) {
       }

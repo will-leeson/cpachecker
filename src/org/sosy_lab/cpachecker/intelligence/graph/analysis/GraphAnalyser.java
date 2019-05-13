@@ -46,6 +46,7 @@ import org.sosy_lab.cpachecker.intelligence.graph.analysis.SCCUtil.SCC;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.InverseGraphNavigator;
@@ -871,6 +872,7 @@ public class GraphAnalyser {
     graph.setGlobalOption(OptionKeys.FUNC_BOUNDRY, boundry);
 
   }
+
 
   public void defaultAnalysis() throws InterruptedException {
     pruneBlank();

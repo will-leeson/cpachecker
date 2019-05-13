@@ -31,6 +31,7 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CBinaryExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CCastExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CCharLiteralExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CComplexCastExpression;
+import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpressionVisitor;
 import org.sosy_lab.cpachecker.cfa.ast.c.CFieldReference;
 import org.sosy_lab.cpachecker.cfa.ast.c.CFloatLiteralExpression;
@@ -38,12 +39,15 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CIdExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CImaginaryLiteralExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CIntegerLiteralExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CPointerExpression;
+import org.sosy_lab.cpachecker.cfa.ast.c.CSimpleDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CStringLiteralExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CTypeIdExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CUnaryExpression;
+import org.sosy_lab.cpachecker.cfa.ast.c.CVariableDeclaration;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTCollectorUtils;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 
@@ -56,6 +60,7 @@ public class CExpressionASTVisitor implements CExpressionVisitor<String, CPATran
     this.graph = pGraph;
     this.depth = pDepth;
   }
+
 
   @Override
   public String visit(CBinaryExpression pIastBinaryExpression)
@@ -370,6 +375,11 @@ public class CExpressionASTVisitor implements CExpressionVisitor<String, CPATran
 
     if(depth <= 0)return "";
 
+    if(graph.getGlobalOption(OptionKeys.REPLACE_ID) != null && graph.getGlobalOption(OptionKeys.REPLACE_ID)){
+      CSimpleDeclaration declaration = pIastIdExpression.getDeclaration();
+      return declaration.accept(new CSimpleDeclTypeASTVisitor(graph, depth));
+    }
+
     String id = graph.genId("A");
     String label = "";
 
@@ -380,6 +390,7 @@ public class CExpressionASTVisitor implements CExpressionVisitor<String, CPATran
       label = ASTNodeLabel.ID.name();
 
     graph.addNode(id, label);
+
     return id;
   }
 
