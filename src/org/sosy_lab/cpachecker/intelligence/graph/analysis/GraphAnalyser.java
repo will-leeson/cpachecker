@@ -748,7 +748,7 @@ public class GraphAnalyser {
       boolean remain = false;
 
       for(GEdge pre : graph.getIngoing(id))
-        if(!prune.contains(pre)){
+        if(!prune.contains(pre.getSource().getId())){
           remain = true;
           break;
         }
@@ -767,8 +767,6 @@ public class GraphAnalyser {
   public void recursionDetection(){
 
       FunctionGraph functionGraph = new FunctionGraph();
-
-      int i = 0;
 
       for(String n : graph.nodes()){
         GNode node = graph.getNode(n);
