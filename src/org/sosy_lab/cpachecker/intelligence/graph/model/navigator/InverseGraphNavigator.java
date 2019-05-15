@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,21 +21,30 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.graph.model.navigator;
 
-import org.sosy_lab.common.ShutdownNotifier;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
+import java.util.Set;
 
-public abstract class AEdgeListener implements IEdgeListener {
+public class InverseGraphNavigator implements IGraphNavigator {
 
-  protected int depth;
-  protected SVGraph graph;
-  protected ShutdownNotifier notifier;
+  private IGraphNavigator delegate;
 
-  public AEdgeListener(int pDepth, SVGraph pGraph, ShutdownNotifier pShutdownNotifier) {
-    depth = pDepth;
-    graph = pGraph;
-    notifier = pShutdownNotifier;
+  public InverseGraphNavigator(IGraphNavigator pDelegate) {
+    delegate = pDelegate;
   }
 
+  @Override
+  public Set<String> successor(String node) {
+    return delegate.predecessor(node);
+  }
+
+  @Override
+  public Set<String> predecessor(String node) {
+    return delegate.successor(node);
+  }
+
+  @Override
+  public Set<String> nodes() {
+    return delegate.nodes();
+  }
 }

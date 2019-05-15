@@ -89,6 +89,7 @@ import org.sosy_lab.cpachecker.cpa.location.LocationCPA;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.intelligence.GraphGenAlgorithm;
 import org.sosy_lab.cpachecker.intelligence.IntelligentRestartAlgorithm;
+import org.sosy_lab.cpachecker.intelligence.NeuralGraphGenAlgorithm;
 
 /**
  * Factory class for the three core components of CPAchecker:
@@ -270,6 +271,13 @@ public class CoreComponentsFactory {
   )
   boolean runGraphGenAlgorithm = false;
 
+  @Option(
+      secure = true,
+      name = "algorithm.NeuralGraphGen",
+      description = "generate a software verification graph from CFA (neural graph)"
+  )
+  boolean runNeuralGraphGenAlgorithm = false;
+
   private final Configuration config;
   private final LogManager logger;
   private final @Nullable ShutdownManager shutdownManager;
@@ -378,9 +386,12 @@ public class CoreComponentsFactory {
       logger.log(Level.INFO, "Using Restarting Algorithm with predictive execution");
       algorithm =
           IntelligentRestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
-    }else if(runGraphGenAlgorithm){
-        logger.log(Level.INFO, "Using Graph generation algorithm");
-        algorithm = new GraphGenAlgorithm(logger, config, shutdownNotifier, cfa);
+    }else if(runGraphGenAlgorithm) {
+      logger.log(Level.INFO, "Using Graph generation algorithm");
+      algorithm = new GraphGenAlgorithm(logger, config, shutdownNotifier, cfa);
+    }else if(runNeuralGraphGenAlgorithm){
+      logger.log(Level.INFO, "Using Neural Graph generation algorithm");
+      algorithm = new NeuralGraphGenAlgorithm(logger, config, shutdownNotifier, cfa);
     } else if (useInterleavedAlgorithm) {
       logger.log(Level.INFO, "Using Interleaved Algorithm");
       algorithm = new InterleavedAlgorithm(config, logger, shutdownNotifier, specification, cfa);

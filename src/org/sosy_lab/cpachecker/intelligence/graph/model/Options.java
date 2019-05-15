@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,21 +21,35 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.graph.model;
 
-import org.sosy_lab.common.ShutdownNotifier;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
+import java.util.HashMap;
+import java.util.Map;
 
-public abstract class AEdgeListener implements IEdgeListener {
+public class Options {
 
-  protected int depth;
-  protected SVGraph graph;
-  protected ShutdownNotifier notifier;
+  private final Map<String, Object> map = new HashMap<>();
 
-  public AEdgeListener(int pDepth, SVGraph pGraph, ShutdownNotifier pShutdownNotifier) {
-    depth = pDepth;
-    graph = pGraph;
-    notifier = pShutdownNotifier;
+  public <T> T put(Key<T> key, T value){
+    return (T) map.put(key.getName(), value);
   }
 
+  public <T> T get(Key<T> key){
+    return (T) map.get(key.getName());
+  }
+
+
+  public static class Key<T> {
+
+    private final String name;
+
+    public Key(String pName) {
+      this.name = pName;
+    }
+
+    public String getName(){
+      return name;
+    }
+
+  }
 }

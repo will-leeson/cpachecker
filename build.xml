@@ -72,7 +72,7 @@
         <ivy:retrieve sync="true" pattern="${ivy.lib.dir}-benchmark/[artifact](-[classifier]).[ext]"/>
     </target>
 
-    <target name="tests" depends="unit-tests, configuration-checks, python-unit-tests" description="Run all tests"/>
+    <target name="tests" depends="unit-tests" description="Run all tests"/>
 
     <target name="all-checks" description="Run all tests and checks">
         <!-- We have to use antcall here to run clean twice. -->
