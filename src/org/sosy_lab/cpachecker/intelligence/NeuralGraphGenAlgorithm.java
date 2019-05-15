@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,18 +46,19 @@ import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
 import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
-import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
+import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
+import org.sosy_lab.cpachecker.intelligence.ast.neural.GraphWriter;
 import org.sosy_lab.cpachecker.intelligence.ast.neural.SVGraphProcessor;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.CDEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.NativeGraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.CDEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
-@Options(prefix = "graphGen")
-public class GraphGenAlgorithm implements Algorithm {
+@Options(prefix = "neuralGraphGen")
+public class NeuralGraphGenAlgorithm implements Algorithm {
 
   @Option(secure = true,
           description = "depth of AST tree")
@@ -74,7 +75,7 @@ public class GraphGenAlgorithm implements Algorithm {
   private CFA cfa;
   private ShutdownNotifier notifier;
 
-  public GraphGenAlgorithm(LogManager pLogger, Configuration pConfiguration, ShutdownNotifier pShutdownNotifier, CFA pCFA)
+  public NeuralGraphGenAlgorithm(LogManager pLogger, Configuration pConfiguration, ShutdownNotifier pShutdownNotifier, CFA pCFA)
       throws InvalidConfigurationException {
     pConfiguration.inject(this);
     logger = pLogger;
@@ -91,33 +92,32 @@ public class GraphGenAlgorithm implements Algorithm {
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     logger.log(Level.INFO, "Start CFA processing....");
-    SVGraph graph = new CFAProcessor().process(cfa, astDepth);
+    SVGraph graph = new SVGraphProcessor().process(cfa, notifier);
 
     System.out.println("Time for CFA: "+stopwatch.elapsed());
     stopwatch.reset();
 
-    GraphAnalyser analyser = new NativeGraphAnalyser(cfa, graph, notifier, logger);
-
-    logger.log(Level.INFO, "Add Dummy edges");
-    analyser.pruneBlank();
-    //analyser.connectComponents();
-    analyser.applyDummyEdges();
-    analyser.pruneGraph();
-
+    GraphAnalyser graphAnalyser = new GraphAnalyser(graph, notifier, logger);
+    graphAnalyser.simplify();
+    graphAnalyser.recursionDetection();
 
     stopwatch.start();
 
     logger.log(Level.INFO, "Add data dependencies");
-    analyser.applyDD();
+    graphAnalyser.applyDD();
 
     System.out.println("Time for DD: "+stopwatch.elapsed());
     stopwatch.reset().start();
 
+    graphAnalyser.disconnectFunctionsViaDependencies();
+    System.out.println("Time for Disconnect: "+stopwatch.elapsed());
+    stopwatch.reset().start();
+
     logger.log(Level.INFO, "Add control dependencies");
-    analyser.applyCD();
+    graphAnalyser.applyCD();
 
     System.out.println("Time for CD: "+stopwatch.elapsed());
-    stopwatch = stopwatch.reset();
+    stopwatch = stopwatch.reset().start();
 
     logger.log(Level.INFO, "Write graph to "+output.toString());
     try {
@@ -125,6 +125,7 @@ public class GraphGenAlgorithm implements Algorithm {
     } catch (IOException pE) {
       logger.log(Level.WARNING, "Problem while writing "+output.toString(), pE);
     }
+    System.out.println("Time for Writing: "+stopwatch.elapsed());
 
     return AlgorithmStatus.UNSOUND_AND_PRECISE.withPrecise(false);
   }
@@ -137,79 +138,8 @@ public class GraphGenAlgorithm implements Algorithm {
       Files.createDirectory(parent);
     }
 
-    EdgeWriter edgeSer = new EdgeWriter();
-
-    String serial = pGraph.edgeStream().map(
-        edge -> edgeSer.write(edge)
-    ).collect(Collectors.joining(", "));
-
-    serial = "["+serial+"]";
-
-    writeWithNIO(out, serial);
-  }
-
-  private void writeWithNIO(Path pPath, String text)
-      throws IOException {
-
-    RandomAccessFile file = null;
-    FileChannel channel = null;
-
-    try {
-      file = new RandomAccessFile(pPath.toString(), "rw");
-      channel = file.getChannel();
-
-      byte[] bytes = text.getBytes("UTF-8");
-      ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length);
-      byteBuffer.put(bytes);
-      byteBuffer.flip();
-      channel.write(byteBuffer);
-    }finally {
-      if(file != null)file.close();
-      if(channel != null)channel.close();
-    }
-
-  }
-
-  private static class EdgeWriter{
-
-    Map<String, Integer> index = new HashMap<>();
-    int counter = 0;
-
-    private int index(String s){
-      if(!index.containsKey(s)){
-        index.put(s, counter++);
-      }
-      return index.get(s);
-    }
-
-    public String write(GEdge pGEdge){
-
-      int a = index(pGEdge.getSource().getId());
-      String aLabel = pGEdge.getSource().getLabel();
-
-      int b = index(pGEdge.getSink().getId());
-      String bLabel = pGEdge.getSink().getLabel();
-
-      boolean forward = a <= b;
-      String edgeLabel = pGEdge.getId();
-
-      if(pGEdge instanceof CDEdge){
-
-        GNode source =  pGEdge.getSource();
-        if(source.containsOption(OptionKeys.TRUTH)){
-          edgeLabel+= "_"+(source.getOption(OptionKeys.TRUTH) ? "t" : "f");
-        }
-
-      }
-
-      if(forward){
-        return String.format("[%d, %d, \"%s\", \"%s\", \"%s\"]", a, b, aLabel, edgeLabel+"|>", bLabel);
-      }else{
-        return String.format("[%d, %d, \"%s\", \"%s\", \"%s\"]", b, a, bLabel, "<|"+edgeLabel, aLabel);
-      }
-
-    }
-
+    GraphWriter writer = new GraphWriter(pGraph);
+    writer.writeTo(out);
   }
 
 }

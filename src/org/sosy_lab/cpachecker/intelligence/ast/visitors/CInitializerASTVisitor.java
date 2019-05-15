@@ -30,7 +30,7 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CInitializerList;
 import org.sosy_lab.cpachecker.cfa.ast.c.CInitializerVisitor;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 /**
  * Created by zenscr on 01/12/15.
@@ -38,11 +38,11 @@ import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
 public class CInitializerASTVisitor implements CInitializerVisitor<String, CPATransferException> {
 
 
-  private final StructureGraph graph;
+  private final SVGraph graph;
   private final int depth;
 
   public CInitializerASTVisitor(
-      StructureGraph pGraph, int pDepth) {
+      SVGraph pGraph, int pDepth) {
     graph = pGraph;
     depth = pDepth;
   }

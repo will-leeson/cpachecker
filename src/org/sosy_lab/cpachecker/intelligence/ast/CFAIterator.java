@@ -45,11 +45,15 @@ public class CFAIterator {
   }
 
   public void iterate(CFA pCFA) throws InterruptedException {
+    iterate(pCFA.getMainFunction(), true);
+  }
+
+  public void iterate(CFANode start, boolean icfg) throws InterruptedException {
 
     ArrayDeque<CFANode> stack = new ArrayDeque<>();
-    stack.add(pCFA.getMainFunction());
+    stack.add(start);
     Set<CFANode> seen = new HashSet<>();
-    seen.add(pCFA.getMainFunction());
+    seen.add(start);
 
     while (!stack.isEmpty()){
       CFANode node = stack.pop();
@@ -64,6 +68,11 @@ public class CFAIterator {
         }
 
         CFANode next = edge.getSuccessor();
+
+        if(!icfg && !next.getFunctionName().equals(node.getFunctionName())){
+          continue;
+        }
+
         if(!seen.contains(next)) {
           seen.add(next);
           stack.add(next);

@@ -2,7 +2,7 @@
  *  CPAchecker is a tool for configurable software verification.
  *  This file is part of CPAchecker.
  *
- *  Copyright (C) 2007-2018  Dirk Beyer
+ *  Copyright (C) 2007-2019  Dirk Beyer
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,21 +21,13 @@
  *  CPAchecker web page:
  *    http://cpachecker.sosy-lab.org
  */
-package org.sosy_lab.cpachecker.intelligence.ast;
+package org.sosy_lab.cpachecker.intelligence.graph.model.control;
 
-import org.sosy_lab.common.ShutdownNotifier;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 
-public abstract class AEdgeListener implements IEdgeListener {
-
-  protected int depth;
-  protected SVGraph graph;
-  protected ShutdownNotifier notifier;
-
-  public AEdgeListener(int pDepth, SVGraph pGraph, ShutdownNotifier pShutdownNotifier) {
-    depth = pDepth;
-    graph = pGraph;
-    notifier = pShutdownNotifier;
+public class CDEdge extends GEdge {
+  public CDEdge(GNode pSource, GNode pSink) {
+    super("cd", pSource, pSink);
   }
-
 }

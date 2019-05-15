@@ -33,16 +33,16 @@ import org.sosy_lab.cpachecker.cfa.ast.c.CStatementVisitor;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTCollectorUtils;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
-import org.sosy_lab.cpachecker.intelligence.graph.StructureGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 
 public class CStatementASTVisitor implements CStatementVisitor<String, CPATransferException> {
 
 
-  private final StructureGraph graph;
+  private final SVGraph graph;
   private final int depth;
 
-  public CStatementASTVisitor(StructureGraph pGraph, int pDepth) {
+  public CStatementASTVisitor(SVGraph pGraph, int pDepth) {
     graph = pGraph;
     depth = pDepth;
   }

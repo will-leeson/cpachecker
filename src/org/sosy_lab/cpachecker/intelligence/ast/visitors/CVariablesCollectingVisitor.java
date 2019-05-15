@@ -72,7 +72,7 @@ public class CVariablesCollectingVisitor implements
 
   @Override
   public Set<String> visit(CArraySubscriptExpression exp) {
-    return Sets.newHashSet();
+    return exp.getArrayExpression().accept(this);
   }
 
   @Override
