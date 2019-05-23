@@ -25,16 +25,10 @@ package org.sosy_lab.cpachecker.intelligence;
 
 import com.google.common.base.Stopwatch;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -46,15 +40,9 @@ import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
 import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
-import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.ast.neural.GraphWriter;
 import org.sosy_lab.cpachecker.intelligence.ast.neural.SVGraphProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.NativeGraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.CDEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 @Options(prefix = "neuralGraphGen")
@@ -118,6 +106,7 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
 
     System.out.println("Time for CD: "+stopwatch.elapsed());
     stopwatch = stopwatch.reset().start();
+
 
     logger.log(Level.INFO, "Write graph to "+output.toString());
     try {

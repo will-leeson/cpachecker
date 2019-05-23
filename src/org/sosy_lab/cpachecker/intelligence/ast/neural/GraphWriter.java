@@ -165,7 +165,7 @@ public class GraphWriter {
 
 
       List<GEdge> edges = edges();
-      if(edges.size() > 0 && ast.size() > 0)writer.write(", ");
+      if(edges.size() > 0 && ast.size() == 0)writer.write(", ");
 
       for(int i = 0; i < edges.size(); i++){
         GEdge edge = edges.get(i);

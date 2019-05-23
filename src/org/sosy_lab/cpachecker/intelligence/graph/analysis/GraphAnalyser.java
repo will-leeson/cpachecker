@@ -23,6 +23,10 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph.analysis;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import com.google.protobuf.Struct;
+import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -731,36 +735,6 @@ public class GraphAnalyser {
       }
     }
 
-    Queue<String> possible = new ArrayDeque<>(graph.nodes());
-
-    while(!possible.isEmpty()){
-
-      String id = possible.poll();
-
-      if(prune.contains(id))
-        continue;
-
-      GNode node = graph.getNode(id);
-
-      if(node.getLabel().equals("START"))
-        continue;
-
-      boolean remain = false;
-
-      for(GEdge pre : graph.getIngoing(id))
-        if(!prune.contains(pre.getSource().getId())){
-          remain = true;
-          break;
-        }
-
-      if(!remain){
-        prune.add(node.getId());
-        possible.addAll(graph.getOutgoingStream(node.getId()).map(e -> e.getSink().getId()).collect(
-            Collectors.toSet()));
-      }
-    }
-
-
     pruneNodes(prune);
   }
 
@@ -870,17 +844,6 @@ public class GraphAnalyser {
     graph.setGlobalOption(OptionKeys.FUNC_BOUNDRY, boundry);
 
   }
-
-
-  public void defaultAnalysis() throws InterruptedException {
-    pruneBlank();
-    connectComponents();
-    applyDummyEdges();
-    applyDD();
-    applyCD();
-  }
-
-
 
 
 }
