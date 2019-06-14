@@ -49,8 +49,8 @@ import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 public class NeuralGraphGenAlgorithm implements Algorithm {
 
   @Option(secure = true,
-          description = "depth of AST tree")
-  private int astDepth = 5;
+          description = "export node postitions")
+  private String nodePosition = null;
 
   @Option(
       secure = true,
@@ -111,6 +111,7 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
     logger.log(Level.INFO, "Write graph to "+output.toString());
     try {
       exportGraph(graph);
+      exportNodePostition(graph);
     } catch (IOException pE) {
       logger.log(Level.WARNING, "Problem while writing "+output.toString(), pE);
     }
@@ -123,12 +124,26 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
     Path out = Paths.get(output);
     Path parent = out.getParent();
 
-    if(!Files.exists(parent) || !Files.isDirectory(parent)){
+    if(parent != null && !Files.exists(parent) || !Files.isDirectory(parent)){
       Files.createDirectory(parent);
     }
 
     GraphWriter writer = new GraphWriter(pGraph);
     writer.writeTo(out);
+  }
+
+  private void exportNodePostition(SVGraph pGraph) throws IOException {
+    if(nodePosition == null) return;
+
+    Path out = Paths.get(nodePosition);
+    Path parent = out.getParent();
+
+    if(parent != null && !Files.exists(parent) || !Files.isDirectory(parent)){
+      Files.createDirectory(parent);
+    }
+
+    GraphWriter writer = new GraphWriter(pGraph);
+    writer.writePositionTo(out);
   }
 
 }

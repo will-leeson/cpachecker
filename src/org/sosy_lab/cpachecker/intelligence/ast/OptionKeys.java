@@ -39,6 +39,8 @@ public class OptionKeys {
 
   public static final Options.Key<Boolean> TRUTH = new Key<>("truth");
   public static final Options.Key<Integer> RPO = new Key<>("reversePostorder");
+  public static final Options.Key<Integer> START_POS = new Key<>("start_position");
+  public static final Options.Key<Integer> END_POS = new Key<>("end_position");
 
   public static final Options.Key<Set<String>> VARS = new Key<>("variables");
 

@@ -40,6 +40,7 @@ public class SVGraphProcessor {
     return new ArrayList<IEdgeListener>(){{
       add(new ParentListener(-1, pGraph, pShutdownNotifier));
       add(new RPOListener(pGraph, pShutdownNotifier));
+      add(new PosListener(pGraph, pShutdownNotifier));
       add(new InitExitListener(pGraph, pShutdownNotifier));
       add(new AssumptionListener(pGraph, pShutdownNotifier));
       add(new BlankEdgeListener(pGraph, pShutdownNotifier));
