@@ -23,10 +23,6 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph.analysis;
 
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
-import com.google.protobuf.Struct;
-import java.nio.charset.Charset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,7 +46,6 @@ import org.sosy_lab.cpachecker.intelligence.graph.analysis.SCCUtil.SCC;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.InverseGraphNavigator;
