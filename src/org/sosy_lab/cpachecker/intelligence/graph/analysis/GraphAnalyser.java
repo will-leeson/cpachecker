@@ -37,6 +37,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Predicate;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
@@ -527,6 +529,62 @@ public class GraphAnalyser {
     return id;
   }
 
+  private void generalCDProcedure(String pStartNode, String pEndNode, Predicate<GNode> filter) throws InterruptedException {
+    initNavigator();
+    IGraphNavigator navi = new InverseGraphNavigator(navigator);
+    IDominator dominator = new IterativeDominator(navi, pEndNode);
+
+    ArrayDeque<String> queue = new ArrayDeque<>();
+    queue.add(pStartNode);
+    Set<String> seen = new HashSet<>();
+
+    while (!queue.isEmpty()){
+      String n = queue.pop();
+      Set<String> pred = navi.predecessor(n);
+
+      if(shutdownNotifier != null)
+        shutdownNotifier.shutdownIfNecessary();
+
+      if(pred.size() > 1 && !n.equals(pStartNode)) {
+
+        String idom = dominator.getIDom(n);
+
+        for (String p : pred) {
+
+          Set<String> runnerSet = new HashSet<>();
+
+          String runner = p;
+
+          while (!Objects.equals(runner, idom)) {
+            runnerSet.add(runner);
+
+            String pRunner = runner;
+            runner = dominator.getIDom(runner);
+
+            if (runner == null || runner.equals(pRunner)) {
+              runnerSet.clear();
+              break;
+            }
+
+          }
+
+
+          for (String r : runnerSet)
+            graph.addCDEdge(n, r);
+
+        }
+      }
+
+      for(GEdge next : graph.getOutgoing(n)){
+        String id = next.getSink().getId();
+        if(!seen.contains(id)){
+          seen.add(id);
+          queue.add(id);
+        }
+      }
+    }
+  }
+
   private void applyGeneralCD(String pStartNode, String pEndNode) throws InterruptedException {
     initNavigator();
     IGraphNavigator navi = new InverseGraphNavigator(navigator);
@@ -840,5 +898,9 @@ public class GraphAnalyser {
 
   }
 
+
+  public SVGraph getGraph(){
+    return graph;
+  }
 
 }
