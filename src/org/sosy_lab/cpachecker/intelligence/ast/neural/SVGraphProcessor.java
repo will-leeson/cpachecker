@@ -35,7 +35,7 @@ import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class SVGraphProcessor {
 
-  private List<IEdgeListener> listeners(SVGraph pGraph, ShutdownNotifier pShutdownNotifier){
+  protected List<IEdgeListener> listeners(SVGraph pGraph, ShutdownNotifier pShutdownNotifier){
 
     return new ArrayList<IEdgeListener>(){{
       add(new ParentListener(-1, pGraph, pShutdownNotifier));

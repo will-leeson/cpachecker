@@ -28,7 +28,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
+
+import com.google.protobuf.Struct;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -40,9 +44,13 @@ import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
 import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
+import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.ast.neural.GraphWriter;
 import org.sosy_lab.cpachecker.intelligence.ast.neural.SVGraphProcessor;
+import org.sosy_lab.cpachecker.intelligence.ast.neural.SVPEProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.BlockedGraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.pointer.AliasAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 @Options(prefix = "neuralGraphGen")
@@ -80,19 +88,29 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     logger.log(Level.INFO, "Start CFA processing....");
-    SVGraph graph = new SVGraphProcessor().process(cfa, notifier);
+    SVGraph graph = new SVPEProcessor().process(cfa, notifier);
+
+    Map<String, Set<String>> aliases = null;
+
+    if(graph.getGlobalOption(OptionKeys.POINTER_GRAPH) != null){
+      AliasAnalyser aliasAnalyser = new AliasAnalyser(graph.getGlobalOption(OptionKeys.POINTER_GRAPH), notifier);
+      aliases = aliasAnalyser.getAliases();
+
+      graph.setGlobalOption(OptionKeys.POINTER_GRAPH, null);
+      aliasAnalyser = null;
+    }
 
     System.out.println("Time for CFA: "+stopwatch.elapsed());
     stopwatch.reset();
 
-    GraphAnalyser graphAnalyser = new GraphAnalyser(graph, notifier, logger);
+    GraphAnalyser graphAnalyser = new BlockedGraphAnalyser(graph, notifier, logger);
     graphAnalyser.simplify();
     graphAnalyser.recursionDetection();
 
     stopwatch.start();
 
     logger.log(Level.INFO, "Add data dependencies");
-    graphAnalyser.applyDD();
+    graphAnalyser.applyDD(aliases);
 
     System.out.println("Time for DD: "+stopwatch.elapsed());
     stopwatch.reset().start();
@@ -106,6 +124,10 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
 
     System.out.println("Time for CD: "+stopwatch.elapsed());
     stopwatch = stopwatch.reset().start();
+
+    graph = graphAnalyser.getGraph();
+
+    //System.out.println(graph.toDot());
 
     logger.log(Level.INFO, "Write graph to "+output.toString());
     try {

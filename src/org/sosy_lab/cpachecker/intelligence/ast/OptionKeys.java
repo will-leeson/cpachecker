@@ -29,7 +29,7 @@ import java.util.Set;
 import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CStatement;
-import org.sosy_lab.cpachecker.cfa.ast.c.CVariableDeclaration;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.pointer.PEGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.model.Options;
 import org.sosy_lab.cpachecker.intelligence.graph.model.Options.Key;
 import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
@@ -59,5 +59,8 @@ public class OptionKeys {
 
   public static final Options.Key<Set<String>> INVOKED_FUNCS = new Key<>("global.invokes");
   public static final Options.Key<Map<String, Pair<String, String>>> FUNC_BOUNDRY = new Key<>("global.func_boundry");
-
+  public static final Options.Key<PEGraph> POINTER_GRAPH = new Key<>("global.pointer_graph");
+  public static final Options.Key<Boolean> RECURSION = new Key<>("global.recursion");
+  public static final Options.Key<Boolean> CONCURRENCY = new Key<>("global.concurrency");
+  public static final Options.Key<Boolean> POINTER = new Key<>("global.pointer");
 }

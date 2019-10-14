@@ -24,6 +24,8 @@
 package org.sosy_lab.cpachecker.intelligence.ast.visitors;
 
 import com.google.common.collect.Sets;
+
+import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.sosy_lab.cpachecker.cfa.ast.c.CAddressOfLabelExpression;
@@ -156,12 +158,32 @@ public class CVariablesCollectingVisitor implements
 
   @Override
   public Set<String> visit(CUnaryExpression exp) {
-    return exp.getOperand().accept(this);
+    Set<String> vars = exp.getOperand().accept(this);
+
+    if(exp.getOperator() == CUnaryExpression.UnaryOperator.AMPER) {
+      Set<String> out = new HashSet<>();
+
+      for (String var : vars){
+        out.add("&"+var);
+      }
+      vars = out;
+    }
+
+
+    return vars;
   }
 
   @Override
   public Set<String> visit(CPointerExpression exp) {
-    return exp.getOperand().accept(this);
+    Set<String> vars = exp.getOperand().accept(this);
+    Set<String> out = new HashSet<>();
+
+    for (String var : vars){
+      out.add("*"+var);
+    }
+    vars = out;
+
+    return vars;
   }
 
   @Override

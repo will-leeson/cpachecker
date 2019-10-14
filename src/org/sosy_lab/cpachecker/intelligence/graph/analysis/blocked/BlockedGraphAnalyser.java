@@ -109,7 +109,7 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
 
     }
 
-    private void localUseDef(BlockGraph blockGraph, Queue<IUseDefEvent> events) throws InterruptedException {
+    private void localUseDef(BlockGraph blockGraph, Queue<IUseDefEvent> events, Map<String, Set<String>> aliases) throws InterruptedException {
 
         for(String bNodeId : blockGraph.nodes()){
 
@@ -131,7 +131,7 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
 
                 //Uses variables?
                 if(sNode.containsOption(OptionKeys.VARS)){
-                    for(String use: sNode.getOption(OptionKeys.VARS)){
+                    for(String use: aliasGet(sNode.getOption(OptionKeys.VARS), aliases)){
                         if(lastDef.containsKey(use)){
                             events.add(new UseDef(sNodeId, use, lastDef.get(use)));
                         }else{
@@ -143,7 +143,14 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
 
                 //Defines variables?
                 if(sNode.containsOption(OptionKeys.DECL_VARS)){
-                    for(String decl : sNode.getOption(OptionKeys.DECL_VARS)){
+
+                    Set<String> decls = sNode.getOption(OptionKeys.DECL_VARS);
+
+                    if(!sNode.getLabel().contains("DECL")){
+                        decls = aliasGet(decls, aliases);
+                    }
+
+                    for(String decl : decls){
                         lastDef.put(decl, sNodeId);
                     }
                 }
@@ -160,13 +167,16 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
     }
 
     @Override
-    public void applyDD() throws InterruptedException {
+    public void applyDD(Map<String, Set<String>> aliases) throws InterruptedException {
+
+        if(aliases == null)
+            aliases = new HashMap<>();
 
         BlockGraph bGraph = generateBlocks();
 
         Queue<IUseDefEvent> events = new ArrayDeque<>();
 
-        localUseDef(bGraph, events);
+        localUseDef(bGraph, events, aliases);
 
         Queue<UseDef> useDefQueue = new ArrayDeque<>();
         Queue<BlockUse> useQueue = new ArrayDeque<>();
@@ -231,7 +241,9 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
             }
 
             if(pred.isEmpty()){
-                System.out.println("Unknown use-def for ("+graph.getNode(use.getUsePos()).getLabel()+", "+use.getVariable()+")");
+                GNode n = graph.getNode(use.getUsePos());
+                if(n != null)
+                    System.out.println("Unknown use-def for ("+n.getLabel()+", "+use.getVariable()+")");
                 continue;
             }
 

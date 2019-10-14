@@ -119,6 +119,8 @@ public class GraphGenAlgorithm implements Algorithm {
     System.out.println("Time for CD: "+stopwatch.elapsed());
     stopwatch = stopwatch.reset();
 
+    graph = analyser.getGraph();
+
     logger.log(Level.INFO, "Write graph to "+output.toString());
     try {
       exportGraph(graph);
