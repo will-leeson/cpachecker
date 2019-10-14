@@ -25,6 +25,7 @@ public class PEGraph extends StructureGraph {
         return addEdge(new TransEdge(name, super.getNode(source), super.getNode(target)));
     }
 
+    @Override
     public String toDot(){
         return super.toDot(
                 n -> true,

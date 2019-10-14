@@ -38,24 +38,24 @@ public class BlockGraph extends StructureGraph {
         return addBlockNode(name, "", sequence);
     }
 
-    public class CFGEdge extends GEdge {
+    public static class CFGEdge extends GEdge {
 
         public CFGEdge(String pID, GNode pSource, GNode pSink) {
             super(pID, pSource, pSink);
         }
     }
 
-    public class BlockNode extends GNode {
+    public static class BlockNode extends GNode {
 
         private List<String> sequence;
 
-        public BlockNode(String pId, String label, List<String> sequence) {
+        public BlockNode(String pId, String label, List<String> pSequence) {
             super(pId, label);
-            this.sequence = sequence;
+            this.sequence = pSequence;
         }
 
-        public BlockNode(String pId,  List<String> sequence) {
-            this(pId, "", sequence);
+        public BlockNode(String pId,  List<String> pSequence) {
+            this(pId, "", pSequence);
         }
 
         public List<String> getSequence(){

@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Stack;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
 
@@ -76,17 +75,17 @@ public class SCCUtil {
 
   private void strongconnected(SCCNode pSCCNode){
 
-    Stack<SCCNode> strong = new Stack<>();
+    ArrayDeque<SCCNode> strong = new ArrayDeque<>();
     strong.push(pSCCNode);
 
     while (!strong.isEmpty()) {
-      SCCNode sccNode = strong.peek();
+      SCCNode sccNode = strong.peekFirst();
 
       if(sccNode.index == -1) {
         sccNode.index = pubIndex;
         sccNode.lowlink = pubIndex;
         pubIndex++;
-        stack.push(sccNode);
+        stack.addFirst(sccNode);
         sccNode.onStack = true;
         sccNode.open = graph.getOutgoing(sccNode.nodeId).iterator();
       }
@@ -95,28 +94,28 @@ public class SCCUtil {
           SCCNode w = getNode(sccNode.open.next().getSink().getId());
           if (w.index == -1){
             sccNode.waitOn = w.nodeId;
-            strong.push(w);
+            strong.addFirst(w);
             break;
           }else if(w.onStack){
             sccNode.lowlink = Math.min(sccNode.lowlink, w.index);
           }
       }
 
-      if(!strong.peek().equals(sccNode))
+      if(!strong.peekFirst().equals(sccNode))
         continue;
 
       //Finish node
       strong.pop();
 
       if(!strong.isEmpty() && sccNode.nodeId.equals(strong.peek().waitOn)){
-        strong.peek().lowlink = Math.min(strong.peek().lowlink, sccNode.lowlink);
-        strong.peek().waitOn = null;
+        strong.peekFirst().lowlink = Math.min(strong.peek().lowlink, sccNode.lowlink);
+        strong.peekFirst().waitOn = null;
       }
 
       if(sccNode.lowlink == sccNode.index){
         sccs.add(new SCC());
         while (!stack.isEmpty()){
-          SCCNode w = stack.pop();
+          SCCNode w = stack.removeFirst();
           w.onStack = false;
           sccs.get(sccs.size() - 1).nodes.add(w.nodeId);
           if(w.equals(sccNode))break;

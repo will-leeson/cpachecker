@@ -1,6 +1,8 @@
 package org.sosy_lab.cpachecker.intelligence.graph.analysis.pointer;
 
 import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
@@ -47,9 +49,9 @@ public class AliasAnalyser {
     private PEGraph graph;
     private ShutdownNotifier shutdownNotifier;
 
-    public AliasAnalyser(PEGraph graph, ShutdownNotifier shutdownNotifier) {
-        this.graph = graph;
-        this.shutdownNotifier = shutdownNotifier;
+    public AliasAnalyser(PEGraph pGraph, ShutdownNotifier pShutdownNotifier) {
+        this.graph = pGraph;
+        this.shutdownNotifier = pShutdownNotifier;
     }
 
     private boolean isNeeded(){
@@ -61,6 +63,7 @@ public class AliasAnalyser {
         }
         return false;
     }
+
 
     private void memoryAlias() throws InterruptedException {
 
@@ -84,8 +87,8 @@ public class AliasAnalyser {
             String X = triple.getSecond();
             String v = triple.getThird();
 
-            if(Set.of("M", "v_1", "vp_1").contains(X)){
-                for(String alpha: List.of("a", "d", "M")){
+            if(Sets.newHashSet("M", "v_1", "vp_1").contains(X)){
+                for(String alpha: Lists.newArrayList("a", "d", "M")){
                     String trans = phaseOne.get(alpha, X);
                     if(trans.equals("x"))continue;
                     for(String w : graph.getOutgoingTypedStream(v, alpha).map(e -> e.getSink().getId()).collect(Collectors.toSet())){
@@ -103,7 +106,7 @@ public class AliasAnalyser {
                 }
             }else{
 
-                for(String alpha : List.of("a", "ap", "d", "M")){
+                for(String alpha : Lists.newArrayList("a", "ap", "d", "M")){
                     String trans = phaseTwo.get(alpha, X);
                     if(trans.equals("x"))continue;
 
@@ -176,7 +179,7 @@ public class AliasAnalyser {
             String u = edge.getSource().getId();
             String v = edge.getSink().getId();
 
-            for(String alpha : Set.of("v_1", "vp_1", "M")){
+            for(String alpha : Sets.newHashSet("v_1", "vp_1", "M")){
 
                 for(String w : graph.getOutgoingTypedStream(v, alpha).map(e -> e.getSink().getId()).collect(Collectors.toSet())){
                     if(graph.getEdge(u, w, "v_2") == null){
@@ -194,7 +197,7 @@ public class AliasAnalyser {
             Triple<String, String, String> curr = workList.poll();
             String v = curr.getThird();
 
-            for(String alpha : Set.of("v_1", "vp_1", "M", "v_2")){
+            for(String alpha : Sets.newHashSet("v_1", "vp_1", "M", "v_2")){
 
                 for(String w : graph.getOutgoingTypedStream(v, alpha).map(e -> e.getSink().getId()).collect(Collectors.toSet())){
                     if(graph.getEdge(w, v, "v_2") == null){
@@ -218,15 +221,17 @@ public class AliasAnalyser {
             memoryAlias();
             valueAnalysis();
 
+            Set<String> check = Sets.newHashSet("M", "v_1", "vp_1", "v_2");
+
             for (GEdge e : graph.edgeStream().filter(
-                    e -> Set.of("M", "v_1", "vp_1", "v_2").contains(e.getId())
+                    e -> check.contains(e.getId())
             ).collect(Collectors.toSet())) {
 
                 String u = e.getSource().getLabel();
                 String v = e.getSink().getLabel();
 
 
-                for (String x : List.of(u, v)) {
+                for (String x : Lists.newArrayList(u, v)) {
                     if (!aliases.containsKey(x)) {
                         aliases.put(x, new HashSet<>());
                     }
