@@ -1,3 +1,4 @@
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 int main(){
 
  int inp = 10;
@@ -10,6 +11,9 @@ int main(){
    inp = 0;
  }
 
- assert(inp == 0);
+ if(inp != 0){
+  __VERIFIER_error();
+ }
+
  return 0;
 }

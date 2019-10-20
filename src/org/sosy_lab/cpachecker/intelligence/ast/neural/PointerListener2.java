@@ -15,9 +15,9 @@ public class PointerListener2 implements IEdgeListener {
     private PEGraph graph;
     private ShutdownNotifier notifier;
 
-    public PointerListener2(PEGraph graph, ShutdownNotifier notifier) {
-        this.graph = graph;
-        this.notifier = notifier;
+    public PointerListener2(PEGraph pGraph, ShutdownNotifier pNotifier) {
+        this.graph = pGraph;
+        this.notifier = pNotifier;
     }
 
     private boolean isPointer(CType type){
@@ -63,7 +63,7 @@ public class PointerListener2 implements IEdgeListener {
             return handlePointer((CPointerExpression)expression);
         }
 
-        return "";
+        throw new UnsupportedOperationException(expression.toASTString());
     }
 
     private String handleUnary(CUnaryExpression expression){
@@ -77,7 +77,7 @@ public class PointerListener2 implements IEdgeListener {
             }
         }
 
-        return null;
+        throw new UnsupportedOperationException(expression.toASTString());
     }
 
     private String handleId(CIdExpression idExpression){
@@ -98,15 +98,24 @@ public class PointerListener2 implements IEdgeListener {
 
     private void handleAssign(String name, CExpression rightHand){
 
-        String target = handleExpr(rightHand);
-        addNode(target);
-        graph.addAssignEdge(getId(target), name);
+        try{
+            String target = handleExpr(rightHand);
+            addNode(target);
+            graph.addAssignEdge(getId(target), name);
+        }catch (UnsupportedOperationException pE){
+            System.out.println("Unsupported: "+pE.getMessage());
+        }
     }
 
     private void addNode(String name){
 
         graph.addNode(getId(name), name);
         String pre = name;
+
+        if(pre.isEmpty()){
+            System.out.println(pre);
+        }
+
         while(pre.charAt(0) == '*'){
             String n = pre.substring(1);
             graph.addNode(getId(n), n);
