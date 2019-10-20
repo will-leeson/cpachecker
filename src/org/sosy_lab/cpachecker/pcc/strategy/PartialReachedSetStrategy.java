@@ -25,10 +25,11 @@ package org.sosy_lab.cpachecker.pcc.strategy;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -109,9 +110,7 @@ public class PartialReachedSetStrategy extends ReachedSetStrategy {
     int certificateSize = 0;
 
     List<AbstractState> certificate = new ArrayList<>(savedReachedSetSize);
-    for (AbstractState elem : reachedSet) {
-      certificate.add(elem);
-    }
+    certificate.addAll(Arrays.asList(reachedSet));
 
     /*also restrict stop to elements of same location as analysis does*/
     StopOperator stop = cpa.getStopOperator();

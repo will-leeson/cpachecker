@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.annotations.FieldsAreNonnullByDefault;
 import org.sosy_lab.common.annotations.ReturnValuesAreNonnullByDefault;
 import org.sosy_lab.common.collect.PersistentLinkedList;
@@ -132,18 +132,14 @@ final class VariableAndFieldRelevancyComputer {
         queue.add(pendingMerges);
         while (!queue.isEmpty()) {
           for (VarFieldDependencies deps : queue.poll()) {
-            for (final String e : deps.relevantVariables) {
-              relevantVariables.add(e);
-            }
+            relevantVariables.addAll(deps.relevantVariables);
             for (final Map.Entry<CCompositeType, String> e : deps.relevantFields.entries()) {
               relevantFields.put(e.getKey(), e.getValue());
             }
             for (final Map.Entry<CCompositeType, String> e : deps.addressedFields.entries()) {
               addressedFields.put(e.getKey(), e.getValue());
             }
-            for (final String e : deps.addressedVariables) {
-              addressedVariables.add(e);
-            }
+            addressedVariables.addAll(deps.addressedVariables);
             for (final Map.Entry<VariableOrField, VariableOrField> e :
                 deps.dependencies.entries()) {
               dependencies.put(e.getKey(), e.getValue());
@@ -367,6 +363,14 @@ final class VariableAndFieldRelevancyComputer {
       return ImmutableMultimap.copyOf(squashed.addressedFields);
     }
 
+    /**
+     * This methods performs a forward search on the graph formed by the previously collected
+     * dependencies. We start at the variables and fields that are already found to be relevant and
+     * flag everything as relevant that is reachable from there.
+     *
+     * @return a pair consisting of 1. all the found relevant variables and 2. a mapping of
+     *     composite types to all the found relevant-field names
+     */
     public Pair<ImmutableSet<String>, ImmutableMultimap<CCompositeType, String>>
         computeRelevantVariablesAndFields() {
       ensureSquashed();
@@ -525,9 +529,10 @@ final class VariableAndFieldRelevancyComputer {
               throw new UnrecognizedCodeException("Unhandled assignment", edge, assignment);
             }
           } else if (statement instanceof CFunctionCallStatement) {
-            ((CFunctionCallStatement) statement)
-                .getFunctionCallExpression()
-                .accept(CollectingRHSVisitor.create(pCfa, VariableOrField.unknown()));
+            result =
+              result.withDependencies(
+                  ((CFunctionCallStatement) statement).getFunctionCallExpression()
+                      .accept(CollectingRHSVisitor.create(pCfa, VariableOrField.unknown())));
           }
           break;
         }

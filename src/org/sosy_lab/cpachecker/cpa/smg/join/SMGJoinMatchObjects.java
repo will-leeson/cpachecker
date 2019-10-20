@@ -23,6 +23,8 @@
  */
 package org.sosy_lab.cpachecker.cpa.smg.join;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
@@ -84,13 +86,17 @@ final class SMGJoinMatchObjects {
     for (SMGEdgeHasValue hv : Sets.union(edges1, edges2)) {
       // edges are already filtered for given object, just filter again for type and offset.
       SMGEdgeHasValueFilter filter =
-          new SMGEdgeHasValueFilter().filterByType(hv.getType()).filterAtOffset(hv.getOffset());
+          new SMGEdgeHasValueFilter()
+              .filterBySize(hv.getSizeInBits())
+              .filterAtOffset(hv.getOffset());
       Iterable<SMGEdgeHasValue> hv1 = filter.filter(edges1);
       Iterable<SMGEdgeHasValue> hv2 = filter.filter(edges2);
       if (Iterables.size(hv1) > 0 && Iterables.size(hv2) > 0) {
         SMGValue v1 = Iterators.getOnlyElement(hv1.iterator()).getValue();
         SMGValue v2 = Iterators.getOnlyElement(hv2.iterator()).getValue();
-        if (pMapping1.containsKey(v1) && pMapping2.containsKey(v2) && !(pMapping1.get(v1).equals(pMapping2.get(v2)))) {
+        if (pMapping1.containsKey(v1)
+            && pMapping2.containsKey(v2)
+            && !pMapping1.get(v1).equals(pMapping2.get(v2))) {
           return true;
         }
       }
@@ -130,9 +136,7 @@ final class SMGJoinMatchObjects {
       SMGObject pObj1,
       SMGObject pObj2) {
 
-    if (!pSMG1.getObjects().contains(pObj1) || !pSMG2.getObjects().contains(pObj2)) {
-      throw new IllegalArgumentException();
-    }
+    checkArgument(pSMG1.getObjects().contains(pObj1) && pSMG2.getObjects().contains(pObj2));
 
     // Algorithm 8 from FIT-TR-2012-04, line 1
     if (checkNull(pObj1, pObj2)) {

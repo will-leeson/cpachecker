@@ -23,8 +23,8 @@
  */
 package org.sosy_lab.cpachecker.util.ci;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Writer;
@@ -139,7 +139,7 @@ public class CustomInstructionApplications {
   }
 
   public ImmutableSet<CFANode> getStartAndEndLocationsOfCIApplications() {
-    Builder<CFANode> result = ImmutableSet.builder();
+    ImmutableSet.Builder<CFANode> result = ImmutableSet.builder();
 
     for (AppliedCustomInstruction aci : cis.values()) {
       result.addAll(aci.getStartAndEndNodes());
@@ -267,7 +267,7 @@ public class CustomInstructionApplications {
       input.add("x");
       input.add("y");
       CustomInstruction ci = new CustomInstruction(start, Collections.singleton(end),
-          input, Collections.singletonList("r"), shutdownNotifier);
+          input, ImmutableList.of("r"), shutdownNotifier);
 
       // find applied custom instructions in program
       try (Writer aciDef =

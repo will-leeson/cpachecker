@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cpa.invariants.operators.Operator;
 import org.sosy_lab.cpachecker.cpa.invariants.operators.mathematical.ICCOperator;
 import org.sosy_lab.cpachecker.cpa.invariants.operators.mathematical.IICOperator;
@@ -207,7 +207,7 @@ public class CompoundMathematicalInterval implements CompoundIntegralInterval {
   public CompoundMathematicalInterval unionWith(SimpleInterval pOther) {
     if (contains(pOther)) { return this; }
     if (isBottom() || pOther.isTop()) { return getInternal(pOther); }
-    ArrayList<SimpleInterval> resultIntervals = new ArrayList<>();
+    List<SimpleInterval> resultIntervals = new ArrayList<>();
     int start = 0;
     SimpleInterval lastInterval = null;
     if (pOther.hasLowerBound() && hasUpperBound()) {

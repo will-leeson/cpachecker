@@ -29,15 +29,15 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
@@ -131,7 +131,7 @@ public class PathExtractor implements Statistics {
    * @return the list of paths to the target states
    */
   public List<ARGPath> getTargetPaths(final Collection<ARGState> targetStates) {
-    return Lists.newArrayList(Collections2.transform(targetStates, ARGUtils::getOnePathTo));
+    return new ArrayList<>(Collections2.transform(targetStates, ARGUtils::getOnePathTo));
   }
 
   public void addFeasibleTarget(ARGState pLastState) {

@@ -30,7 +30,7 @@ import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.ForOverride;
 import java.util.Collection;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionCallEdge;
@@ -58,7 +58,7 @@ public class AbstractARGBasedRefiner implements Refiner, StatisticsProvider {
   private int refinementNumber;
 
   private final ARGBasedRefiner refiner;
-  private final ARGCPA argCpa;
+  protected final ARGCPA argCpa;
   private final LogManager logger;
 
   protected AbstractARGBasedRefiner(AbstractARGBasedRefiner pAbstractARGBasedRefiner) {

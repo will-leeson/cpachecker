@@ -21,7 +21,8 @@ package org.sosy_lab.cpachecker.util;
 
 import java.io.Serializable;
 import java.util.Objects;
-import javax.annotation.Nullable;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A generic Triple class based on Pair.java.

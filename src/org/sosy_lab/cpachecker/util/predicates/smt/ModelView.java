@@ -23,12 +23,15 @@
  */
 package org.sosy_lab.cpachecker.util.predicates.smt;
 
+import static com.google.common.collect.FluentIterable.from;
+
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.BitvectorFormula;
 import org.sosy_lab.java_smt.api.BooleanFormula;
@@ -62,7 +65,13 @@ class ModelView implements Model {
     );
   }
 
-  @Nullable
+
+    @Override
+    public <T extends Formula> @Nullable T eval(T t) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Nullable
   @Override
   public Object evaluate(Formula f) {
     return evaluateImpl(f);
@@ -98,6 +107,11 @@ class ModelView implements Model {
   @Override
   public Iterator<ValueAssignment> iterator() {
     return Iterators.filter(delegate.iterator(), FILTER_MODEL_TERM);
+  }
+
+  @Override
+  public ImmutableList<ValueAssignment> asList() {
+    return from(delegate.asList()).filter(FILTER_MODEL_TERM).toList();
   }
 
   @Override

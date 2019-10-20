@@ -26,11 +26,17 @@ package org.sosy_lab.cpachecker.cpa.predicate;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.sosy_lab.cpachecker.cpa.predicate.PredicateAbstractState.getPredicateState;
 
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,14 +44,23 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.sosy_lab.common.collect.PersistentLinkedList;
 import org.sosy_lab.common.collect.PersistentList;
+import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
+import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.core.counterexample.CounterexampleInfo;
+import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
+import org.sosy_lab.cpachecker.core.interfaces.AbstractStateWithAssumptions;
 import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
 import org.sosy_lab.cpachecker.cpa.arg.ARGReachedSet;
 import org.sosy_lab.cpachecker.cpa.arg.ARGState;
 import org.sosy_lab.cpachecker.cpa.arg.ARGUtils;
 import org.sosy_lab.cpachecker.cpa.arg.path.ARGPath;
+import org.sosy_lab.cpachecker.cpa.dca.DCAState;
+import org.sosy_lab.cpachecker.cpa.predicate.BlockFormulaStrategy.BlockFormulas;
+import org.sosy_lab.cpachecker.cpa.slab.EdgeSet;
+import org.sosy_lab.cpachecker.cpa.slab.SLARGState;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
+import org.sosy_lab.cpachecker.util.AbstractStates;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.PathFormula;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.PathFormulaBuilder;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.PathFormulaManager;
@@ -72,7 +87,7 @@ public class SlicingAbstractionsUtils {
    *         via which originState can be reached from the corresponding key
    */
   public static Map<ARGState, List<ARGState>> calculateIncomingSegments(ARGState originState) {
-    checkArgument(getPredicateState(originState).isAbstractionState());
+    checkArgument(isAbstractionState(originState));
 
     final Map<ARGState, List<ARGState>> result = new TreeMap<>();
     final List<ARGState> startAbstractionStates = calculateStartStates(originState);
@@ -98,32 +113,38 @@ public class SlicingAbstractionsUtils {
    * @return A list of (abstraction) states from which originState can be reached
    */
   public static List<ARGState> calculateStartStates(ARGState originState) {
-    checkArgument(getPredicateState(originState).isAbstractionState());
-    final List<ARGState> result = new ArrayList<>();
+    checkArgument(isAbstractionState(originState));
+    final Set<ARGState> result = new HashSet<>();
     final Deque<ARGState> waitlist = new ArrayDeque<>();
+    final Set<ARGState> reached = new HashSet<>();
 
     for (ARGState parent: originState.getParents()) {
 
-      if (getPredicateState(parent).isAbstractionState()) {
+      if (isAbstractionState(parent)) {
         result.add(parent);
         continue;
       }
 
       waitlist.add(parent);
+      reached.clear();
+      reached.add(parent);
       while (!waitlist.isEmpty()) {
         ARGState currentState = waitlist.pop();
         for (ARGState s : currentState.getParents()) {
-          if (getPredicateState(s).isAbstractionState()) {
+          if (isAbstractionState(s)) {
             result.add(s);
             waitlist.clear();
             break;
           } else {
-            waitlist.add(s);
+            if (!reached.contains(s)) {
+              waitlist.add(s);
+              reached.add(s);
+            }
           }
         }
       }
     }
-    return result;
+    return new ArrayList<>(result);
   }
 
   /**
@@ -134,19 +155,20 @@ public class SlicingAbstractionsUtils {
    *         which can be reached from originState
    */
   public static Map<ARGState, List<ARGState>> calculateOutgoingSegments(ARGState originState) {
-    checkArgument(getPredicateState(originState).isAbstractionState());
+    checkArgument(isAbstractionState(originState));
 
     // Used data structures:
     final Collection<ARGState> outgoingStates = originState.getChildren();
     final Deque<ARGState> waitlist = new ArrayDeque<>();
     final Map<ARGState, PersistentList<ARGState>> frontier = new TreeMap<>();
     final Map<ARGState, List<ARGState>> segmentMap = new TreeMap<>();
+    final Collection<ARGState> reachableNonAbstractionStates = nonAbstractionReach(originState);
 
     // prepare initial state
     frontier.put(originState, PersistentLinkedList.of());
     for (ARGState startState: outgoingStates) {
       // we need to treat AbstractionStates differently!
-      if (!getPredicateState(startState).isAbstractionState()) {
+      if (!isAbstractionState(startState)) {
           waitlist.add(startState);
       } else {
         segmentMap.put(startState, PersistentLinkedList.of());
@@ -159,22 +181,34 @@ public class SlicingAbstractionsUtils {
       // get element from waitlist. Re-queue if we have not yet
       // explored all of its parents!
       ARGState currentState = waitlist.pop();
-      if (!frontier.keySet().containsAll(currentState.getParents())) {
+      if (!frontier
+          .keySet()
+          .containsAll(
+              FluentIterable.from(currentState.getParents())
+                  .filter(x -> reachableNonAbstractionStates.contains(x))
+                  .toList())) {
         waitlist.add(currentState);
         continue;
       }
 
       // All parents have already been explored, let's
       // build the state list for this state:
-      PersistentList<ARGState> currentStateList = null;//PersistentLinkedList.of();
+      PersistentList<ARGState> currentStateList = null;
+      Set<ARGState> currentStateSet = new HashSet<>();
       for (ARGState parent : currentState.getParents()) {
+        if (!reachableNonAbstractionStates.contains(parent)) {
+          continue;
+        }
         PersistentList<ARGState> parentStateList = frontier.get(parent);
         if (currentStateList == null) {
           currentStateList = parentStateList;
+          currentStateSet.addAll(parentStateList);
         } else {
           for (ARGState s : parentStateList.reversed()) {
-            if (!currentStateList.contains(s)) {
+            // checking containment in O(1) is crucial here:
+            if (!currentStateSet.contains(s)) {
               currentStateList = currentStateList.with(s);
+              currentStateSet.add(s);
             }
           }
         }
@@ -189,7 +223,7 @@ public class SlicingAbstractionsUtils {
       // AbstractionState - add the currentStateList to the
       // segmentMap with the child as key
       for (ARGState child : currentState.getChildren()) {
-        if (getPredicateState(child).isAbstractionState()) {
+        if (isAbstractionState(child)) {
           if (segmentMap.containsKey(child)) {
             PersistentList<ARGState> storedStateList = (PersistentList<ARGState>) segmentMap.get(child);
             for (ARGState s : currentStateList.reversed()) {
@@ -219,6 +253,27 @@ public class SlicingAbstractionsUtils {
     return segmentMap;
   }
 
+  private static Collection<ARGState> nonAbstractionReach(ARGState pOriginState) {
+    final Deque<ARGState> waitlist = new ArrayDeque<>();
+    final Set<ARGState> reachable = new HashSet<>();
+    waitlist.push(pOriginState);
+    reachable.add(pOriginState);
+    while (!waitlist.isEmpty()) {
+      ARGState s = waitlist.pop();
+      List<ARGState> l =
+          FluentIterable.from(s.getChildren())
+              .filter(x -> !SlicingAbstractionsUtils.isAbstractionState(x))
+              .filter(x -> !reachable.contains(x))
+              .toList();
+      waitlist.addAll(l);
+      reachable.addAll(l);
+    }
+    return reachable;
+  }
+
+  public static boolean isAbstractionState(ARGState pState) {
+    return getPredicateState(pState).isAbstractionState() || !pState.wasExpanded();
+  }
 
   /**
    * @param start The (abstraction) state to start at
@@ -237,6 +292,9 @@ public class SlicingAbstractionsUtils {
       SSAMap pSSAMap, PointerTargetSet pPts, Solver pSolver, PathFormulaManager pPfmgr, boolean withInvariants)
           throws CPATransferException, InterruptedException {
     List<ARGState> segmentList = SlicingAbstractionsUtils.calculateOutgoingSegments(start).get(stop);
+    if (segmentList == null) {
+      segmentList = ImmutableList.of();
+    }
     return buildPathFormula(start, stop, segmentList, pSSAMap, pPts, pSolver, pPfmgr, withInvariants);
   }
 
@@ -250,7 +308,7 @@ public class SlicingAbstractionsUtils {
           throws CPATransferException, InterruptedException {
 
     final PathFormula pathFormula;
-    final PathFormula startFormula;
+    PathFormula startFormula;
     final PathFormulaBuilder pfb;
 
     // start with either an empty PathFormula or the abstraction state of start
@@ -261,9 +319,19 @@ public class SlicingAbstractionsUtils {
       startFormula = emptyPathFormulaWithSSAMap(pSolver.getFormulaManager().getBooleanFormulaManager().makeTrue(), pSSAMap, pPts);
     }
 
+    // Add precondition assumptions if any:
+    AbstractStateWithAssumptions other =
+        AbstractStates.extractStateByType(stop, AbstractStateWithAssumptions.class);
+    if (other != null) {
+      for (CExpression preassumption :
+          Iterables.filter(other.getPreconditionAssumptions(), CExpression.class)) {
+        startFormula = pPfmgr.makeAnd(startFormula, preassumption);
+      }
+    }
+
     // generate the PathFormula for the path between start and stop
     // using the relevant non-abstraction states
-    pfb = buildFormulaBuilder(start,stop,segmentList);
+    pfb = buildFormulaBuilder(start, stop, segmentList, pPfmgr);
     PathFormula p = pfb.build(pPfmgr,startFormula);
 
     //add the abstraction formula of abstraction state if the caller wants this:
@@ -277,7 +345,8 @@ public class SlicingAbstractionsUtils {
     return pathFormula;
   }
 
-  private static PathFormulaBuilder buildFormulaBuilder(ARGState start, ARGState stop, List<ARGState> segmentList) {
+  private static PathFormulaBuilder buildFormulaBuilder(
+      ARGState start, ARGState stop, List<ARGState> segmentList, PathFormulaManager pPfmgr) {
     final Map<ARGState, PathFormulaBuilder> finishedBuilders = new TreeMap<>();
     List<ARGState> allList = new ArrayList<>(segmentList);
     allList.add(0, start);
@@ -290,25 +359,32 @@ public class SlicingAbstractionsUtils {
           if (currentBuilder == null) {
             CFAEdge edge = parent.getEdgeToChild(currentState);
             if (edge != null) {
-              currentBuilder = finishedBuilders.get(parent).makeAnd(parent.getEdgeToChild(currentState));
+              currentBuilder = finishedBuilders.get(parent).makeAnd(edge);
             } else {
               // aggregateBasicBlocks is enabled!
               List<CFAEdge> edges = parent.getEdgesToChild(currentState);
-              assert edges.size() != 0;
+              assert !edges.isEmpty();
               currentBuilder = finishedBuilders.get(parent);
               for (CFAEdge e : edges) {
                 currentBuilder = currentBuilder.makeAnd(e);
               }
             }
+            DCAState dcaState = AbstractStates.extractStateByType(currentState, DCAState.class);
+            if (dcaState != null) {
+              for (CExpression assumption : FluentIterable.from(dcaState.getAssumptions())
+                  .filter(CExpression.class)) {
+                currentBuilder = currentBuilder.makeAnd(assumption);
+              }
+            }
           } else {
             CFAEdge edge = parent.getEdgeToChild(currentState);
             if (edge != null) {
-              currentBuilder = currentBuilder.makeOr(finishedBuilders.get(parent).makeAnd(parent.getEdgeToChild(currentState)));
+              currentBuilder = currentBuilder.makeOr(finishedBuilders.get(parent).makeAnd(edge));
             } else {
               // aggregateBasicBlocks is enabled!
               PathFormulaBuilder otherBuilder = finishedBuilders.get(parent);
               List<CFAEdge> edges = parent.getEdgesToChild(currentState);
-              assert edges.size() != 0;
+              assert !edges.isEmpty();
               for (CFAEdge e : edges) {
                 otherBuilder = otherBuilder.makeAnd(e);
               }
@@ -318,7 +394,7 @@ public class SlicingAbstractionsUtils {
         }
       }
       if (currentBuilder == null) {
-        currentBuilder = new PathFormulaBuilder();
+        currentBuilder = pPfmgr.createNewPathFormulaBuilder();
       }
       finishedBuilders.put(currentState,currentBuilder);
     }
@@ -326,7 +402,8 @@ public class SlicingAbstractionsUtils {
     return finishedBuilders.get(stop);
   }
 
-  private static PathFormula invariantPathFormulaFromState(ARGState state, SSAMap pSSAMap,PointerTargetSet pPts, Solver pSolver) {
+  private static PathFormula invariantPathFormulaFromState(
+      ARGState state, SSAMap pSSAMap, PointerTargetSet pPts, Solver pSolver) {
     BooleanFormula initFormula = getPredicateState(state).getAbstractionFormula().asFormula();
     BooleanFormula instatiatedInitFormula = pSolver.getFormulaManager().instantiate(initFormula,pSSAMap);
     return emptyPathFormulaWithSSAMap(instatiatedInitFormula, pSSAMap, pPts);
@@ -335,6 +412,86 @@ public class SlicingAbstractionsUtils {
   private static PathFormula emptyPathFormulaWithSSAMap(BooleanFormula formula, SSAMap pSSAMap, PointerTargetSet pPts) {
     PathFormula resultPathFormula = new PathFormula(formula, pSSAMap, pPts, 0);
     return resultPathFormula;
+  }
+
+  /**
+   * Retrieve a list of {@link PathFormula}s for a given list of {@link ARGState}s and a starting
+   * point, which can then be used for e.g. building a {@link BlockFormulas}.
+   *
+   * @param pfmgr {@link PathFormulaManager} for making PathFormulas from {@link CFAEdge}s
+   * @param pSolver solver object that provides the formula manager
+   * @param pRoot The (abstraction) state to start at
+   * @param pPath the path consisting of a list of (abstraction) states
+   * @param includePartialInvariants whether to include the abstraction formulas of the first and
+   *        last ARGState (with the right SSA indices)
+   * @return generated list of PathFormulas
+   * @throws CPATransferException building the {@link PathFormula} from {@link CFAEdge}s failed
+   * @throws InterruptedException building the {@link PathFormula} from {@link CFAEdge}s got
+   *         interrupted
+   */
+  public static List<PathFormula> getFormulasForPath(
+      PathFormulaManager pfmgr,
+      Solver pSolver,
+      ARGState pRoot,
+      List<ARGState> pPath,
+      boolean includePartialInvariants)
+      throws CPATransferException, InterruptedException {
+
+    return getFormulasForPath(
+        pfmgr,
+        pSolver,
+        pRoot,
+        pPath,
+        SSAMap.emptySSAMap().withDefault(1),
+        PointerTargetSet.emptyPointerTargetSet(),
+        includePartialInvariants);
+  }
+
+  /**
+   * Retrieve a list of {@link PathFormula}s for a given list of {@link ARGState}s and a starting
+   * point.
+   * <p>
+   * See also
+   * {@link SlicingAbstractionsUtils#getFormulasForPath(PathFormulaManager, Solver, ARGState, List, boolean)}
+   */
+  public static List<PathFormula> getFormulasForPath(
+      PathFormulaManager pfmgr,
+      Solver pSolver,
+      ARGState pRoot,
+      List<ARGState> pPath,
+      SSAMap pSSAMap,
+      PointerTargetSet pPts,
+      boolean includePartialInvariants)
+      throws CPATransferException, InterruptedException {
+
+    List<PathFormula> abstractionFormulas = new ArrayList<>();
+
+    PathFormula currentPathFormula =
+        buildPathFormula(
+            pRoot,
+            pPath.get(0),
+            pSSAMap,
+            pPts,
+            pSolver,
+            pfmgr,
+            includePartialInvariants);
+    abstractionFormulas.add(currentPathFormula);
+
+    for (int i = 0; i < pPath.size() - 1; i++) {
+      PathFormula oldPathFormula = currentPathFormula;
+      currentPathFormula =
+          buildPathFormula(
+              pPath.get(i),
+              pPath.get(i + 1),
+              oldPathFormula.getSsa(),
+              oldPathFormula.getPointerTargetSet(),
+              pSolver,
+              pfmgr,
+              includePartialInvariants);
+      abstractionFormulas.add(currentPathFormula);
+    }
+
+    return abstractionFormulas;
   }
 
   /**
@@ -374,10 +531,17 @@ public class SlicingAbstractionsUtils {
       ARGState oldEndState, ARGState newStartState, ARGState newEndState, ARGReachedSet pReached) {
 
     // we need to treat the case where we have no intermediate non-abstraction states differently:
-    if (pSegmentStates.size() == 0) {
-      newEndState.addParent(newStartState);
-      assert (newEndState != newStartState) : "Self loop in ARG discovered. Splitting might be wrong!";
-      return;
+    if (oldEndState.getParents().contains(oldStartState)) {
+      if (oldStartState instanceof SLARGState) {
+        EdgeSet newEdgeSet =
+            new EdgeSet(((SLARGState) oldStartState).getEdgeSetToChild(oldEndState));
+        ((SLARGState) newEndState).addParent((SLARGState) newStartState, newEdgeSet);
+      } else {
+        newEndState.addParent(newStartState);
+      }
+      if (newEndState == newStartState) {
+        // self loop already exists, no need to copy something
+      }
     }
 
     // now if we have intermediate non-abstraction states, we copy them appropriately
@@ -386,19 +550,28 @@ public class SlicingAbstractionsUtils {
     // list index as the state itself (or isn't in the list at all)
     List<ARGState> newSegmentStates = new ArrayList<>();
     for (ARGState existingState : pSegmentStates) {
-      ARGState newState = new ARGState(existingState.getWrappedState(), null);
+      ARGState newState;
+      if (!(existingState instanceof SLARGState)) {
+        newState = new ARGState(existingState.getWrappedState(), null);
+      } else {
+        newState = new SLARGState((SLARGState) existingState);
+      }
       newState.makeTwinOf(existingState);
       newSegmentStates.add(newState);
       for (ARGState parent : existingState.getParents()) {
         if (pSegmentStates.contains(parent)) {
-          newState.addParent(newSegmentStates.get(pSegmentStates.indexOf(parent)));
+          copyParent(
+              parent,
+              existingState,
+              newSegmentStates.get(pSegmentStates.indexOf(parent)),
+              newState);
         }
       }
       if (existingState.getParents().contains(oldStartState)) {
-        newState.addParent(newStartState);
+        copyParent(oldStartState, existingState, newStartState, newState);
       }
       if (existingState.getChildren().contains(oldEndState)) {
-        newEndState.addParent(newState);
+        copyParent(existingState, oldEndState, newState, newEndState);
       }
     }
     addForkedStatesToReachedSet(newSegmentStates, pSegmentStates, pReached);
@@ -408,6 +581,16 @@ public class SlicingAbstractionsUtils {
     checkArgument(newStates.size()==originalStates.size());
     for (int i = 0; i< newStates.size(); i++) {
       pReached.addForkedState(newStates.get(i),originalStates.get(i));
+    }
+  }
+
+  private static void copyParent(
+      ARGState oldParent, ARGState oldState, ARGState newParent, ARGState newState) {
+    if (!(newParent instanceof SLARGState)) {
+      newState.addParent(newParent);
+    } else {
+      EdgeSet newEdgeSet = new EdgeSet(((SLARGState) oldParent).getEdgeSetToChild(oldState));
+      ((SLARGState) newState).addParent((SLARGState) newParent, newEdgeSet);
     }
   }
 
@@ -454,13 +637,15 @@ public class SlicingAbstractionsUtils {
     }
 
     final List<ARGState> abstractionStatesOnErrorPath;
-    abstractionStatesOnErrorPath = path.asStatesList().asList().
-        stream().
-        filter(x->PredicateAbstractState.getPredicateState(x).isAbstractionState()).
-        collect(Collectors.toList());
+    abstractionStatesOnErrorPath =
+        path.asStatesList()
+            .asList()
+            .stream()
+            .filter(x -> isAbstractionState(x))
+            .collect(Collectors.toList());
 
-    final Set<ARGState> statesOnErrorPath = new HashSet<>();
-    statesOnErrorPath.addAll(abstractionStatesOnErrorPath);
+    final Set<ARGState> statesOnErrorPath = new HashSet<>(abstractionStatesOnErrorPath);
+
     for (int i = 0; i< abstractionStatesOnErrorPath.size()-1;i++) {
       ARGState start = abstractionStatesOnErrorPath.get(i);
       ARGState stop = abstractionStatesOnErrorPath.get(i+1);
@@ -468,6 +653,158 @@ public class SlicingAbstractionsUtils {
     }
 
     return statesOnErrorPath;
+  }
+
+  private static Set<CFANode> getIncomingLocations(SLARGState pState) {
+    ImmutableSet.Builder<CFANode> locations = ImmutableSet.builder();
+    for (ARGState parent : pState.getParents()) {
+      for (Iterator<CFAEdge> it = ((SLARGState) parent).getEdgeSetToChild(pState).iterator();
+          it.hasNext(); ) {
+        locations.add(it.next().getSuccessor());
+      }
+    }
+    return locations.build();
+  }
+
+  private static Set<CFANode> getOutgoingLocations(SLARGState pState) {
+    ImmutableSet.Builder<CFANode> locations = ImmutableSet.builder();
+    for (ARGState child : pState.getChildren()) {
+      for (Iterator<CFAEdge> it = pState.getEdgeSetToChild(child).iterator();it.hasNext();) {
+        locations.add(it.next().getPredecessor());
+      }
+    }
+    return locations.build();
+  }
+
+  public static void removeIncomingEdgesWithLocationMismatch(SLARGState state) {
+    if (state.isTarget() || state.getParents().isEmpty()) {
+      return;
+    }
+    Set<CFANode> locations = getOutgoingLocations(state);
+    List<ARGState> toRemove = new ArrayList<>();
+    for (ARGState parent : state.getParents()) {
+      EdgeSet edgeSet = ((SLARGState) parent).getEdgeSetToChild(state);
+      if (edgeSet != null) {
+        for (Iterator<CFAEdge> it = edgeSet.iterator();it.hasNext(); ) {
+          CFAEdge edge = it.next();
+          if (!locations.contains(edge.getSuccessor())) {
+            it.remove();
+          }
+        }
+        if (edgeSet.isEmpty()) {
+          toRemove.add(parent);
+        }
+      }
+    }
+    for (ARGState parent : toRemove) {
+      state.removeParent(parent);
+    }
+  }
+
+  public static void removeOutgoingEdgesWithLocationMismatch(SLARGState state) {
+    if (state.isTarget() || state.getParents().isEmpty()) {
+      return;
+    }
+    Set<CFANode> locations = getIncomingLocations(state);
+    List<ARGState> toRemove = new ArrayList<>();
+    for (ARGState child : state.getChildren()) {
+      EdgeSet edgeSet = state.getEdgeSetToChild(child);
+
+      if (edgeSet != null) {
+        for (Iterator<CFAEdge> it = edgeSet.iterator(); it.hasNext(); ) {
+          CFAEdge edge = it.next();
+          if (!locations.contains(edge.getPredecessor())) {
+            it.remove();
+          }
+        }
+        if (edgeSet.isEmpty()) {
+          toRemove.add(child);
+        }
+      }
+    }
+    for (ARGState child : toRemove) {
+      child.removeParent(state);
+    }
+  }
+
+  private static boolean blk(ARGState pState) {
+
+    // if it is the root state, return true:
+    if (pState.getParents().isEmpty()) {
+      return true;
+    }
+    // if it is a target state, return true:
+    if (pState.isTarget()) {
+      return true;
+    }
+    // if it is part of multiple incoming blocks, return true:
+    if (calculateStartStates(pState).size() > 1) {
+      return true;
+    }
+    // it is a loop head, return true:
+    if (calculateOutgoingSegments(pState).containsKey(pState)) {
+      return true;
+    }
+    if (pState instanceof SLARGState) {
+      // if not all EdgeSets from parents to pState are singletons, return true:
+      if (!pState
+          .getParents()
+          .stream()
+          .map(parent -> ((SLARGState) parent).getEdgeSetToChild(pState))
+          .allMatch(x -> x.size() == 1)) {
+        return true;
+      }
+      // if not all EdgeSets from pState to children are singletons, return true:
+      if (!pState
+          .getChildren()
+          .stream()
+          .map(child -> ((SLARGState) pState).getEdgeSetToChild(child))
+          .allMatch(x -> x.size() == 1)) {
+        return true;
+      }
+    }
+    if (calculateIncomingSegments(pState).entrySet().size() > 1
+        || calculateOutgoingSegments(pState).entrySet().size() > 1) {
+      return true;
+    }
+    return false;
+  }
+
+  static boolean performDynamicBlockEncoding(ARGReachedSet pArgReachedSet) {
+    boolean changed = false;
+    for (AbstractState state : new ArrayList<>(pArgReachedSet.asReachedSet().asCollection())) {
+      ARGState currentState = (ARGState) state;
+      PredicateAbstractState predState =
+          PredicateAbstractState.getPredicateState(currentState);
+      assert predState != null;
+      if (predState.isAbstractionState() && !blk(currentState)) {
+        changed = true;
+        PredicateAbstractState replacement =
+            PredicateAbstractState.mkNonAbstractionState(
+                predState.getPathFormula(),
+                predState.getAbstractionFormula(),
+                predState.getAbstractionLocationsOnPath());
+        ARGState newState = currentState.forkWithReplacements(Collections.singleton(replacement));
+        currentState.replaceInARGWith(newState);
+        pArgReachedSet.addForkedState(newState, (ARGState) state);
+        if (newState instanceof SLARGState) {
+          // check for incoming edges that do not have a suitable outgoing edge for their successor
+          // location. E.g.: A-{1~>2}->B-{3~>4}->C
+          // transfer from 1~>2 will be removed
+          removeIncomingEdgesWithLocationMismatch((SLARGState) newState);
+
+          // now do the same the other way around (check for outgoing edges that do not have a
+          removeOutgoingEdgesWithLocationMismatch((SLARGState) newState);
+        }
+      } else if (predState.isAbstractionState() && !((ARGState) state).getParents().isEmpty()) {
+        // here it is only sound to check for outgoing edges that do not have a suitable incoming
+        // edge
+        if (state instanceof SLARGState) {
+          removeOutgoingEdgesWithLocationMismatch((SLARGState) state);
+        }
+      }
+    }
+    return changed;
   }
 
 }

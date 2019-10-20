@@ -38,10 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import javax.annotation.Nullable;
+import java.util.logging.Level;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.ast.FileLocation;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpressionAssignmentStatement;
@@ -174,7 +176,17 @@ class AssignmentHandler {
 
     // LHS handling
     final CExpressionVisitorWithPointerAliasing lhsVisitor = newExpressionVisitor();
-    final Location lhsLocation = lhs.accept(lhsVisitor).asLocation();
+    final Expression lhsExpression = lhs.accept(lhsVisitor);
+    if (lhsExpression.isNondetValue()) {
+      // only because of CExpressionVisitorWithPointerAliasing.visit(CFieldReference)
+      conv.logger.logfOnce(
+          Level.WARNING,
+          "%s: Ignoring assignment to %s because bit fields are currently not fully supported",
+          edge.getFileLocation(),
+          lhs);
+      return conv.bfmgr.makeTrue();
+    }
+    final Location lhsLocation = lhsExpression.asLocation();
     final boolean useOldSSAIndices = useOldSSAIndicesIfAliased && lhsLocation.isAliased();
 
     final Map<String, CType> lhsLearnedPointerTypes = lhsVisitor.getLearnedPointerTypes();
@@ -294,21 +306,20 @@ class AssignmentHandler {
         && !assignments.isEmpty()) {
       return handleInitializationAssignmentsWithQuantifier(variable, assignments, false);
     } else {
-      return handleInitializationAssignmentsWithoutQuantifier(variable, assignments);
+      return handleInitializationAssignmentsWithoutQuantifier(assignments);
     }
   }
 
   /**
    * Handles initialization assignments.
    *
-   * @param variable The left hand side of the variable.
    * @param assignments A list of assignment statements.
    * @return A boolean formula for the assignment.
    * @throws UnrecognizedCodeException If the C code was unrecognizable.
    * @throws InterruptedException It the execution was interrupted.
    */
   private BooleanFormula handleInitializationAssignmentsWithoutQuantifier(
-      final CIdExpression variable, final List<CExpressionAssignmentStatement> assignments)
+      final List<CExpressionAssignmentStatement> assignments)
       throws UnrecognizedCodeException, InterruptedException {
     BooleanFormula result = conv.bfmgr.makeTrue();
     for (CExpressionAssignmentStatement assignment : assignments) {
@@ -324,8 +335,7 @@ class AssignmentHandler {
    * quantifier over the resulting SMT array.
    *
    * <p>If we cannot make an assignment of the form {@code <variable> = <value>}, we fall back to
-   * the normal initialization in
-   * {@link #handleInitializationAssignmentsWithoutQuantifier(CIdExpression, List)}.
+   * the normal initialization in {@link #handleInitializationAssignmentsWithoutQuantifier(List)}.
    *
    * @param pLeftHandSide The left hand side of the statement. Needed for fallback scenario.
    * @param pAssignments A list of assignment statements.
@@ -333,7 +343,7 @@ class AssignmentHandler {
    * @return A boolean formula for the assignment.
    * @throws UnrecognizedCodeException If the C code was unrecognizable.
    * @throws InterruptedException If the execution was interrupted.
-   * @see #handleInitializationAssignmentsWithoutQuantifier(CIdExpression, List)
+   * @see #handleInitializationAssignmentsWithoutQuantifier(List)
    */
   private BooleanFormula handleInitializationAssignmentsWithQuantifier(
       final CIdExpression pLeftHandSide,
@@ -341,8 +351,8 @@ class AssignmentHandler {
       final boolean pUseOldSSAIndices)
       throws UnrecognizedCodeException, InterruptedException {
 
-    assert pAssignments.size() > 0 : "Cannot handle initialization assignments without an "
-        + "assignment right hand side.";
+    assert !pAssignments.isEmpty()
+        : "Cannot handle initialization assignments without an " + "assignment right hand side.";
 
     final CType lhsType = typeHandler.getSimplifiedType(pAssignments.get(0).getLeftHandSide());
     final CType rhsType = typeHandler.getSimplifiedType(pAssignments.get(0).getRightHandSide());
@@ -364,7 +374,7 @@ class AssignmentHandler {
       //    ...
       //    const struct s s = { .x = 1 };
       //    struct t t = { .s = s };
-      return handleInitializationAssignmentsWithoutQuantifier(pLeftHandSide, pAssignments);
+      return handleInitializationAssignmentsWithoutQuantifier(pAssignments);
     } else {
       MemoryRegion region = lhsLocation.asAliased().getMemoryRegion();
       if(region == null) {
@@ -585,7 +595,7 @@ class AssignmentHandler {
                   newRvalue,
                   useOldSSAIndices,
                   updatedRegions));
-      offset += conv.getBitSizeof(lvalueArrayType.getType());
+      offset += conv.getSizeof(lvalueArrayType.getType());
     }
     return result;
   }
@@ -632,8 +642,12 @@ class AssignmentHandler {
                       newLvalueType,
                       ssa)))) {
 
-        final long offset = typeHandler.getBitOffset(lvalueCompositeType, memberDeclaration);
-        final Formula offsetFormula = fmgr.makeNumber(conv.voidPointerFormulaType, offset);
+        final OptionalLong offset = typeHandler.getOffset(lvalueCompositeType, memberDeclaration);
+        if (!offset.isPresent()) {
+          continue; // TODO this looses values of bit fields
+        }
+        final Formula offsetFormula =
+            fmgr.makeNumber(conv.voidPointerFormulaType, offset.getAsLong());
         final Location newLvalue;
         if (lvalue.isAliased()) {
           final MemoryRegion region =
@@ -838,169 +852,205 @@ class AssignmentHandler {
       assert newLhsLocation.isUnaliasedLocation();
 
       if (CTypeUtils.isSimpleType(newLhsType)) {
-        final Expression newRhsExpression;
-        final CType newRhsType = newLhsType;
-        if (CTypeUtils.isSimpleType(rhsType) && !rhsExpression.isNondetValue()) {
-          Formula rhsFormula = getValueFormula(rhsType, rhsExpression).get();
-          rhsFormula = conv.makeCast(rhsType, lhsType, rhsFormula, constraints, edge);
-          rhsFormula = conv.makeValueReinterpretation(lhsType, newLhsType, rhsFormula);
-          newRhsExpression = rhsFormula == null ? Value.nondetValue() : Value.ofValue(rhsFormula);
-        } else if (rhsType instanceof CCompositeType) {
-          // reinterpret compositetype as bitvector; concatenate its fields appropriately in case of
-          // struct
-          if (((CCompositeType) rhsType).getKind() == ComplexTypeKind.STRUCT) {
-            CExpressionVisitorWithPointerAliasing expVisitor = newExpressionVisitor();
-            int offset = 0;
-            int targetSize = typeHandler.getBitSizeof(newLhsType);
-            Formula rhsFormula = null;
-
-            for (CCompositeTypeMemberDeclaration innerMember :
-                ((CCompositeType) rhsType).getMembers()) {
-              int innerMemberSize = typeHandler.getBitSizeof(innerMember.getType());
-
-              CExpression innerMemberFieldReference =
-                  new CFieldReference(
-                      FileLocation.DUMMY,
-                      innerMember.getType(),
-                      innerMember.getName(),
-                      fieldReference,
-                      false);
-              Formula memberFormula =
-                  getValueFormula(
-                          innerMember.getType(),
-                          createRHSExpression(
-                              innerMemberFieldReference, innerMember.getType(), expVisitor))
-                      .get();
-              if (!(memberFormula instanceof BitvectorFormula)) {
-                CType interType = TypeUtils.createTypeWithLength(innerMemberSize);
-                memberFormula =
-                    conv.makeCast(
-                        innerMember.getType(), interType, memberFormula, constraints, edge);
-                memberFormula =
-                    conv.makeValueReinterpretation(innerMember.getType(), interType, memberFormula);
-              }
-              assert memberFormula == null || memberFormula instanceof BitvectorFormula;
-
-              if (memberFormula != null) {
-                if (rhsFormula == null) {
-                  rhsFormula = fmgr.getBitvectorFormulaManager().makeBitvector(targetSize, 0);
-                }
-
-                boolean lhsSigned = false;
-                if (!(newLhsType instanceof CPointerType)) {
-                  lhsSigned = ((CSimpleType) newLhsType).isSigned();
-                }
-                memberFormula =
-                    fmgr.makeExtend(memberFormula, targetSize - innerMemberSize, lhsSigned);
-                memberFormula =
-                    fmgr.makeShiftLeft(
-                        memberFormula,
-                        fmgr.makeNumber(FormulaType.getBitvectorTypeWithSize(targetSize), offset));
-                rhsFormula = fmgr.makePlus(rhsFormula, memberFormula);
-              }
-
-              offset += typeHandler.getBitSizeof(innerMember.getType());
-            }
-
-            if (rhsFormula != null) {
-              CType fromType = TypeUtils.createTypeWithLength(targetSize);
-              rhsFormula = conv.makeCast(fromType, newLhsType, rhsFormula, constraints, edge);
-              rhsFormula = conv.makeValueReinterpretation(fromType, newLhsType, rhsFormula);
-            }
-            // make rhsexpression from constructed bitvector; perhaps cast to lhsType in advance?
-            newRhsExpression = rhsFormula == null ? Value.nondetValue() : Value.ofValue(rhsFormula);
-
-            // make assignment to lhs
-          } else {
-            throw new UnsupportedCodeException(
-                "Assignment of complex Unions via nested Struct-Members not supported", edge);
-          }
-        } else {
-          newRhsExpression = Value.nondetValue();
-        }
-        constraints.addConstraint(
-            makeDestructiveAssignment(
-                newLhsType,
-                newRhsType,
-                newLhsLocation,
-                newRhsExpression,
-                useOldSSAIndices,
-                updatedRegions));
+        addAssignmentsForOtherFieldsOfUnionForLhsSimpleType(
+            lhsType,
+            newLhsType,
+            rhsType,
+            rhsExpression,
+            fieldReference,
+            newLhsLocation,
+            useOldSSAIndices,
+            updatedRegions);
       }
 
       if (newLhsType instanceof CCompositeType
           && CTypeUtils.isSimpleType(rhsType)
           && !rhsExpression.isNondetValue()) {
-        // Use different name in this block as newLhsType is confusing. newLhsType was computed as
-        // member.getType() -> call it memberType here (note we will also have an innerMember)
-        final CType memberType = newLhsType;
-        // newLhs is a CFieldReference to member:
-        final CExpression memberCFieldReference = newLhs;
-        final int rhsSize = typeHandler.getBitSizeof(rhsType);
+        addAssignmentsForOtherFieldsOfUnionForLhsCompositeType(
+            newLhs,
+            (CCompositeType) newLhsType,
+            rhsType,
+            rhsExpression,
+            lhsVisitor,
+            member,
+            useOldSSAIndices,
+            updatedRegions);
+      }
+    }
+  }
 
-        // for each innerMember of member we need to add a (destructive!) constraint like:
-        // union.member.innerMember := treatAsMemberTypeAndExtractInnerMemberValue(rhsExpression);
+  private void addAssignmentsForOtherFieldsOfUnionForLhsSimpleType(
+      final CType lhsType,
+      final CType newLhsType,
+      final CType rhsType,
+      final Expression rhsExpression,
+      final CFieldReference fieldReference,
+      final Location newLhsLocation,
+      final boolean useOldSSAIndices,
+      final Set<MemoryRegion> updatedRegions)
+      throws AssertionError, UnrecognizedCodeException, UnsupportedCodeException {
+    final Expression newRhsExpression;
+    if (CTypeUtils.isSimpleType(rhsType) && !rhsExpression.isNondetValue()) {
+      Formula rhsFormula = getValueFormula(rhsType, rhsExpression).get();
+      rhsFormula = conv.makeCast(rhsType, lhsType, rhsFormula, constraints, edge);
+      rhsFormula = conv.makeValueReinterpretation(lhsType, newLhsType, rhsFormula);
+      newRhsExpression = Value.ofValueOrNondet(rhsFormula);
+    } else if (rhsType instanceof CCompositeType) {
+      // reinterpret compositetype as bitvector; concatenate its fields appropriately in case of
+      // struct
+      if (((CCompositeType) rhsType).getKind() == ComplexTypeKind.STRUCT) {
+        CExpressionVisitorWithPointerAliasing expVisitor = newExpressionVisitor();
+        int offset = 0;
+        int targetSize = typeHandler.getBitSizeof(newLhsType);
+        Formula rhsFormula = null;
+
         for (CCompositeTypeMemberDeclaration innerMember :
-            ((CCompositeType) memberType).getMembers()) {
+            ((CCompositeType) rhsType).getMembers()) {
+          int innerMemberSize = typeHandler.getBitSizeof(innerMember.getType());
 
-          int fieldOffset =
-              (int) typeHandler.getBitOffset(((CCompositeType) memberType), innerMember);
-          if (fieldOffset >= rhsSize) {
-            // nothing to fill anymore
-            break;
-          }
-          // don't try later to extract a too big chunk of bits
-          int fieldSize =
-              Math.min(typeHandler.getBitSizeof(innerMember.getType()), rhsSize - fieldOffset);
-          assert fieldSize > 0;
-          int startIndex = fieldOffset;
-          int endIndex = fieldOffset + fieldSize - 1;
-
-          // "treatAsMemberType"
-          Formula rhsFormula = getValueFormula(rhsType, rhsExpression).get();
-          if (rhsType instanceof CPointerType) {
-            // Do not break on Pointer-Handling
-            CType rhsCasted = TypeUtils.createTypeWithLength(rhsSize);
-            rhsFormula = conv.makeCast(rhsType, rhsCasted, rhsFormula, constraints, edge);
-            rhsFormula = conv.makeValueReinterpretation(rhsType, rhsCasted, rhsFormula);
-          } else {
-            rhsFormula = conv.makeCast(rhsType, memberType, rhsFormula, constraints, edge);
-            rhsFormula = conv.makeValueReinterpretation(rhsType, memberType, rhsFormula);
-          }
-          assert rhsFormula == null || rhsFormula instanceof BitvectorFormula;
-
-          boolean rhsSigned = false;
-          if (!(rhsType instanceof CPointerType)) {
-            rhsSigned = ((CSimpleType) rhsType).isSigned();
-          }
-          // "AndExtractInnerMemberValue"
-          if (rhsFormula != null) {
-            rhsFormula = fmgr.makeExtract(rhsFormula, endIndex, startIndex, rhsSigned);
-          }
-          Expression newRhsExpression =
-              rhsFormula == null ? Value.nondetValue() : Value.ofValue(rhsFormula);
-
-          // we need innerMember as location for the lvalue of makeDestructiveAssignment:
-          final CExpression innerMemberCFieldReference =
+          CExpression innerMemberFieldReference =
               new CFieldReference(
                   FileLocation.DUMMY,
-                  member.getType(),
+                  innerMember.getType(),
                   innerMember.getName(),
-                  memberCFieldReference,
+                  fieldReference,
                   false);
-          final Location innerMemberLocation =
-              innerMemberCFieldReference.accept(lhsVisitor).asLocation();
+          Formula memberFormula =
+              getValueFormula(
+                      innerMember.getType(),
+                      createRHSExpression(
+                          innerMemberFieldReference, innerMember.getType(), expVisitor))
+                  .get();
+          if (!(memberFormula instanceof BitvectorFormula)) {
+            CType interType = TypeUtils.createTypeWithLength(innerMemberSize);
+            memberFormula =
+                conv.makeCast(
+                    innerMember.getType(), interType, memberFormula, constraints, edge);
+            memberFormula =
+                conv.makeValueReinterpretation(innerMember.getType(), interType, memberFormula);
+          }
+          assert memberFormula == null || memberFormula instanceof BitvectorFormula;
 
-          constraints.addConstraint(
-              makeDestructiveAssignment(
-                  innerMember.getType(),
-                  innerMember.getType(),
-                  innerMemberLocation,
-                  newRhsExpression,
-                  useOldSSAIndices,
-                  updatedRegions));
+          if (memberFormula != null) {
+            if (rhsFormula == null) {
+              rhsFormula = fmgr.getBitvectorFormulaManager().makeBitvector(targetSize, 0);
+            }
+
+            boolean lhsSigned = false;
+            if (!(newLhsType instanceof CPointerType)) {
+              lhsSigned = ((CSimpleType) newLhsType).isSigned();
+            }
+            memberFormula =
+                fmgr.makeExtend(memberFormula, targetSize - innerMemberSize, lhsSigned);
+            memberFormula =
+                fmgr.makeShiftLeft(
+                    memberFormula,
+                    fmgr.makeNumber(FormulaType.getBitvectorTypeWithSize(targetSize), offset));
+            rhsFormula = fmgr.makePlus(rhsFormula, memberFormula);
+          }
+
+          offset += typeHandler.getBitSizeof(innerMember.getType());
         }
+
+        if (rhsFormula != null) {
+          CType fromType = TypeUtils.createTypeWithLength(targetSize);
+          rhsFormula = conv.makeCast(fromType, newLhsType, rhsFormula, constraints, edge);
+          rhsFormula = conv.makeValueReinterpretation(fromType, newLhsType, rhsFormula);
+        }
+        // make rhsexpression from constructed bitvector; perhaps cast to lhsType in advance?
+        newRhsExpression = Value.ofValueOrNondet(rhsFormula);
+
+        // make assignment to lhs
+      } else {
+        throw new UnsupportedCodeException(
+            "Assignment of complex Unions via nested Struct-Members not supported", edge);
       }
+    } else {
+      newRhsExpression = Value.nondetValue();
+    }
+    final CType newRhsType = newLhsType;
+    constraints.addConstraint(
+        makeDestructiveAssignment(
+            newLhsType,
+            newRhsType,
+            newLhsLocation,
+            newRhsExpression,
+            useOldSSAIndices,
+            updatedRegions));
+  }
+
+  private void addAssignmentsForOtherFieldsOfUnionForLhsCompositeType(
+      final CExpression newLhs,
+      final CCompositeType newLhsType,
+      final CType rhsType,
+      final Expression rhsExpression,
+      final CExpressionVisitorWithPointerAliasing lhsVisitor,
+      CCompositeTypeMemberDeclaration member,
+      final boolean useOldSSAIndices,
+      final Set<MemoryRegion> updatedRegions)
+      throws AssertionError, UnrecognizedCodeException {
+    // Use different name in this block as newLhsType is confusing. newLhsType was computed as
+    // member.getType() -> call it memberType here (note we will also have an innerMember)
+    final CCompositeType memberType = newLhsType;
+    // newLhs is a CFieldReference to member:
+    final CExpression memberCFieldReference = newLhs;
+    final int rhsSize = typeHandler.getBitSizeof(rhsType);
+
+    // for each innerMember of member we need to add a (destructive!) constraint like:
+    // union.member.innerMember := treatAsMemberTypeAndExtractInnerMemberValue(rhsExpression);
+    for (CCompositeTypeMemberDeclaration innerMember : memberType.getMembers()) {
+      int fieldOffset = (int) typeHandler.getBitOffset(memberType, innerMember);
+      if (fieldOffset >= rhsSize) {
+        // nothing to fill anymore
+        break;
+      }
+      // don't try later to extract a too big chunk of bits
+      int fieldSize =
+          Math.min(typeHandler.getBitSizeof(innerMember.getType()), rhsSize - fieldOffset);
+      assert fieldSize > 0;
+      int startIndex = fieldOffset;
+      int endIndex = fieldOffset + fieldSize - 1;
+
+      // "treatAsMemberType"
+      Formula rhsFormula = getValueFormula(rhsType, rhsExpression).get();
+      if (rhsType instanceof CPointerType) {
+        // Do not break on Pointer-Handling
+        CType rhsCasted = TypeUtils.createTypeWithLength(rhsSize);
+        rhsFormula = conv.makeCast(rhsType, rhsCasted, rhsFormula, constraints, edge);
+        rhsFormula = conv.makeValueReinterpretation(rhsType, rhsCasted, rhsFormula);
+      } else {
+        rhsFormula = conv.makeCast(rhsType, memberType, rhsFormula, constraints, edge);
+        rhsFormula = conv.makeValueReinterpretation(rhsType, memberType, rhsFormula);
+      }
+      assert rhsFormula == null || rhsFormula instanceof BitvectorFormula;
+
+      boolean rhsSigned = !(rhsType instanceof CPointerType) && ((CSimpleType) rhsType).isSigned();
+
+      // "AndExtractInnerMemberValue"
+      if (rhsFormula != null) {
+        rhsFormula = fmgr.makeExtract(rhsFormula, endIndex, startIndex, rhsSigned);
+      }
+      Expression newRhsExpression = Value.ofValueOrNondet(rhsFormula);
+
+      // we need innerMember as location for the lvalue of makeDestructiveAssignment:
+      final CExpression innerMemberCFieldReference =
+          new CFieldReference(
+              FileLocation.DUMMY,
+              member.getType(),
+              innerMember.getName(),
+              memberCFieldReference,
+              false);
+      final Location innerMemberLocation =
+          innerMemberCFieldReference.accept(lhsVisitor).asLocation();
+
+      constraints.addConstraint(
+          makeDestructiveAssignment(
+              innerMember.getType(),
+              innerMember.getType(),
+              innerMemberLocation,
+              newRhsExpression,
+              useOldSSAIndices,
+              updatedRegions));
     }
   }
 
@@ -1028,7 +1078,7 @@ class AssignmentHandler {
     assert !options.useArraysForHeap();
 
     checkIsSimplified(lvalueType);
-    final int size = conv.getBitSizeof(lvalueType);
+    final int size = conv.getSizeof(lvalueType);
 
     if (options.useQuantifiersOnArrays()) {
       addRetentionConstraintsWithQuantifiers(

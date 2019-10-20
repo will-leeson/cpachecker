@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.Appender;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.FileOption;
@@ -143,8 +143,8 @@ public class CBMCChecker implements CounterexampleChecker, Statistics {
     CBMCExecutor cbmc;
     int exitCode;
     try {
-      List<String> cbmcArgs = new ArrayList<>();
-      cbmcArgs.addAll(getParamForMachineModel());
+      List<String> cbmcArgs = new ArrayList<>(getParamForMachineModel());
+
       cbmcArgs.add("--stop-on-fail");
 
       // Our paths are loop-free, but there might be hidden loops in stdlib functions like memcpy.

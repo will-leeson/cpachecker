@@ -26,6 +26,7 @@ package org.sosy_lab.cpachecker.core.algorithm.impact;
 import static org.sosy_lab.cpachecker.util.AbstractStates.extractLocation;
 import static org.sosy_lab.cpachecker.util.CFAUtils.leavingEdges;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -212,12 +213,12 @@ public class ImpactAlgorithm implements Algorithm, StatisticsProvider {
       // build list of formulas for edges
       List<BooleanFormula> pathFormulas = new ArrayList<>(path.size());
       addPathFormulasToList(path, pathFormulas);
-      BlockFormulas formulas = new BlockFormulas(pathFormulas);
+      BlockFormulas formulas = new BlockFormulas(pathFormulas, bfmgr.makeTrue());
 
       CounterexampleTraceInfo cex = imgr.buildCounterexampleTrace(formulas);
 
       if (!cex.isSpurious()) {
-        return Collections.emptyList(); // real counterexample
+        return ImmutableList.of(); // real counterexample
       }
 
       logger.log(Level.FINER, "Refinement successful");
@@ -335,7 +336,7 @@ public class ImpactAlgorithm implements Algorithm, StatisticsProvider {
     assert formulas.size() == path.size() + 1;
 
     CounterexampleTraceInfo interpolantInfo =
-        imgr.buildCounterexampleTrace(new BlockFormulas(formulas));
+        imgr.buildCounterexampleTrace(new BlockFormulas(formulas, bfmgr.makeTrue()));
 
     if (!interpolantInfo.isSpurious()) {
       logger.log(Level.FINER, "Forced covering unsuccessful.");

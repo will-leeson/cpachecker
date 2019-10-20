@@ -82,6 +82,7 @@ public final class SMGUtils {
     return pInputSMG.getHVEdges(valueFilter);
   }
 
+  @Deprecated // unused
   public static boolean isRecursiveOnOffset(CType pType, long fieldOffset, MachineModel pModel) {
 
     CFieldTypeVisitor v = new CFieldTypeVisitor(fieldOffset, pModel);
@@ -113,7 +114,7 @@ public final class SMGUtils {
 
     @Override
     public CType visit(CArrayType pArrayType) {
-      if (fieldOffset % model.getSizeofInBits(pArrayType) == 0) {
+      if (fieldOffset % model.getSizeofInBits(pArrayType).longValueExact() == 0) {
         return pArrayType.getType();
       } else {
         return UNKNOWN;
@@ -133,7 +134,7 @@ public final class SMGUtils {
         } else if (memberOffset > fieldOffset) {
           return UNKNOWN;
         } else {
-          memberOffset = memberOffset + model.getSizeofInBits(member.getType());
+          memberOffset = memberOffset + model.getSizeofInBits(member.getType()).longValueExact();
         }
       }
 

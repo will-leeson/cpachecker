@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.ast.ABinaryExpression;
 import org.sosy_lab.cpachecker.cfa.ast.ABinaryExpression.ABinaryOperator;
 import org.sosy_lab.cpachecker.cfa.ast.ADeclaration;
@@ -256,7 +256,7 @@ public abstract class ForwardingTransferRelation<S, T extends AbstractState, P e
   @SuppressWarnings({"unchecked", "unused"})
   protected Collection<T> postProcessing(@Nullable S successor, CFAEdge edge) {
     if (successor == null) {
-      return Collections.emptySet();
+      return ImmutableSet.of();
     } else {
       return Collections.singleton((T)successor);
     }

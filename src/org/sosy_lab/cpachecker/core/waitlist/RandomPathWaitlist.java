@@ -29,7 +29,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.LinkedList;
 import java.util.Random;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
 import org.sosy_lab.cpachecker.util.AbstractStates;
@@ -44,10 +44,9 @@ import org.sosy_lab.cpachecker.util.globalinfo.GlobalInfo;
  * returns one of these successors at random.
  */
 @SuppressFBWarnings(
-  value = "BC_BAD_CAST_TO_CONCRETE_COLLECTION",
-  justification = "warnings is only because of casts introduced by generics"
-)
-@SuppressWarnings("JdkObsolete")
+    value = "BC_BAD_CAST_TO_CONCRETE_COLLECTION",
+    justification = "warnings is only because of casts introduced by generics")
+@SuppressWarnings("checkstyle:IllegalType")
 public class RandomPathWaitlist extends AbstractWaitlist<LinkedList<AbstractState>> {
 
   private static final long serialVersionUID = 1L;
@@ -56,6 +55,7 @@ public class RandomPathWaitlist extends AbstractWaitlist<LinkedList<AbstractStat
   private int successorsOfParent;
   private transient @Nullable CFANode parent;
 
+  @SuppressWarnings("JdkObsolete")
   protected RandomPathWaitlist() {
     super(new LinkedList<>());
     successorsOfParent = 0;
@@ -65,7 +65,7 @@ public class RandomPathWaitlist extends AbstractWaitlist<LinkedList<AbstractStat
   public void add(AbstractState pStat) {
     super.add(pStat);
     CFANode location = AbstractStates.extractLocation(pStat);
-    if (parent == null || (!parent.hasEdgeTo(location))) {
+    if (parent == null || !parent.hasEdgeTo(location)) {
       parent = location;
       successorsOfParent = 0;
     } else {
@@ -98,7 +98,7 @@ public class RandomPathWaitlist extends AbstractWaitlist<LinkedList<AbstractStat
     s.writeObject(parent.getNodeNumber());
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("UnusedVariable") // parameter is required by API
   private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
     s.defaultReadObject();
     Integer nodeNumber = (Integer) s.readObject();

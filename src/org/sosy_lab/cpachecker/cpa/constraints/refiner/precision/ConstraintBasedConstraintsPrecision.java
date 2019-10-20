@@ -26,10 +26,10 @@ package org.sosy_lab.cpachecker.cpa.constraints.refiner.precision;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
-import java.util.ArrayList;
+import com.google.common.collect.SetMultimap;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -55,7 +55,7 @@ class ConstraintBasedConstraintsPrecision
   private final static ConstraintBasedConstraintsPrecision
       EMPTY = new ConstraintBasedConstraintsPrecision();
 
-  private Multimap<CFANode, Constraint> trackedLocally;
+  private SetMultimap<CFANode, Constraint> trackedLocally;
   private Multimap<String, Constraint> trackedInFunction;
   private Set<Constraint> trackedGlobally;
 
@@ -77,10 +77,9 @@ class ConstraintBasedConstraintsPrecision
   }
 
   private ConstraintBasedConstraintsPrecision(
-      final Multimap<CFANode, Constraint> pTrackedLocally,
+      final SetMultimap<CFANode, Constraint> pTrackedLocally,
       final Multimap<String, Constraint> pTrackedInFunction,
-      final Set<Constraint> pTrackedGlobally
-  ) {
+      final Set<Constraint> pTrackedGlobally) {
     trackedLocally = pTrackedLocally;
     trackedInFunction = pTrackedInFunction;
     trackedGlobally = pTrackedGlobally;
@@ -130,7 +129,7 @@ class ConstraintBasedConstraintsPrecision
     assert pOther instanceof ConstraintBasedConstraintsPrecision;
 
     ConstraintBasedConstraintsPrecision other = (ConstraintBasedConstraintsPrecision) pOther;
-    Multimap<CFANode, Constraint> joinedLocal = HashMultimap.create(trackedLocally);
+    SetMultimap<CFANode, Constraint> joinedLocal = HashMultimap.create(trackedLocally);
     Multimap<String, Constraint> joinedFunctionwise = HashMultimap.create(trackedInFunction);
     Set<Constraint> joinedGlobal = new HashSet<>(trackedGlobally);
 
@@ -267,11 +266,9 @@ class ConstraintBasedConstraintsPrecision
 
     sb.append("\nLocally tracked: {");
     if (!trackedLocally.keySet().isEmpty()) {
-      List<CFANode> nodes = new ArrayList<>(trackedLocally.keySet());
-      Collections.sort(nodes); // we always want the same node order
-
       sb.append("\n");
-      for (CFANode n : nodes) {
+      // we always want the same node order
+      for (CFANode n : ImmutableList.sortedCopyOf(trackedLocally.keySet())) {
         sb.append("\t").append(n).append(" -> ");
 
         // unfortunately, constraints aren't comparable, so we won't have a deterministic order.
@@ -287,8 +284,8 @@ class ConstraintBasedConstraintsPrecision
 
     sb.append("\nFunctionwise tracked: {");
     if (!trackedInFunction.keySet().isEmpty()) {
-      List<String> functions = new ArrayList<>(trackedInFunction.keySet());
-      Collections.sort(functions); // we always want the same function order
+      // we always want the same function order
+      List<String> functions = ImmutableList.sortedCopyOf(trackedInFunction.keySet());
 
       sb.append("\n");
       for (String f : functions) {

@@ -27,13 +27,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableSet;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import org.sosy_lab.cpachecker.cpa.usage.UsageInfo;
 import org.sosy_lab.cpachecker.cpa.usage.UsageState;
 
 public class UnrefinedUsagePointSet implements AbstractUsagePointSet {
-  private final TreeSet<UsagePoint> topUsages;
+  private final NavigableSet<UsagePoint> topUsages;
   private final Map<UsagePoint, UsageInfoSet> usageInfoSets;
 
   public UnrefinedUsagePointSet() {
@@ -72,7 +73,6 @@ public class UnrefinedUsagePointSet implements AbstractUsagePointSet {
     }
   }
 
-  @Override
   public UsageInfoSet getUsageInfo(UsagePoint point) {
     return usageInfoSets.get(point);
   }
@@ -93,14 +93,13 @@ public class UnrefinedUsagePointSet implements AbstractUsagePointSet {
     usageInfoSets.clear();
   }
 
-  @Override
   public void remove(UsageState pUstate) {
     //Attention! Use carefully. May not work
     for (UsagePoint point : new TreeSet<>(usageInfoSets.keySet())) {
       UsageInfoSet uset = usageInfoSets.get(point);
       boolean b = uset.remove(pUstate);
       if (b) {
-        if (uset.size() == 0) {
+        if (uset.isEmpty()) {
           usageInfoSets.remove(point);
         }
         //May be two usages related to the same state. This is abstractState !
@@ -117,7 +116,6 @@ public class UnrefinedUsagePointSet implements AbstractUsagePointSet {
     return new TreeSet<>(topUsages.tailSet(p)).iterator();
   }
 
-  @Override
   public int getNumberOfTopUsagePoints() {
     return topUsages.size();
   }

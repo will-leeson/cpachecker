@@ -28,27 +28,32 @@ import static org.sosy_lab.cpachecker.util.AbstractStates.IS_TARGET_STATE;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
+import com.google.common.io.MoreFiles;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.Appender;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.FileOption;
@@ -77,6 +82,7 @@ import org.sosy_lab.cpachecker.cpa.automaton.Automaton;
 import org.sosy_lab.cpachecker.cpa.partitioning.PartitioningCPA.PartitionState;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.util.AbstractStates;
+import org.sosy_lab.cpachecker.util.BiPredicates;
 import org.sosy_lab.cpachecker.util.Pair;
 import org.sosy_lab.cpachecker.util.cwriter.ARGToCTranslator;
 
@@ -145,10 +151,17 @@ public class ARGStatistics implements Statistics {
 
   @Option(
       secure = true,
+      name = "automaton.exportSpcZipFile",
+      description = "translate final ARG into an automaton, depends on 'automaton.export=true'")
+  @FileOption(FileOption.Type.OUTPUT_FILE)
+  private Path automatonSpcZipFile = Paths.get("ARG_parts.zip");
+
+  @Option(
+      secure = true,
       name = "automaton.exportSpcFile",
       description = "translate final ARG into an automaton, depends on 'automaton.export=true'")
   @FileOption(FileOption.Type.OUTPUT_FILE)
-  private PathTemplate automatonSpcFile = PathTemplate.ofFormatString("ARG_parts/ARG.%03d.spc");
+  private PathTemplate automatonSpcFile = PathTemplate.ofFormatString("ARG_parts/ARG.%06d.spc");
 
   @Option(
       secure = true,
@@ -156,13 +169,19 @@ public class ARGStatistics implements Statistics {
       description = "translate final ARG into an automaton, depends on 'automaton.export=true'")
   @FileOption(FileOption.Type.OUTPUT_FILE)
   private PathTemplate automatonSpcDotFile =
-      PathTemplate.ofFormatString("ARG_parts/ARG.%03d.spc.dot");
+      PathTemplate.ofFormatString("ARG_parts/ARG.%06d.spc.dot");
 
   @Option(
       secure = true,
       name = "automaton.exportCompressed",
       description = "export as zip-files, depends on 'automaton.export=true'")
   private boolean exportAutomatonCompressed = true;
+
+  @Option(
+      secure = true,
+      name = "automaton.exportZipped",
+      description = "export all automata into one zip-file, depends on 'automaton.export=true'")
+  private boolean exportAutomatonZipped = true;
 
   protected final ConfigurableProgramAnalysis cpa;
 
@@ -224,8 +243,8 @@ public class ARGStatistics implements Statistics {
               extendedWitnessExporter);
     }
 
-    argToCExporter = new ARGToCTranslator(logger, config);
-    argToAutomatonSplitter = new ARGToAutomatonConverter(config);
+    argToCExporter = new ARGToCTranslator(logger, config, cfa.getMachineModel());
+    argToAutomatonSplitter = new ARGToAutomatonConverter(config, cfa.getMachineModel(), logger);
 
     if (argCFile == null) {
       translateARG = false;
@@ -348,24 +367,26 @@ public class ARGStatistics implements Statistics {
         : Collections.singleton(AbstractStates.extractStateByType(pReached.getFirstState(), ARGState.class));
 
     for (ARGState rootState: rootStates) {
-      exportARG0(rootState, Predicates.in(allTargetPathEdges), pResult);
+      exportARG0(rootState, BiPredicates.pairIn(allTargetPathEdges), pResult);
     }
   }
 
   @SuppressWarnings("try")
   private void exportARG0(
       final ARGState rootState,
-      final Predicate<Pair<ARGState, ARGState>> isTargetPathEdge,
+      final BiPredicate<ARGState, ARGState> isTargetPathEdge,
       Result pResult) {
     SetMultimap<ARGState, ARGState> relevantSuccessorRelation =
         ARGUtils.projectARG(rootState, ARGState::getChildren, ARGUtils.RELEVANT_STATE);
     Function<ARGState, Collection<ARGState>> relevantSuccessorFunction = Functions.forMap(relevantSuccessorRelation.asMap(), ImmutableSet.<ARGState>of());
 
-    if (proofWitness != null && pResult != Result.FALSE) {
+    if (proofWitness != null && EnumSet.of(Result.TRUE, Result.UNKNOWN).contains(pResult)) {
       try {
         Path witnessFile = adjustPathNameForPartitioning(rootState, proofWitness);
-        Appender content = pAppendable -> argWitnessExporter.writeProofWitness(pAppendable, rootState, Predicates.alwaysTrue(),
-            Predicates.alwaysTrue());
+        Appender content =
+            pAppendable ->
+                argWitnessExporter.writeProofWitness(
+                    pAppendable, rootState, Predicates.alwaysTrue(), BiPredicates.alwaysTrue());
         if (!compressWitness) {
           IO.writeFile(witnessFile, StandardCharsets.UTF_8, content);
         } else {
@@ -402,10 +423,12 @@ public class ARGStatistics implements Statistics {
           IO.openOutputFile(
               adjustPathNameForPartitioning(rootState, simplifiedArgFile),
               Charset.defaultCharset())) {
-        ARGToDotWriter.write(w, rootState,
+        ARGToDotWriter.write(
+            w,
+            rootState,
             relevantSuccessorFunction,
             Predicates.alwaysTrue(),
-            Predicates.alwaysFalse());
+            BiPredicates.alwaysFalse());
       } catch (IOException e) {
         logger.logUserException(Level.WARNING, e, "Could not write ARG to file");
       }
@@ -415,10 +438,11 @@ public class ARGStatistics implements Statistics {
     if (refinementGraphUnderlyingWriter != null) {
       try (Writer w = refinementGraphUnderlyingWriter) { // for auto-closing
         // TODO: Support for partitioned state spaces
-        refinementGraphWriter.writeSubgraph(rootState,
+        refinementGraphWriter.writeSubgraph(
+            rootState,
             relevantSuccessorFunction,
             Predicates.alwaysTrue(),
-            Predicates.alwaysFalse());
+            BiPredicates.alwaysFalse());
         refinementGraphWriter.finish();
 
       } catch (IOException e) {
@@ -427,37 +451,20 @@ public class ARGStatistics implements Statistics {
     }
 
     if (exportAutomaton && (automatonSpcFile != null || automatonSpcDotFile != null)) {
-      ARGToAutomatonConverter argToAutomatonConverter;
       try {
-        argToAutomatonConverter = new ARGToAutomatonConverter(null);
-      } catch (InvalidConfigurationException e) {
-        throw new AssertionError("should not happen");
-      }
-      try {
+        if (exportAutomatonZipped && automatonSpcZipFile != null) {
+          Files.deleteIfExists(automatonSpcZipFile);
+        }
         final int baseId = -1; // id for the exported 'complete' automaton
-        Automaton automaton =
-            Iterables.getOnlyElement(argToAutomatonConverter.getAutomata(rootState));
-        if (automatonSpcFile != null) {
-          writeFile(automatonSpcFile.getPath(baseId), automaton, exportAutomatonCompressed);
-        }
-        if (automatonSpcDotFile != null) {
-          Appender app = automaton::writeDotFile;
-          writeFile(automatonSpcDotFile.getPath(baseId), app, exportAutomatonCompressed);
-        }
+        writeAutomaton(baseId, argToAutomatonSplitter.getAutomaton(rootState, true));
       } catch (IOException io) {
         logger.logUserException(Level.WARNING, io, "Could not write ARG to automata to file");
       }
-      int counterId = 0; // id for each exported 'partial' automata, distinct from 'baseId'
       try {
+        int counterId = 0; // id for each exported 'partial' automata, distinct from 'baseId'
         for (Automaton automaton : argToAutomatonSplitter.getAutomata(rootState)) {
           counterId++;
-          if (automatonSpcFile != null) {
-            writeFile(automatonSpcFile.getPath(counterId), automaton, exportAutomatonCompressed);
-          }
-          if (automatonSpcDotFile != null) {
-            Appender app = automaton::writeDotFile;
-            writeFile(automatonSpcDotFile.getPath(counterId), app, exportAutomatonCompressed);
-          }
+          writeAutomaton(counterId, automaton);
         }
         logger.log(Level.INFO, "Number of exported automata after splitting:", counterId);
       } catch (IOException io) {
@@ -466,8 +473,28 @@ public class ARGStatistics implements Statistics {
     }
   }
 
-  private static void writeFile(Path path, Object content, boolean compressed) throws IOException {
-    if (compressed) {
+  private void writeAutomaton(int counterId, Automaton automaton) throws IOException {
+    if (automatonSpcFile != null) {
+      writeFile(automatonSpcFile.getPath(counterId), automaton);
+    }
+    if (automatonSpcDotFile != null) {
+      Appender app = automaton::writeDotFile;
+      writeFile(automatonSpcDotFile.getPath(counterId), app);
+    }
+  }
+
+  private void writeFile(Path path, Object content) throws IOException {
+    if (exportAutomatonZipped && automatonSpcZipFile != null) {
+      MoreFiles.createParentDirectories(automatonSpcZipFile);
+      try (FileSystem fs =
+          FileSystems.newFileSystem(
+              URI.create("jar:" + automatonSpcZipFile.toUri()),
+              // create zip-file if not existing, else append
+              ImmutableMap.of("create", "true"))) {
+        Path nf = fs.getPath(path.getFileName().toString());
+        IO.writeFile(nf, Charset.defaultCharset(), content);
+      }
+    } else if (exportAutomatonCompressed) {
       path = path.resolveSibling(path.getFileName() + ".gz");
       IO.writeGZIPFile(path, Charset.defaultCharset(), content);
     } else {
@@ -518,4 +545,5 @@ public class ARGStatistics implements Statistics {
       exportARG(pReached, getAllCounterexamples(pReached), CPAcheckerResult.Result.UNKNOWN);
     }
   }
+
 }

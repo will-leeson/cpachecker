@@ -30,6 +30,7 @@ import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.BooleanFormula;
 import org.sosy_lab.java_smt.api.FormulaType;
 import org.sosy_lab.java_smt.api.NumeralFormula;
+import org.sosy_lab.java_smt.api.NumeralFormula.IntegerFormula;
 import org.sosy_lab.java_smt.api.NumeralFormulaManager;
 
 public class NumeralFormulaManagerView
@@ -70,12 +71,6 @@ public class NumeralFormulaManagerView
   }
 
   @Override
-  public ResultFormulaType modulo(
-      ParamFormulaType pParamFormulaType, ParamFormulaType pParamFormulaType1) {
-    return manager.modulo(pParamFormulaType, pParamFormulaType1);
-  }
-
-  @Override
   public ResultFormulaType multiply(ParamFormulaType pNumber1, ParamFormulaType pNumber2) {
     return manager.multiply(pNumber1, pNumber2);
   }
@@ -100,6 +95,10 @@ public class NumeralFormulaManagerView
     return manager.lessOrEquals(pNumber1, pNumber2);
   }
 
+  @Override
+  public BooleanFormula distinct(List<ParamFormulaType> pNumbers) {
+    return manager.distinct(pNumbers);
+  }
 
   @Override
   public ResultFormulaType makeNumber(long pI) {
@@ -145,4 +144,8 @@ public class NumeralFormulaManagerView
     return manager.getFormulaType();
   }
 
+  @Override
+  public IntegerFormula floor(ParamFormulaType pFormula) {
+    return manager.floor(pFormula);
+  }
 }

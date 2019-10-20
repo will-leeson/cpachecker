@@ -101,7 +101,7 @@ LatticeAbstractState<PolicyEnforcementState<E>>, Graphable, AbstractQueryableSta
               E sink=this.allowedsecurityclassmapping.get(var);
               SortedSet<E> source=this.contentsecurityclasslevels.get(var);
               Edge<E> edge=new Edge<>(sink,source);
-              if(!(this.policy.getEdges().contains(edge))){
+              if(!this.policy.getEdges().contains(edge)){
                 return true;
               }
             }
@@ -114,7 +114,7 @@ LatticeAbstractState<PolicyEnforcementState<E>>, Graphable, AbstractQueryableSta
           E sink=this.allowedsecurityclassmapping.get(var);
           SortedSet<E> source=this.contentsecurityclasslevels.get(var);
           Edge<E> edge=new Edge<>(sink,source);
-          if(!(this.policy.getEdges().contains(edge))){
+          if (!this.policy.getEdges().contains(edge)) {
             return true;
           }
         }
@@ -178,7 +178,7 @@ LatticeAbstractState<PolicyEnforcementState<E>>, Graphable, AbstractQueryableSta
         E sink=this.allowedsecurityclassmapping.get(var);
         SortedSet<E> source=entry.getValue();
         Edge<E> edge=new Edge<>(sink,source);
-        if(!(this.policy.getEdges().contains(edge))){
+        if(!this.policy.getEdges().contains(edge)){
           return true;
         }
       }
@@ -211,16 +211,16 @@ LatticeAbstractState<PolicyEnforcementState<E>>, Graphable, AbstractQueryableSta
     }
     @SuppressWarnings("unchecked")
     PolicyEnforcementState<E> ostate=(PolicyEnforcementState<E>) pOther;
-    if(!(this.policy.equals(ostate.policy))){
+    if (!this.policy.equals(ostate.policy)) {
       return false;
     }
-    if(!(this.defaultlevel.equals(ostate.defaultlevel))){
+    if (!this.defaultlevel.equals(ostate.defaultlevel)) {
       return false;
     }
-    if(!(this.allowedsecurityclassmapping.equals(ostate.allowedsecurityclassmapping))){
+    if (!this.allowedsecurityclassmapping.equals(ostate.allowedsecurityclassmapping)) {
       return false;
     }
-    if(!(this.contentsecurityclasslevels.equals(ostate.contentsecurityclasslevels))){
+    if (!this.contentsecurityclasslevels.equals(ostate.contentsecurityclasslevels)) {
       return false;
     }
     return true;
@@ -243,12 +243,10 @@ LatticeAbstractState<PolicyEnforcementState<E>>, Graphable, AbstractQueryableSta
         if(this.allowedsecurityclassmapping.containsKey(var)){
           assert(merge.allowedsecurityclassmapping.containsKey(var));
           assert(merge.contentsecurityclasslevels.containsKey(var));
-          ndeps=(merge.contentsecurityclasslevels.get(var));
-          initialmap=(merge.allowedsecurityclassmapping.get(var));
+          ndeps = merge.contentsecurityclasslevels.get(var);
+          initialmap = merge.allowedsecurityclassmapping.get(var);
         }
-        for(E sc: deps){
-          ndeps.add(sc);
-        }
+        ndeps.addAll(deps);
         merge.contentsecurityclasslevels.put(var,ndeps);
         merge.allowedsecurityclassmapping.put(var,initialmap);
       }

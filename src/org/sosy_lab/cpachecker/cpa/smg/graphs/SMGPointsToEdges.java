@@ -23,7 +23,7 @@
  */
 package org.sosy_lab.cpachecker.cpa.smg.graphs;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cpa.smg.graphs.edge.SMGEdgePointsTo;
 import org.sosy_lab.cpachecker.cpa.smg.graphs.object.SMGObject;
 import org.sosy_lab.cpachecker.cpa.smg.graphs.value.SMGValue;
@@ -45,6 +45,7 @@ public interface SMGPointsToEdges extends Iterable<SMGEdgePointsTo> {
 
   boolean containsEdgeWithValue(SMGValue pValue);
 
+  /** get an outgoing edge of the {@link SMGValue} if available. */
   @Nullable
   SMGEdgePointsTo getEdgeWithValue(SMGValue pValue);
 

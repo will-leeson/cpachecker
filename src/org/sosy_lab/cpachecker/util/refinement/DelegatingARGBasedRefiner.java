@@ -70,7 +70,7 @@ public final class DelegatingARGBasedRefiner implements ARGBasedRefiner, Statist
       totalRefinementsFinished.add(new StatCounter("Number of finished refinement"));
     }
 
-    assert refiners.size() > 0;
+    assert !refiners.isEmpty();
     assert refiners.size() == totalRefinementsSelected.size();
     assert refiners.size() == totalRefinementsFinished.size();
   }
@@ -104,7 +104,7 @@ public final class DelegatingARGBasedRefiner implements ARGBasedRefiner, Statist
         // ignore and try the next refiner
         if (i == refiners.size() - 1) {
           logger.logf(
-              Level.FINE,
+              Level.WARNING,
               "refinement %d of %d reported repeated counterexample, "
                   + "exiting refiner and possibly using cex from previous refiner",
               i + 1,

@@ -28,7 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.primitives.Longs;
 import java.util.Objects;
 import java.util.Optional;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.types.c.CType;
 import org.sosy_lab.cpachecker.cpa.value.type.NumericValue;
 import org.sosy_lab.cpachecker.util.predicates.smt.FormulaManagerView;
@@ -205,6 +205,9 @@ public class SymbolicIdentifier implements SymbolicValue, Comparable<SymbolicIde
 
       final String memLocName = variableName.substring(0, idStart);
       final String identifierIdOnly = variableName.substring(idStart + 1);
+      if (!identifierIdOnly.matches("[0-9]+")) {
+        throw new AssertionError("Unexpected encoding of symbolic identifier: " + identifierIdOnly);
+      }
       final long id = Long.parseLong(identifierIdOnly);
 
       return new SymbolicIdentifier(id, MemoryLocation.valueOf(memLocName));
