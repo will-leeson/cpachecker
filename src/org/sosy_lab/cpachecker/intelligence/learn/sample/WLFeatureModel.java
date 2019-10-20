@@ -44,7 +44,7 @@ import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.NativeGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
-public class WLFeatureModel {
+public class WLFeatureModel implements IWLFeatureModel {
 
     private static Map<String, String> relabelLabel = null;
 
@@ -92,6 +92,7 @@ public class WLFeatureModel {
       astDepth = pAstDepth;
     }
 
+    @Override
     public int getAstDepth(){
       return astDepth;
     }
@@ -120,6 +121,7 @@ public class WLFeatureModel {
       return count;
     }
 
+    @Override
     public SVGraph getGraph(ShutdownNotifier pShutdownNotifier) throws InterruptedException {
       if(graph == null){
         graph = new CFAProcessor().process(cfa, astDepth, pShutdownNotifier);
@@ -186,6 +188,7 @@ public class WLFeatureModel {
       return rLabel;
     }
 
+    @Override
     public Map<String, Integer> iterate(){
       try {
         return iterate(null);
@@ -195,6 +198,7 @@ public class WLFeatureModel {
     }
 
 
+    @Override
     public Map<String, Integer> iterate(ShutdownNotifier pShutdownNotifier)
         throws InterruptedException {
       iteration++;

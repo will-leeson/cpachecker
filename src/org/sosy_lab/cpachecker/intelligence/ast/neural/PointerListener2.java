@@ -98,13 +98,9 @@ public class PointerListener2 implements IEdgeListener {
 
     private void handleAssign(String name, CExpression rightHand){
 
-        try {
-            String target = handleExpr(rightHand);
-            addNode(target);
-            graph.addAssignEdge(getId(target), name);
-        }catch (UnsupportedOperationException e){
-            System.out.println("Unsupported: "+e.getMessage());
-        }
+        String target = handleExpr(rightHand);
+        addNode(target);
+        graph.addAssignEdge(getId(target), name);
     }
 
     private void addNode(String name){

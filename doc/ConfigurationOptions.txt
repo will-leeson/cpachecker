@@ -152,6 +152,9 @@ analysis.algorithm.GraphGen = false
 # use MPV algorithm for checking multiple properties
 analysis.algorithm.MPV = false
 
+# generate a software verification graph from CFA (neural graph)
+analysis.algorithm.NeuralGraphGen = false
+
 # use a analysis which proves if the program satisfies a specified property
 # with the help of an enabler CPA to separate differnt program paths
 analysis.algorithm.analysisWithEnabler = false
@@ -3251,6 +3254,12 @@ mpv.partitionOperator = no default value
 # - AUTOMATON: each automaton represent a single property.
 mpv.propertySeparator = FILE
   enum:     [FILE, AUTOMATON]
+
+# export node postitions
+neuralGraphGen.nodePosition = no default value
+
+# output path for Graph
+neuralGraphGen.output = "output/graph.dfs"
 
 # file path to label-path mapping
 oracle.labelPath = no default value
