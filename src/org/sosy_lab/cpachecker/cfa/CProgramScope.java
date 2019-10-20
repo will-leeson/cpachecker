@@ -333,7 +333,7 @@ public class CProgramScope implements Scope {
 
     Iterable<Supplier<Iterable<CSimpleDeclaration>>> filteredAndUnfiltered =
         Iterables.concat(
-            Iterables.transform(lookups, s -> (() -> FluentIterable.from(s.get()).filter(d -> getLocationFilter().test(d)))),
+            Iterables.transform(lookups, (s -> (() -> FluentIterable.from(s.get()).filter(d -> getLocationFilter().test(d))))),
             lookups);
 
     Iterator<Supplier<Iterable<CSimpleDeclaration>>> lookupSupplierIterator = filteredAndUnfiltered.iterator();

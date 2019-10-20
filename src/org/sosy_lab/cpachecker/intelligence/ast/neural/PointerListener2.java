@@ -63,7 +63,7 @@ public class PointerListener2 implements IEdgeListener {
             return handlePointer((CPointerExpression)expression);
         }
 
-        return "";
+        throw new UnsupportedOperationException(expression.toASTString());
     }
 
     private String handleUnary(CUnaryExpression expression){
@@ -77,7 +77,7 @@ public class PointerListener2 implements IEdgeListener {
             }
         }
 
-        return null;
+        throw new UnsupportedOperationException(expression.toASTString());
     }
 
     private String handleId(CIdExpression idExpression){
@@ -98,9 +98,13 @@ public class PointerListener2 implements IEdgeListener {
 
     private void handleAssign(String name, CExpression rightHand){
 
-        String target = handleExpr(rightHand);
-        addNode(target);
-        graph.addAssignEdge(getId(target), name);
+        try {
+            String target = handleExpr(rightHand);
+            addNode(target);
+            graph.addAssignEdge(getId(target), name);
+        }catch (UnsupportedOperationException e){
+            System.out.println("Unsupported: "+e.getMessage());
+        }
     }
 
     private void addNode(String name){

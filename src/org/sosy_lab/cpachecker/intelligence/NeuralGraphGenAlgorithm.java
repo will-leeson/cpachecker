@@ -51,7 +51,7 @@ import org.sosy_lab.cpachecker.intelligence.ast.neural.SVPEProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.BlockedGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.pointer.AliasAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
+import org.sosy_lab.cpachecker.intelligence.graph.model.control.*;
 
 @Options(prefix = "neuralGraphGen")
 public class NeuralGraphGenAlgorithm implements Algorithm {
@@ -89,6 +89,7 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
 
     logger.log(Level.INFO, "Start CFA processing....");
     SVGraph graph = new SVPEProcessor().process(cfa, notifier);
+
 
     Map<String, Set<String>> aliases = null;
 
