@@ -25,7 +25,7 @@ package org.sosy_lab.cpachecker.core.algorithm.bmc;
 
 import java.util.Objects;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
 import org.sosy_lab.cpachecker.core.algorithm.Algorithm.AlgorithmStatus;
@@ -121,7 +121,7 @@ public class UnrolledReachedSet {
     return containedLoopBoundKeysK;
   }
 
-  interface EnsureK {
+  public interface EnsureK {
 
     AlgorithmStatus ensureK(
         Algorithm pAlgorithm, ConfigurableProgramAnalysis pCPA, ReachedSet pReachedSet)

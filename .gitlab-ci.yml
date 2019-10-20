@@ -3,6 +3,10 @@ include: /build/gitlab-ci.yml
 variables:
   PROJECT_PATH: "sosy-lab/software/cpachecker"
   GH_REF: "github.com/sosy-lab/cpachecker"
+  # Version of https://gitlab.com/sosy-lab/software/refaster/ to use
+  REFASTER_REPO_REVISION: 7f894bc18c3dcd5f19a7b8f59fb4cada8c331984
+  # Needs to be synchronized with Error Prone version in lib/ivy.xml
+  REFASTER_VERSION: 2.3.3
 
 
 .binary_check: &binary_check
@@ -22,23 +26,30 @@ configuration-checks:jdk-8:
   dependencies:
     - build-dependencies
     - build:jdk-8
+  needs:
+    - build-dependencies
+    - build:jdk-8
+  image: ${CI_REGISTRY_IMAGE}/test:jdk-8
 
-configuration-checks:jdk-9:
+configuration-checks:jdk-11:
   <<: *configuration-checks
   dependencies:
     - build-dependencies
-    - build:jdk-9
-  image: ${CI_REGISTRY_IMAGE}/test:jdk-9
+    - build:jdk-11
+  needs:
+    - build-dependencies
+    - build:jdk-11
+  image: ${CI_REGISTRY_IMAGE}/test:jdk-11
 
-configuration-checks:jdk-10:
+configuration-checks:jdk-12:
   <<: *configuration-checks
   dependencies:
     - build-dependencies
-    - build:jdk-10
-  image: ${CI_REGISTRY_IMAGE}/test:jdk-10
-  # Temporarily disabled until the segmentation fault is fixe
-  # (probably related to https://github.com/sosy-lab/java-smt/issues/132)
-  only: []
+    - build:jdk-12
+  needs:
+    - build-dependencies
+    - build:jdk-12
+  image: ${CI_REGISTRY_IMAGE}/test:jdk-12
 
 
 configuration-documentation:
@@ -49,7 +60,10 @@ configuration-documentation:
     - "diff doc/ConfigurationOptions.txt.old doc/ConfigurationOptions.txt"
   dependencies:
     - build-dependencies
-    - build:jdk-8
+    - build:jdk-11
+  needs:
+    - build-dependencies
+    - build:jdk-11
 
 
 configuration-plot:
@@ -74,62 +88,71 @@ python-unit-tests:jdk-8:
   dependencies:
     - build-dependencies
     - build:jdk-8
+  needs:
+    - build-dependencies
+    - build:jdk-8
+  image: ${CI_REGISTRY_IMAGE}/test:jdk-8
 
-python-unit-tests:jdk-9:
+python-unit-tests:jdk-11:
   <<: *python-unit-tests
   dependencies:
     - build-dependencies
-    - build:jdk-9
-  image: ${CI_REGISTRY_IMAGE}/test:jdk-9
+    - build:jdk-11
+  needs:
+    - build-dependencies
+    - build:jdk-11
+  image: ${CI_REGISTRY_IMAGE}/test:jdk-11
 
-python-unit-tests:jdk-10:
+python-unit-tests:jdk-12:
   <<: *python-unit-tests
   dependencies:
     - build-dependencies
-    - build:jdk-10
-  image: ${CI_REGISTRY_IMAGE}/test:jdk-10
-
-generate-sample-report:
-  stage: generate
-  dependencies:
+    - build:jdk-12
+  needs:
     - build-dependencies
-    - build:jdk-10
-  image: ${CI_REGISTRY_IMAGE}/test:jdk-10
-  script:
-    - scripts/cpa.sh -predicateAnalysis test/programs/simple/SSAMap-bug_false-unreach-label.c
-  artifacts:
-    paths:
-     - "output/Counterexample.1.html"
+    - build:jdk-12
+  image: ${CI_REGISTRY_IMAGE}/test:jdk-12
+
 
 javascript-unit-tests:
   stage: checks
-  dependencies: 
-    - generate-sample-report
-  image: node:8.9.4
+  dependencies: []
+  image: node:8.10.0 # This version is also provided by Ubuntu 18.04
   before_script:
     - cd src/org/sosy_lab/cpachecker/core/counterexample/
     - npm install
   script:
-    - cd node_modules/.bin/
-    - npm test --watch=false --single-run=true
+    - npm test
   cache:
     paths:
     - "src/org/sosy_lab/cpachecker/core/counterexample/node_modules/"
   artifacts:
     paths:
-      - src/org/sosy_lab/cpachecker/core/counterexample/unit_testing_report
+      - src/org/sosy_lab/cpachecker/core/counterexample/unit_testing_report.html
     when: always
 
 
+build-docker:test:java-node:
+  extends: .build-docker
+  variables:
+    DOCKERFILE: build/gitlab-ci.Dockerfile.java-node
+    IMAGE: test:java-node
+
 javascript-e2e-tests:
   stage: checks
-  dependencies: 
-    - generate-sample-report
+  dependencies:
+    - build-dependencies
+    - build:jdk-11
+  needs:
+    - build-dependencies
+    - build:jdk-11
   image: ${CI_REGISTRY_IMAGE}/test:java-node
   before_script:
+      # generate example report
+    - scripts/cpa.sh -predicateAnalysis test/programs/simple/SSAMap-bug_false-unreach-label.c
     - cd src/org/sosy_lab/cpachecker/core/counterexample/
     - npm install
-    - ./node_modules/protractor/node_modules/webdriver-manager/bin/webdriver-manager update
+    - "./node_modules/protractor/node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome $(dpkg-query --showformat='${Version}' --show chromium-browser)"
   script:
     - npm run e2e-test
   cache:
@@ -137,25 +160,46 @@ javascript-e2e-tests:
     - src/org/sosy_lab/cpachecker/core/counterexample/node_modules/
   artifacts:
     paths:
+      - output/Counterexample.1.html
       - src/org/sosy_lab/cpachecker/core/counterexample/e2e-tests-report
     when: always
+  allow_failure: true # tests are currently racy (cf. #520)
+
+
+# Checks for Python code
+check-format-python:
+  stage: checks
+  dependencies: []
+  image: python
+  before_script:
+    - pip install black
+  script:
+    - black . --check --diff
+
+flake8:
+  stage: checks
+  dependencies: []
+  image: python
+  before_script:
+    - pip install flake8-awesome
+  script:
+    - flake8
+  allow_failure: true # need to fix existing code first
 
 
 # No coverage is computed for CPAchecker
 unit-tests:jdk-8:
   script: "ant $ANT_PROPS_CHECKS unit-tests"
 
-unit-tests:jdk-9:
+unit-tests:jdk-11:
   script: "ant $ANT_PROPS_CHECKS unit-tests"
 
-unit-tests:jdk-10:
+unit-tests:jdk-12:
   script: "ant $ANT_PROPS_CHECKS unit-tests"
+
 
 # Disable some checks because they are not used for CPAchecker
 check-format:
-  only: []
-
-checkstyle:
   only: []
 
 javadoc:

@@ -110,7 +110,7 @@ class ForceTerminationOnShutdown implements Runnable {
     }
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings({"deprecation", "DeprecatedThreadMethods"})
   @SuppressFBWarnings("DM_EXIT")
   @Override
   public void run() {

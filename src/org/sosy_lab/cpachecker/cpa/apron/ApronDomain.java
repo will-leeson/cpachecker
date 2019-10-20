@@ -50,7 +50,8 @@ class ApronDomain implements AbstractDomain {
     ApronState apronState1 = (ApronState) element1;
     ApronState apronState2 = (ApronState) element2;
 
-    if (covers.containsKey(apronState2) && ((HashSet<ApronState>)(covers.get(apronState2))).contains(apronState1)) {
+    if (covers.containsKey(apronState2)
+        && ((HashSet<ApronState>) covers.get(apronState2)).contains(apronState1)) {
       return true;
     }
 

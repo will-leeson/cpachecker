@@ -38,13 +38,13 @@ public final class FieldReference extends LeftHandSide {
 
   public FieldReference(String pName, String pFunctionName, List<String> pFieldNames) {
     super(pName, pFunctionName);
-    assert pFieldNames.size() > 0;
+    assert !pFieldNames.isEmpty();
     fieldNames = ImmutableList.copyOf(pFieldNames);
   }
 
   public FieldReference(String pName, List<String> pFieldNames) {
     super(pName);
-    assert pFieldNames.size() > 0;
+    assert !pFieldNames.isEmpty();
     fieldNames = ImmutableList.copyOf(pFieldNames);
   }
 
@@ -95,7 +95,7 @@ public final class FieldReference extends LeftHandSide {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((isGlobal()) ? 0 : getFunctionName().hashCode());
+    result = prime * result + (isGlobal() ? 0 : getFunctionName().hashCode());
     result = prime * result + ((getName() == null) ? 0 : getName().hashCode());
     result = prime * result + ((fieldNames == null) ? 0 : fieldNames.hashCode());
     return result;

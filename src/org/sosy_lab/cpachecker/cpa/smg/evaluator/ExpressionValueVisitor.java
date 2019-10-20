@@ -75,7 +75,7 @@ import org.sosy_lab.cpachecker.exceptions.UnrecognizedCodeException;
  * result of this evaluation is a {@link SMGSymbolicValue}. The value represents a symbolic value of
  * the SMG.
  */
-public class ExpressionValueVisitor
+class ExpressionValueVisitor
     extends DefaultCExpressionVisitor<List<? extends SMGValueAndState>, CPATransferException>
     implements CRightHandSideVisitor<List<? extends SMGValueAndState>, CPATransferException> {
 
@@ -91,7 +91,7 @@ public class ExpressionValueVisitor
 
   @Override
   protected List<? extends SMGValueAndState> visitDefault(CExpression pExp) {
-    return singletonList(SMGValueAndState.of(getInitialSmgState()));
+    return singletonList(SMGValueAndState.withUnknownValue(getInitialSmgState()));
   }
 
   @Override
@@ -106,7 +106,7 @@ public class ExpressionValueVisitor
       SMGState newState = addressAndState.getSmgState();
 
       if (address.isUnknown()) {
-        result.add(SMGValueAndState.of(newState));
+        result.add(SMGValueAndState.withUnknownValue(newState));
         continue;
       }
 
@@ -159,7 +159,7 @@ public class ExpressionValueVisitor
 
 
       if (addressOfField.isUnknown()) {
-        result.add(SMGValueAndState.of(newState));
+        result.add(SMGValueAndState.withUnknownValue(newState));
         continue;
       }
 
@@ -181,7 +181,7 @@ public class ExpressionValueVisitor
   public List<? extends SMGValueAndState> visit(CFloatLiteralExpression exp)
       throws CPATransferException {
 
-    boolean isZero = exp.getValue().equals(BigDecimal.ZERO);
+    boolean isZero = exp.getValue().compareTo(BigDecimal.ZERO) == 0;
 
     SMGSymbolicValue val = isZero ? SMGZeroValue.INSTANCE : SMGUnknownValue.INSTANCE;
     return singletonList(SMGValueAndState.of(getInitialSmgState(), val));
@@ -224,7 +224,7 @@ public class ExpressionValueVisitor
       }
     }
 
-    return singletonList(SMGValueAndState.of(getInitialSmgState()));
+    return singletonList(SMGValueAndState.withUnknownValue(getInitialSmgState()));
   }
 
   @Override
@@ -269,7 +269,7 @@ public class ExpressionValueVisitor
     case TILDE:
 
     default:
-        return singletonList(SMGValueAndState.of(getInitialSmgState()));
+        return singletonList(SMGValueAndState.withUnknownValue(getInitialSmgState()));
     }
   }
 
@@ -305,7 +305,7 @@ public class ExpressionValueVisitor
                 : SMGUnknownValue.INSTANCE;
         return singletonList(SMGValueAndState.of(getInitialSmgState(), val));
     default:
-        return singletonList(SMGValueAndState.of(getInitialSmgState()));
+        return singletonList(SMGValueAndState.withUnknownValue(getInitialSmgState()));
         // TODO Investigate the other Operators.
     }
   }
@@ -337,7 +337,7 @@ public class ExpressionValueVisitor
 
         if (rVal.equals(SMGUnknownValue.INSTANCE)
             || lVal.equals(SMGUnknownValue.INSTANCE)) {
-          result.add(SMGValueAndState.of(newState));
+          result.add(SMGValueAndState.withUnknownValue(newState));
           continue;
         }
 
@@ -356,7 +356,7 @@ public class ExpressionValueVisitor
       throws SMGInconsistentException {
 
     if (lVal.equals(SMGUnknownValue.INSTANCE) || rVal.equals(SMGUnknownValue.INSTANCE)) {
-      return singletonList(SMGValueAndState.of(newState));
+      return singletonList(SMGValueAndState.withUnknownValue(newState));
     }
 
     switch (binaryOperator) {
@@ -385,14 +385,14 @@ public class ExpressionValueVisitor
 
           case MINUS:
           case MODULO:
-            isZero = (lVal.equals(rVal));
+              isZero = lVal.equals(rVal);
               val = isZero ? SMGZeroValue.INSTANCE : SMGUnknownValue.INSTANCE;
               return singletonList(SMGValueAndState.of(newState, val));
 
           case DIVIDE:
               // TODO maybe we should signal a division by zero error?
               if (rVal.equals(SMGZeroValue.INSTANCE)) {
-                return singletonList(SMGValueAndState.of(newState));
+                return singletonList(SMGValueAndState.withUnknownValue(newState));
             }
 
               isZero = lVal.equals(SMGZeroValue.INSTANCE);
@@ -433,7 +433,7 @@ public class ExpressionValueVisitor
                   SMGValueAndState.of(newState, SMGZeroValue.INSTANCE);
             result.add(resultValueAndState);
           } else {
-            result.add(SMGValueAndState.of(newState));
+            result.add(SMGValueAndState.withUnknownValue(newState));
           }
         }
 
@@ -441,7 +441,7 @@ public class ExpressionValueVisitor
       }
 
       default:
-        return singletonList(SMGValueAndState.of(getInitialSmgState()));
+        return singletonList(SMGValueAndState.withUnknownValue(getInitialSmgState()));
     }
   }
 
@@ -521,7 +521,7 @@ public class ExpressionValueVisitor
   @Override
   public List<? extends SMGValueAndState> visit(CFunctionCallExpression pIastFunctionCallExpression)
       throws CPATransferException {
-    return singletonList(SMGValueAndState.of(getInitialSmgState()));
+    return singletonList(SMGValueAndState.withUnknownValue(getInitialSmgState()));
   }
 
   SMGState getInitialSmgState() {

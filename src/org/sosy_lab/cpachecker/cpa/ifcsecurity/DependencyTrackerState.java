@@ -82,8 +82,9 @@ public class DependencyTrackerState
     for (Entry<Variable, SortedSet<Variable>> entry : this.dependencies.entrySet()) {
       Variable var=entry.getKey();
       if (pOther.dependencies.containsKey(var)) {
-        if (!(this.dependencies.get(var).containsAll(
-            pOther.dependencies.get(var)))) { return false; }
+        if (!this.dependencies.get(var).containsAll(pOther.dependencies.get(var))) {
+          return false;
+        }
       } else {
         return false;
       }
@@ -91,8 +92,9 @@ public class DependencyTrackerState
     for (Entry<Variable, SortedSet<Variable>> entry : pOther.dependencies.entrySet()) {
       Variable var=entry.getKey();
       if (this.dependencies.containsKey(var)) {
-        if (!(pOther.dependencies.get(var).containsAll(
-            this.dependencies.get(var)))) { return false; }
+        if (!pOther.dependencies.get(var).containsAll(this.dependencies.get(var))) {
+          return false;
+        }
       } else {
         return false;
       }
@@ -107,18 +109,17 @@ public class DependencyTrackerState
     } else {
       //Strongest Post Condition
       DependencyTrackerState merge = this;
-      //implicit copy of this
-      //explicit copy of pOther
-      for (Variable var : pOther.dependencies.keySet()) {
-        SortedSet<Variable> deps = pOther.dependencies.get(var);
+      // implicit copy of this
+      // explicit copy of pOther
+      for (Entry<Variable, SortedSet<Variable>> entry : pOther.dependencies.entrySet()) {
+        Variable var = entry.getKey();
+        SortedSet<Variable> deps = entry.getValue();
         SortedSet<Variable> ndeps = new TreeSet<>();
         if (this.dependencies.containsKey(var)) {
           assert (merge.dependencies.containsKey(var));
           ndeps = merge.dependencies.get(var);
         }
-        for (Variable var2 : deps) {
-          ndeps.add(var2);
-        }
+        ndeps.addAll(deps);
         merge.dependencies.put(var, ndeps);
       }
       return merge;
@@ -134,8 +135,9 @@ public class DependencyTrackerState
     for (Entry<Variable, SortedSet<Variable>> entry : this.dependencies.entrySet()) {
       Variable var=entry.getKey();
       if (pOther.dependencies.containsKey(var)) {
-        if (!(this.dependencies.get(var).containsAll(
-            pOther.dependencies.get(var)))) { return false; }
+        if (!this.dependencies.get(var).containsAll(pOther.dependencies.get(var))) {
+          return false;
+        }
       } else {
         return false;
       }
@@ -159,9 +161,7 @@ public class DependencyTrackerState
       Variable key=entry.getKey();
       SortedSet<Variable> vars = entry.getValue();
       SortedSet<Variable> nvars = new TreeSet<>();
-      for (Variable var : vars) {
-        nvars.add(var);
-      }
+      nvars.addAll(vars);
       result.dependencies.put(key, nvars);
     }
 

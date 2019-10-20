@@ -67,7 +67,7 @@
 </tasks>
     
 <tasks>
-	  <option name="-combinations-value10+apron-cmc"/>
+	  <option name="-config">config/unmaintained/combinations-value10+apron-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=false</option>
@@ -79,7 +79,7 @@
       </tasks>
    
       <tasks>
-	  <option name="-combinations-valueCegar60+apronCegar-cmc"/>
+	  <option name="-config">config/unmaintained/combinations-valueCegar60+apronCegar-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=false</option>
@@ -154,7 +154,7 @@
 </tasks>
     
 <tasks>
-	  <option name="-combinations-value10+apron-cmc"/>
+	  <option name="-config">config/unmaintained/combinations-value10+apron-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=false</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=false</option>
@@ -166,7 +166,7 @@
       </tasks>
    
       <tasks>
-	  <option name="-combinations-valueCegar60+apronCegar-cmc"/>
+	  <option name="-config">config/unmaintained/combinations-valueCegar60+apronCegar-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=false</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=false</option>
@@ -190,7 +190,7 @@
 	<option name="-combinations-valueCegar60+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp_${sourcefile_name}_arg.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp_${inputfile_name}_arg.proof</option>
 	<option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
@@ -206,7 +206,7 @@
 	<option name="-combinations-valueCegar60+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp+_${sourcefile_name}_arg.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp+_${inputfile_name}_arg.proof</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
@@ -221,7 +221,7 @@
 	<option name="-combinations-value10+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMC_${sourcefile_name}_arg.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMC_${inputfile_name}_arg.proof</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">pcc.strategy=arg.ARG_CPAStrategy</option>
@@ -238,7 +238,7 @@
 	<option name="-combinations-value10+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-    <option name="-setprop">pcc.proofFile=ValuePredicateCMC+_${sourcefile_name}_arg.proof</option>
+    <option name="-setprop">pcc.proofFile=ValuePredicateCMC+_${inputfile_name}_arg.proof</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtJoin=true</option>
@@ -251,11 +251,11 @@
 </tasks>
     
 <tasks>
-	  <option name="-combinations-value10+apron-cmc"/>
+	  <option name="-config">config/unmaintained/combinations-value10+apron-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=true</option>
-      <option name="-setprop">pcc.proofFile=ValueApronCMC_${sourcefile_name}_arg.proof</option>
+      <option name="-setprop">pcc.proofFile=ValueApronCMC_${inputfile_name}_arg.proof</option>
       <option name="-setprop">pcc.strategy=arg.ARG_CPAStrategy</option>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_2_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_3_true-unreach-call_true-no-overflow.c.cil.c</include>
@@ -265,12 +265,12 @@
       </tasks>
    
       <tasks>
-	  <option name="-combinations-valueCegar60+apronCegar-cmc"/>
+	  <option name="-config">config/unmaintained/combinations-valueCegar60+apronCegar-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=true</option>
 	  <option name="-setprop">pcc.strategy=arg.ARG_CPAStrategy</option>
-      <option name="-setprop">pcc.proofFile=ValueApronCMCItp_${sourcefile_name}_arg.proof</option>
+      <option name="-setprop">pcc.proofFile=ValueApronCMCItp_${inputfile_name}_arg.proof</option>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_2_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_3_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/eca-rers2012/Problem16_label59_true-unreach-call.c</include>
@@ -288,7 +288,7 @@
 		<option name="-combinations-valueCegar60+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp_${sourcefile_name}_reached.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp_${inputfile_name}_reached.proof</option>
 	<option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	<option name="-setprop">pcc.strategy=ReachedSetStrategy</option>
@@ -304,7 +304,7 @@
 	<option name="-combinations-valueCegar60+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp+_${sourcefile_name}_reached.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp+_${inputfile_name}_reached.proof</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	<option name="-setprop">pcc.strategy=ReachedSetStrategy</option>
@@ -319,7 +319,7 @@
 		<option name="-combinations-value10+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMC_${sourcefile_name}_reached.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMC_${inputfile_name}_reached.proof</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">pcc.strategy=ReachedSetStrategy</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
@@ -335,7 +335,7 @@
 		<option name="-combinations-value10+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-    <option name="-setprop">pcc.proofFile=ValuePredicateCMC+_${sourcefile_name}_reached.proof</option>
+    <option name="-setprop">pcc.proofFile=ValuePredicateCMC+_${inputfile_name}_reached.proof</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">pcc.strategy=ReachedSetStrategy</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
@@ -349,11 +349,11 @@
     
       <tasks>
 	  <option name="-setprop">pcc.strategy=ReachedSetStrategy</option>  
-	  <option name="-combinations-value10+apron-cmc"/>
+	  <option name="-config">config/unmaintained/combinations-value10+apron-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=true</option>
-      <option name="-setprop">pcc.proofFile=ValueApronCMC_${sourcefile_name}_reached.proof</option>
+      <option name="-setprop">pcc.proofFile=ValueApronCMC_${inputfile_name}_reached.proof</option>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_2_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_3_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_5_true-unreach-call_true-no-overflow.c.cil.c</include>
@@ -362,11 +362,11 @@
       </tasks>
 	  
       <tasks>
-		  <option name="-combinations-valueCegar60+apronCegar-cmc"/>
+		  <option name="-config">config/unmaintained/combinations-valueCegar60+apronCegar-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=true</option>
-      <option name="-setprop">pcc.proofFile=ValueApronCMCItp_${sourcefile_name}_reached.proof</option>
+      <option name="-setprop">pcc.proofFile=ValueApronCMCItp_${inputfile_name}_reached.proof</option>
     <option name="-setprop">pcc.strategy=ReachedSetStrategy</option>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_2_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_3_true-unreach-call_true-no-overflow.c.cil.c</include>
@@ -386,7 +386,7 @@
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
 	<option name="-setprop">pcc.partial.certificateType=ARG</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp_${sourcefile_name}_partial.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp_${inputfile_name}_partial.proof</option>
 	<option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	<option name="-setprop">pcc.strategy=PartialReachedSetStrategy</option>
@@ -402,7 +402,7 @@
 		<option name="-combinations-valueCegar60+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp+_${sourcefile_name}_partial.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp+_${inputfile_name}_partial.proof</option>
     <option name="-setprop">pcc.partial.certificateType=ARG</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
@@ -418,7 +418,7 @@
 		<option name="-combinations-value10+pred-cmc"/>
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMC_${sourcefile_name}_partial.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMC_${inputfile_name}_partial.proof</option>
     <option name="-setprop">pcc.partial.certificateType=ARG</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">pcc.strategy=PartialReachedSetStrategy</option>
@@ -436,7 +436,7 @@
 	<option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
 	<option name="-setprop">pcc.partial.certificateType=ARG</option>
-    <option name="-setprop">pcc.proofFile=ValuePredicateCMC+_${sourcefile_name}_partial.proof</option>
+    <option name="-setprop">pcc.proofFile=ValuePredicateCMC+_${inputfile_name}_partial.proof</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">pcc.strategy=PartialReachedSetStrategy</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
@@ -449,12 +449,12 @@
 </tasks>
 
     <tasks>
-<option name="-combinations-value10+apron-cmc"/>
+<option name="-config">config/unmaintained/combinations-value10+apron-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=true</option>
 	  <option name="-setprop">pcc.partial.certificateType=MONOTONESTOPARG</option>
-      <option name="-setprop">pcc.proofFile=ValueApronCMC_${sourcefile_name}_partial.proof</option>
+      <option name="-setprop">pcc.proofFile=ValueApronCMC_${inputfile_name}_partial.proof</option>
     <option name="-setprop">pcc.strategy=PartialReachedSetStrategy</option>  
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_2_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_3_true-unreach-call_true-no-overflow.c.cil.c</include>
@@ -464,12 +464,12 @@
       </tasks>
 
       <tasks>
-		  <option name="-combinations-valueCegar60+apronCegar-cmc"/>
+		  <option name="-config">config/unmaintained/combinations-valueCegar60+apronCegar-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">restartAlgorithm.combineARGsAfterRestart=true</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=true</option>
 	  <option name="-setprop">pcc.partial.certificateType=MONOTONESTOPARG</option>
-      <option name="-setprop">pcc.proofFile=ValueApronCMCItp_${sourcefile_name}_partial.proof</option>
+      <option name="-setprop">pcc.proofFile=ValueApronCMCItp_${inputfile_name}_partial.proof</option>
     <option name="-setprop">pcc.strategy=PartialReachedSetStrategy</option> 
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_2_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_3_true-unreach-call_true-no-overflow.c.cil.c</include>
@@ -487,7 +487,7 @@
     <tasks>
 		<option name="-combinations-valueCegar60+pred-cmc"/>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp_${sourcefile_name}_cmcarg.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp_${inputfile_name}_cmcarg.proof</option>
 	<option name="-setprop">analysis.memorizeReachedAfterRestart=true</option>
 	<option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
@@ -505,7 +505,7 @@
     <tasks>
 		<option name="-combinations-valueCegar60+pred-cmc"/>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp+_${sourcefile_name}_cmcarg.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMCItp+_${inputfile_name}_cmcarg.proof</option>
     <option name="-setprop">analysis.memorizeReachedAfterRestart=true</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
@@ -522,7 +522,7 @@
     <tasks>
 		<option name="-combinations-value10+pred-cmc"/>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-	<option name="-setprop">pcc.proofFile=ValuePredicateCMC_${sourcefile_name}_cmcarg.proof</option>
+	<option name="-setprop">pcc.proofFile=ValuePredicateCMC_${inputfile_name}_cmcarg.proof</option>
     <option name="-setprop">analysis.memorizeReachedAfterRestart=true</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">pcc.strategy=arg.ARG_CMCStrategy</option>
@@ -540,7 +540,7 @@
     <tasks>
 		<option name="-combinations-value10+pred-cmc"/>
 	<option name="-setprop">pcc.proofgen.doPCC=true</option>
-    <option name="-setprop">pcc.proofFile=ValuePredicateCMC+_${sourcefile_name}_cmcarg.proof</option>
+    <option name="-setprop">pcc.proofFile=ValuePredicateCMC+_${inputfile_name}_cmcarg.proof</option>
     <option name="-setprop">analysis.memorizeReachedAfterRestart=true</option>
     <option name="-setprop">assumptions.automatonIgnoreAssumptions=true</option>
 	<option name="-setprop">pcc.strategy=arg.ARG_CMCStrategy</option>
@@ -556,10 +556,10 @@
 </tasks>
 
     <tasks>
-		<option name="-combinations-value10+apron-cmc"/>
+		<option name="-config">config/unmaintained/combinations-value10+apron-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=true</option>
-      <option name="-setprop">pcc.proofFile=ValueApronCMC_${sourcefile_name}_cmcarg.proof</option>
+      <option name="-setprop">pcc.proofFile=ValueApronCMC_${inputfile_name}_cmcarg.proof</option>
       <option name="-setprop">analysis.memorizeReachedAfterRestart=true</option>
     <option name="-setprop">pcc.strategy=arg.ARG_CMCStrategy</option>
     <option name="-setprop">counterexample.removeInfeasibleErrorState=false</option>
@@ -572,10 +572,10 @@
       </tasks>
 	  
       <tasks>
-		  <option name="-combinations-valueCegar60+apronCegar-cmc"/>
+		  <option name="-config">config/unmaintained/combinations-valueCegar60+apronCegar-cmc.properties</option>
 	  <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	  <option name="-setprop">pcc.proofgen.doPCC=true</option>
-      <option name="-setprop">pcc.proofFile=ValueApronCMCItp_${sourcefile_name}_cmcarg.proof</option>
+      <option name="-setprop">pcc.proofFile=ValueApronCMCItp_${inputfile_name}_cmcarg.proof</option>
       <option name="-setprop">analysis.memorizeReachedAfterRestart=true</option>
     <option name="-setprop">pcc.strategy=arg.ARG_CMCStrategy</option> 
     <option name="-setprop">counterexample.removeInfeasibleErrorState=false</option>
@@ -597,9 +597,9 @@
 <!-- ARG Proof -->
  
      <tasks>
-	<option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp_${sourcefile_name}_arg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp_${inputfile_name}_arg.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.arg.ARGCPA</option>
@@ -616,9 +616,9 @@
 </tasks>
 
     <tasks>
-    <option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+    <option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp+_${sourcefile_name}_arg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp+_${inputfile_name}_arg.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.arg.ARGCPA</option>
@@ -634,9 +634,9 @@
 </tasks>
 
     <tasks>
-	<option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMC_${sourcefile_name}_arg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMC_${inputfile_name}_arg.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
@@ -654,9 +654,9 @@
 </tasks>
 
     <tasks>
-	<option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMC+_${sourcefile_name}_arg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMC+_${inputfile_name}_arg.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
@@ -674,9 +674,9 @@
 </tasks>
 
       <tasks>
-	<option name="-valueApronAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueApronAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValueApronCMC_${sourcefile_name}_arg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValueApronCMC_${inputfile_name}_arg.proof</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.arg.ARGCPA</option>
@@ -691,9 +691,9 @@
       </tasks>
 
       <tasks>
-    <option name="-valueApronAnalysis-proofcheck"/>
+    <option name="-config">config/unmaintained/valueApronAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValueApronCMCItp_${sourcefile_name}_arg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValueApronCMCItp_${inputfile_name}_arg.proof</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.arg.ARGCPA</option>
@@ -714,13 +714,13 @@
 <!-- Reached set proof -->
 
     <tasks>
-	<option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
 	<option name="-setprop">pcc.strategy=ReachedSetStrategy</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp_${sourcefile_name}_reached.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp_${inputfile_name}_reached.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.composite.CompositeCPA</option>
@@ -738,9 +738,9 @@
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtJoin=true</option>
-    <option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+    <option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp+_${sourcefile_name}_reached.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp+_${inputfile_name}_reached.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.composite.CompositeCPA</option>
@@ -753,9 +753,9 @@
     <option name="-setprop">pcc.strategy=ReachedSetStrategy</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
-	<option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMC_${sourcefile_name}_reached.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMC_${inputfile_name}_reached.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
@@ -773,9 +773,9 @@
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtJoin=true</option>
-    <option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+    <option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMC+_${sourcefile_name}_reached.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMC+_${inputfile_name}_reached.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
      <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
@@ -788,9 +788,9 @@
 </tasks>
    
       <tasks>
-    <option name="-valueApronAnalysis-proofcheck"/>
+    <option name="-config">config/unmaintained/valueApronAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValueApronCMC_${sourcefile_name}_reached.proof</option>
+    <option name="-setprop">pcc.proof=output/ValueApronCMC_${inputfile_name}_reached.proof</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.composite.CompositeCPA</option>
@@ -804,9 +804,9 @@
       </tasks>
 
       <tasks>
-	<option name="-valueApronAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueApronAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValueApronCMCItp_${sourcefile_name}_reached.proof</option>
+    <option name="-setprop">pcc.proof=output/ValueApronCMCItp_${inputfile_name}_reached.proof</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.composite.CompositeCPA</option>
@@ -830,9 +830,9 @@
 	<option name="-setprop">pcc.strategy=PartialReachedSetStrategy</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
-    <option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+    <option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp_${sourcefile_name}_partial.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp_${inputfile_name}_partial.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">pcc.partial.stopAddingAtReachedSetSize=true</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
@@ -850,9 +850,9 @@
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtJoin=true</option>
-	<option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp+_${sourcefile_name}_partial.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp+_${inputfile_name}_partial.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">pcc.partial.stopAddingAtReachedSetSize=true</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
@@ -863,12 +863,12 @@
 </tasks>
 
     <tasks>
-	<option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">pcc.strategy=PartialReachedSetStrategy</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMC_${sourcefile_name}_partial.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMC_${inputfile_name}_partial.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">pcc.partial.stopAddingAtReachedSetSize=true</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
@@ -887,9 +887,9 @@
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtJoin=true</option>
-    <option name="-valueAnalysis-predicateAnalysis-proofcheck"/>
+    <option name="-config">config/unmaintained/valueAnalysis-predicateAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMC+_${sourcefile_name}_partial.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMC+_${inputfile_name}_partial.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">pcc.partial.stopAddingAtReachedSetSize=true</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
@@ -903,9 +903,9 @@
 </tasks>
 
     <tasks>
-	<option name="-valueApronAnalysis-proofcheck"/>
+	<option name="-config">config/unmaintained/valueApronAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValueApronCMC_${sourcefile_name}_partial.proof</option>
+    <option name="-setprop">pcc.proof=output/ValueApronCMC_${inputfile_name}_partial.proof</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.composite.CompositeCPA</option>
@@ -920,9 +920,9 @@
       </tasks>
 
       <tasks>
-    <option name="-valueApronAnalysis-proofcheck"/>
+    <option name="-config">config/unmaintained/valueApronAnalysis-proofcheck.properties</option>
 	<option name="-setprop">analysis.algorithm.proofCheck=true</option>
-    <option name="-setprop">pcc.proof=output/ValueApronCMCItp_${sourcefile_name}_partial.proof</option>
+    <option name="-setprop">pcc.proof=output/ValueApronCMCItp_${inputfile_name}_partial.proof</option>
     <option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">cpa=cpa.PropertyChecker.PropertyCheckerCPA</option>
     <option name="-setprop">PropertyCheckerCPA.cpa=cpa.composite.CompositeCPA</option>
@@ -942,9 +942,9 @@
 <!-- CMC args proof -->
 
      <tasks>
-	<option name="-combinations-value+pred-cmc-proofcheck"/>
+	<option name="-config">config/unmaintained/combinations-value+pred-cmc-proofcheck.properties</option>
 	<option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp_${sourcefile_name}_cmcarg.proof</option>	
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMCItp_${inputfile_name}_cmcarg.proof</option>	
 	<option name="-setprop">cpa.composite.aggregateBasicBlocks=false</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
@@ -957,24 +957,24 @@
 </tasks>
 
     <tasks>
-	<option name="-setprop">pcc.proof=output/ValuePredicateCMCItp+_${sourcefile_name}_cmcarg.proof</option>
+	<option name="-setprop">pcc.proof=output/ValuePredicateCMCItp+_${inputfile_name}_cmcarg.proof</option>
     <option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
     <option name="-setprop">solver.solver=MATHSAT5</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtJoin=true</option>
     <option name="-setprop">pcc.arg.checkPropertyPerElement=true</option>
-	<option name="-combinations-value+pred-cmc-proofcheck"/>
+	<option name="-config">config/unmaintained/combinations-value+pred-cmc-proofcheck.properties</option>
 <include>../programs/sv-benchmarks-svcomp17/loops/matrix_true-unreach-call_true-termination.c</include>
 <include>../programs/sv-benchmarks-svcomp17/loops/matrix_true-unreach-call_true-termination.i</include>
 <include>../programs/CMC+PCC/bonus.c</include>
 </tasks>
 
     <tasks>
-	<option name="-combinations-value+pred-cmc-proofcheck"/>
+	<option name="-config">config/unmaintained/combinations-value+pred-cmc-proofcheck.properties</option>
 	<option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
 	<option name="-setprop">solver.solver=MATHSAT5</option>
 	<option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
-	<option name="-setprop">pcc.proof=output/ValuePredicateCMC_${sourcefile_name}_cmcarg.proof</option>
+	<option name="-setprop">pcc.proof=output/ValuePredicateCMC_${inputfile_name}_cmcarg.proof</option>
 	<option name="-setprop">pcc.arg.checkPropertyPerElement=true</option>
  <include>../programs/sv-benchmarks-svcomp17/float-benchs/filter2_iterated_true-unreach-call.c</include>
 <include>../programs/sv-benchmarks-svcomp17/floats-esbmc-regression/fabs_true-unreach-call.i</include>
@@ -985,12 +985,12 @@
 </tasks>
 
     <tasks>
-	<option name="-combinations-value+pred-cmc-proofcheck"/>
+	<option name="-config">config/unmaintained/combinations-value+pred-cmc-proofcheck.properties</option>
 	<option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
 	<option name="-setprop">solver.solver=MATHSAT5</option>
 	<option name="-setprop">cpa.predicate.blk.alwaysAtLoops=true</option>
     <option name="-setprop">cpa.predicate.blk.alwaysAtJoin=true</option>
-    <option name="-setprop">pcc.proof=output/ValuePredicateCMC+_${sourcefile_name}_cmcarg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValuePredicateCMC+_${inputfile_name}_cmcarg.proof</option>
     <option name="-setprop">pcc.arg.checkPropertyPerElement=true</option>
 <include>../programs/sv-benchmarks-svcomp17/float-benchs/filter2_true-unreach-call.c</include>
 <include>../programs/sv-benchmarks-svcomp17/floats-esbmc-regression/fabs_true-unreach-call.i</include>
@@ -1000,9 +1000,9 @@
 </tasks>
 
     <tasks>
-	<option name="-combinations-value+apron-cmc-proofcheck"/>
+	<option name="-config">config/unmaintained/combinations-value+apron-cmc-proofcheck.properties</option>
 	<option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
-    <option name="-setprop">pcc.proof=output/ValueApronCMC_${sourcefile_name}_cmcarg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValueApronCMC_${inputfile_name}_cmcarg.proof</option>
     <option name="-setprop">pcc.arg.checkPropertyPerElement=true</option>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_2_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_3_true-unreach-call_true-no-overflow.c.cil.c</include>
@@ -1012,11 +1012,11 @@
       </tasks>
 
       <tasks>
-    <option name="-combinations-value+apron-cmc-proofcheck"/>
+    <option name="-config">config/unmaintained/combinations-value+apron-cmc-proofcheck.properties</option>
     <option name="-skipRecursion"/>
 	<option name="-setprop">cpa.propertychecker.className=NoTargetStateChecker</option>
 	<option name="-setprop">pcc.arg.checkPropertyPerElement=true</option>
-    <option name="-setprop">pcc.proof=output/ValueApronCMCItp_${sourcefile_name}_cmcarg.proof</option>
+    <option name="-setprop">pcc.proof=output/ValueApronCMCItp_${inputfile_name}_cmcarg.proof</option>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_2_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/bitvector/soft_float_3_true-unreach-call_true-no-overflow.c.cil.c</include>
 <include>../programs/sv-benchmarks-svcomp17/eca-rers2012/Problem16_label59_true-unreach-call.c</include>

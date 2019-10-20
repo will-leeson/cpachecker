@@ -373,7 +373,7 @@ public final class PredicatePrecision implements AdjustablePrecision {
    * and a second one.
    */
   public PredicatePrecision mergeWith(PredicatePrecision prec) {
-    if (this.isEmpty()) {
+    if (this == prec || this.isEmpty()) {
       return prec;
     }
     if (prec.isEmpty()) {
@@ -414,6 +414,7 @@ public final class PredicatePrecision implements AdjustablePrecision {
     return difference;
   }
 
+  @Override
   public boolean isEmpty() {
     return getGlobalPredicates().isEmpty()
         && getFunctionPredicates().isEmpty()
@@ -435,7 +436,7 @@ public final class PredicatePrecision implements AdjustablePrecision {
       return true;
     } else if (pObj == null) {
       return false;
-    } else if (!(pObj.getClass().equals(this.getClass()))) {
+    } else if (!pObj.getClass().equals(this.getClass())) {
       return false;
     } else {
       PredicatePrecision other = (PredicatePrecision)pObj;

@@ -26,7 +26,7 @@ package org.sosy_lab.cpachecker.cfa.simplification;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.log.LogManagerWithoutDuplicates;
 import org.sosy_lab.cpachecker.cfa.ast.FileLocation;
 import org.sosy_lab.cpachecker.cfa.ast.c.CBinaryExpression;
@@ -95,12 +95,13 @@ public class ExpressionSimplificationVisitor
   private CExpression convertExplicitValueToExpression(final CExpression expr, Value value) {
     // TODO: handle cases other than numeric values
     NumericValue numericResult = value.asNumericValue();
-    if (numericResult != null && expr.getExpressionType() instanceof CSimpleType) {
-      CSimpleType type = (CSimpleType) expr.getExpressionType();
-      if (type.getType().isIntegerType()) {
-        return new CIntegerLiteralExpression(expr.getFileLocation(),
-                expr.getExpressionType(), BigInteger.valueOf(numericResult.longValue()));
-      } else if (type.getType().isFloatingPointType()) {
+    CType type = expr.getExpressionType().getCanonicalType();
+    if (numericResult != null && type instanceof CSimpleType) {
+      CSimpleType simpleType = ((CSimpleType) type);
+      if (simpleType.getType().isIntegerType()) {
+        return new CIntegerLiteralExpression(
+            expr.getFileLocation(), expr.getExpressionType(), numericResult.bigInteger());
+      } else if (simpleType.getType().isFloatingPointType()) {
         try {
           return new CFloatLiteralExpression(expr.getFileLocation(),
               expr.getExpressionType(), numericResult.bigDecimalValue());
@@ -142,6 +143,26 @@ public class ExpressionSimplificationVisitor
         newExpr = expr;
       } else {
         final CBinaryExpressionBuilder binExprBuilder = new CBinaryExpressionBuilder(machineModel, logger);
+        switch (binaryOperator) {
+          case BINARY_AND:
+            if (value1 != null && value1.bigInteger().equals(BigInteger.ZERO)) {
+              return op1;
+            }
+            if (value2 != null && value2.bigInteger().equals(BigInteger.ZERO)) {
+              return op2;
+            }
+            break;
+          case BINARY_OR:
+            if (value1 != null && value1.bigInteger().equals(BigInteger.ZERO)) {
+              return op2;
+            }
+            if (value2 != null && value2.bigInteger().equals(BigInteger.ZERO)) {
+              return op1;
+            }
+            break;
+          default:
+            break;
+        }
         newExpr = binExprBuilder.buildBinaryExpressionUnchecked(
             op1, op2, binaryOperator);
       }
@@ -189,9 +210,9 @@ public class ExpressionSimplificationVisitor
 
     switch (idOperator) {
     case SIZEOF:
-      int size = machineModel.getSizeof(innerType);
-      return new CIntegerLiteralExpression(expr.getFileLocation(),
-              expr.getExpressionType(), BigInteger.valueOf(size));
+        BigInteger size = machineModel.getSizeof(innerType);
+        return new CIntegerLiteralExpression(
+            expr.getFileLocation(), expr.getExpressionType(), size);
 
       case ALIGNOF:
         int alignment = machineModel.getAlignof(innerType);
@@ -214,7 +235,7 @@ public class ExpressionSimplificationVisitor
     // in case of a SIZEOF we do not need to know the explicit value of the variable,
     // it is enough to know its type
     if (unaryOperator == UnaryOperator.SIZEOF) {
-      return new CIntegerLiteralExpression(loc, exprType, BigInteger.valueOf(machineModel.getSizeof(operandType)));
+      return new CIntegerLiteralExpression(loc, exprType, machineModel.getSizeof(operandType));
     } else if (unaryOperator == UnaryOperator.ALIGNOF) {
       return new CIntegerLiteralExpression(loc, exprType, BigInteger.valueOf(machineModel.getAlignof(operandType)));
     }
@@ -233,7 +254,10 @@ public class ExpressionSimplificationVisitor
         case BOOL: // negation of zero is zero, other values should be irrelevant
         case CHAR:
         case INT:
-          return new CIntegerLiteralExpression(loc, exprType, BigInteger.valueOf(negatedValue.longValue()));
+            // better do not convert to long, but directly use the computed value,
+            // i.e. "-1ULL" would be converted to long -1, which is valid,
+            // but does not match its CType bounds.
+            return new CIntegerLiteralExpression(loc, exprType, negatedValue.bigInteger());
         case FLOAT:
         case DOUBLE:
           double v = negatedValue.doubleValue();
@@ -251,7 +275,7 @@ public class ExpressionSimplificationVisitor
         // cast the value, because the evaluation of "~" is done for long and maybe the target-type is integer.
         final NumericValue complementValue = (NumericValue) AbstractExpressionValueVisitor.castCValue(
             new NumericValue(~value.longValue()), exprType, machineModel, logger, loc);
-        return new CIntegerLiteralExpression(loc, exprType, BigInteger.valueOf(complementValue.longValue()));
+        return new CIntegerLiteralExpression(loc, exprType, complementValue.bigInteger());
       }
     }
 

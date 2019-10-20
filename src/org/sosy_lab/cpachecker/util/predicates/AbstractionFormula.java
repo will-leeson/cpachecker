@@ -31,7 +31,7 @@ import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.UniqueIdGenerator;
 import org.sosy_lab.cpachecker.util.globalinfo.GlobalInfo;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.PathFormula;
@@ -85,6 +85,17 @@ public class AbstractionFormula implements Serializable {
     this.instantiatedFormula = checkNotNull(pInstantiatedFormula);
     this.blockFormula = checkNotNull(pBlockFormula);
     this.idsOfStoredAbstractionReused = ImmutableSet.copyOf(pIdOfStoredAbstractionReused);
+  }
+
+  /**
+   * create a copy with the same formula information, but a new unique object-id.
+   *
+   * <p>As we do not override {@link Object#equals} in AbstractionFormula, the new copy will not be
+   * "equal" to the old instance.
+   */
+  public AbstractionFormula copyOf() {
+    return new AbstractionFormula(
+        fMgr, region, formula, instantiatedFormula, blockFormula, idsOfStoredAbstractionReused);
   }
 
   public boolean isReusedFromStoredAbstraction() {
@@ -151,8 +162,10 @@ public class AbstractionFormula implements Serializable {
 
   /**
    * javadoc to remove unused parameter warning
+   *
    * @param in an input stream
    */
+  @SuppressWarnings("UnusedVariable") // parameter is required by API
   private void readObject(ObjectInputStream in) throws IOException {
     throw new InvalidObjectException("Proxy required");
   }

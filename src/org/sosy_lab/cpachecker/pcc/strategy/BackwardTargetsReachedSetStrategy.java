@@ -31,7 +31,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -124,7 +124,7 @@ public class BackwardTargetsReachedSetStrategy extends SequentialReadStrategy im
       }
     }
 
-    return statesToStore.toArray(new AbstractState[statesToStore.size()]);
+    return statesToStore.toArray(new AbstractState[0]);
   }
 
   private ARGState replaceByCoveringState(final ARGState pState) {

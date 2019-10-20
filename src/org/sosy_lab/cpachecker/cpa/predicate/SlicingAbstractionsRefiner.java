@@ -71,21 +71,14 @@ public class SlicingAbstractionsRefiner implements Refiner, StatisticsProvider {
       throw new InvalidConfigurationException(SlicingAbstractionsRefiner.class.getSimpleName() + " needs a PredicateCPA");
     }
 
-    RefinementStrategy strategy = new SlicingAbstractionsStrategy(
-        predicateCpa.getConfiguration(),
-        predicateCpa.getSolver(),
-        predicateCpa.getPredicateManager(),
-        predicateCpa.getPathFormulaManager());
+    RefinementStrategy strategy =
+        new SlicingAbstractionsStrategy(predicateCpa, predicateCpa.getConfiguration());
 
     PredicateCPARefinerFactory factory = new PredicateCPARefinerFactory(pCpa);
     ARGBasedRefiner refiner =  factory.create(strategy);
     return new SlicingAbstractionsRefiner(refiner, argCpa);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.sosy_lab.cpachecker.core.interfaces.Refiner#performRefinement(org.sosy_lab.cpachecker.core.reachedset.ReachedSet)
-   */
   @Override
   public boolean performRefinement(ReachedSet pReached) throws CPAException, InterruptedException {
     CounterexampleInfo counterexample = null;
@@ -101,7 +94,7 @@ public class SlicingAbstractionsRefiner implements Refiner, StatisticsProvider {
           ((ARGState)targetState).addCounterexampleInformation(counterexample);
           return false;
         } else {
-          if (SlicingAbstractionsUtils.checkProgress(pReached, errorPath) == false) {
+          if (!SlicingAbstractionsUtils.checkProgress(pReached, errorPath)) {
             throw new RefinementFailedException(Reason.RepeatedCounterexample, errorPath);
           }
         }

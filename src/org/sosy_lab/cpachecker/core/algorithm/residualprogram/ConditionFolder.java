@@ -24,17 +24,17 @@
 package org.sosy_lab.cpachecker.core.algorithm.residualprogram;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.IntegerOption;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -86,7 +86,7 @@ public abstract class ConditionFolder {
       Map<CFANode, Loop> loopMapResult = Maps.newHashMapWithExpectedSize(cfa.getAllNodes().size());
 
       Deque<Pair<CFANode, List<Loop>>> toVisit = new ArrayDeque<>();
-      toVisit.push(Pair.of(cfa.getMainFunction(), Collections.emptyList()));
+      toVisit.push(Pair.of(cfa.getMainFunction(), ImmutableList.of()));
       loopMapResult.put(cfa.getMainFunction(), null);
       List<Loop> loopStack, succLoopStack;
       CFANode node;
@@ -115,7 +115,7 @@ public abstract class ConditionFolder {
 
           if (edge instanceof CFunctionCallEdge) {
             lsucc = null;
-            succLoopStack = Collections.emptyList();
+            succLoopStack = ImmutableList.of();
           }
 
           while (lsucc != null && lsucc.getOutgoingEdges().contains(edge)) {

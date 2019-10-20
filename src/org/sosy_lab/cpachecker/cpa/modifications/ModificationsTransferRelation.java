@@ -23,13 +23,14 @@
  */
 package org.sosy_lab.cpachecker.cpa.modifications;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdgeType;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
@@ -57,10 +58,7 @@ public class ModificationsTransferRelation extends SingleEdgeTransferRelation {
   }
 
   public ModificationsTransferRelation() {
-    this(
-        false,
-        Collections.<String, Set<String>>emptyMap(),
-        Collections.<String, Set<String>>emptyMap());
+    this(false, ImmutableMap.of(), ImmutableMap.of());
   }
 
   @Override
@@ -107,7 +105,7 @@ public class ModificationsTransferRelation extends SingleEdgeTransferRelation {
 
     // if current location doesn't have edge as outgoing edge, or
     // if previous state already depicts modification
-    return Collections.emptySet();
+    return ImmutableSet.of();
   }
 
   private Optional<ModificationsState> findMatchingSuccessor(

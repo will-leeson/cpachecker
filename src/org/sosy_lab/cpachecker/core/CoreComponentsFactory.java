@@ -29,7 +29,7 @@ import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
@@ -49,6 +49,7 @@ import org.sosy_lab.cpachecker.core.algorithm.CustomInstructionRequirementsExtra
 import org.sosy_lab.cpachecker.core.algorithm.ExceptionHandlingAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.ExternalCBMCAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.InterleavedAlgorithm;
+import org.sosy_lab.cpachecker.core.algorithm.NoopAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.ParallelAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.ProgramSplitAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.RestartAlgorithm;
@@ -58,7 +59,7 @@ import org.sosy_lab.cpachecker.core.algorithm.SelectionAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.TestCaseGeneratorAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.UndefinedFunctionCollectorAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.bmc.BMCAlgorithm;
-import org.sosy_lab.cpachecker.core.algorithm.bmc.PdrAlgorithm;
+import org.sosy_lab.cpachecker.core.algorithm.bmc.pdr.PdrAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.counterexamplecheck.CounterexampleCheckAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.impact.ImpactAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.mpv.MPVAlgorithm;
@@ -97,6 +98,12 @@ import org.sosy_lab.cpachecker.intelligence.NeuralGraphGenAlgorithm;
  */
 @Options(prefix="analysis")
 public class CoreComponentsFactory {
+
+  @Option(
+      secure = true,
+      name = "disable",
+      description = "stop CPAchecker after startup (internal option, not intended for users)")
+  private boolean disableAnalysis = false;
 
   @Option(secure=true, description="use assumption collecting algorithm")
   private boolean collectAssumptions = false;
@@ -328,7 +335,8 @@ public class CoreComponentsFactory {
     // BMCAlgorithm needs to get a ShutdownManager that also affects the CPA it is used with.
     // We must not create such a new ShutdownManager if it is not needed,
     // because otherwise the GC will throw it away and shutdowns will NOT WORK!
-    return !useProofCheckAlgorithm
+    return !disableAnalysis
+        && !useProofCheckAlgorithm
         && !useProofCheckAlgorithmWithStoredConfig
         && !useRestartingAlgorithm
         && !useImpactAlgorithm
@@ -338,8 +346,12 @@ public class CoreComponentsFactory {
 
   public Algorithm createAlgorithm(
       final ConfigurableProgramAnalysis cpa, final CFA cfa, final Specification pSpecification)
-      throws InvalidConfigurationException, CPAException {
+      throws InvalidConfigurationException, CPAException, InterruptedException {
     logger.log(Level.FINE, "Creating algorithms");
+
+    if (disableAnalysis) {
+      return NoopAlgorithm.INSTANCE;
+    }
 
     // TerminationAlgorithm requires hard coded specification.
     Specification specification;
@@ -433,7 +445,9 @@ public class CoreComponentsFactory {
       }
 
       if (useCEGAR) {
-        algorithm = new CEGARAlgorithmFactory(algorithm, cpa, logger, config).newInstance();
+        algorithm =
+            new CEGARAlgorithmFactory(algorithm, cpa, logger, config, shutdownNotifier)
+                .newInstance();
       }
 
       if (usePDR) {
@@ -488,11 +502,13 @@ public class CoreComponentsFactory {
 
       if (useTestCaseGeneratorAlgorithm) {
         algorithm =
-            new TestCaseGeneratorAlgorithm(algorithm, cfa, config, cpa, logger, shutdownNotifier);
+            new TestCaseGeneratorAlgorithm(
+                algorithm, cfa, config, cpa, logger, shutdownNotifier, specification);
       }
 
       if (collectAssumptions) {
-        algorithm = new AssumptionCollectorAlgorithm(algorithm, cpa, config, logger, cfa);
+        algorithm =
+            new AssumptionCollectorAlgorithm(algorithm, cpa, config, logger, cfa, shutdownNotifier);
       }
 
       if (useAdjustableConditions) {
@@ -531,16 +547,17 @@ public class CoreComponentsFactory {
       }
 
       if (useTerminationAlgorithm) {
-        algorithm = new TerminationAlgorithm(
-            config,
-            logger,
-            shutdownNotifier,
-            cfa,
-            reachedSetFactory,
-            aggregatedReachedSetManager,
-            specification,
-            algorithm,
-            cpa);
+        algorithm =
+            new TerminationAlgorithm(
+                config,
+                logger,
+                shutdownNotifier,
+                cfa,
+                reachedSetFactory,
+                aggregatedReachedSetManager,
+                specification,
+                algorithm,
+                cpa);
       }
 
       if (cpa instanceof ARGCPA && forceCexStore) {
@@ -580,7 +597,7 @@ public class CoreComponentsFactory {
   }
 
   public ConfigurableProgramAnalysis createCPA(final CFA cfa, final Specification pSpecification)
-      throws InvalidConfigurationException, CPAException {
+      throws InvalidConfigurationException, CPAException, InterruptedException {
     logger.log(Level.FINE, "Creating CPAs");
 
     if (useInterleavedAlgorithm
@@ -608,7 +625,7 @@ public class CoreComponentsFactory {
   }
 
   private Specification loadTerminationSpecification(CFA cfa, Specification originalSpecification)
-      throws InvalidConfigurationException {
+      throws InvalidConfigurationException, InterruptedException {
     Preconditions.checkState(useTerminationAlgorithm);
     boolean atMostWitness = true;
 
@@ -624,7 +641,7 @@ public class CoreComponentsFactory {
     }
     Specification terminationSpecification =
         TerminationAlgorithm.loadTerminationSpecification(
-            originalSpecification.getProperties(), witness, cfa, config, logger);
+            originalSpecification.getProperties(), witness, cfa, config, logger, shutdownNotifier);
 
     if (!atMostWitness && !originalSpecification.equals(terminationSpecification)) {
       throw new InvalidConfigurationException(

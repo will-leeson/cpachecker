@@ -37,14 +37,12 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Verify;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.UnmodifiableIterator;
@@ -67,7 +65,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sosy_lab.cpachecker.cfa.DummyCFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.AssumeEdge;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
@@ -230,8 +229,8 @@ public class ARGUtils {
 
     boolean lastTransitionIsDifferent = false;
     while (!currentARGState.getParents().isEmpty()) {
-      List<ARGState> potentialParents = Lists.newArrayList();
-      potentialParents.addAll(currentARGState.getParents());
+      List<ARGState> potentialParents = new ArrayList<>(currentARGState.getParents());
+
       if (!tracePrefixesToAvoid.isEmpty()) {
         potentialParents.addAll(currentARGState.getCoveredByThis());
       }
@@ -285,7 +284,6 @@ public class ARGUtils {
     states.add(currentARGState);
     seenElements.add(currentARGState);
     Deque<ARGState> backTrackPoints = new ArrayDeque<>();
-    Deque<Set<ARGState>> backTrackSeenElements = new ArrayDeque<>();
     Deque<List<ARGState>> backTrackOptions = new ArrayDeque<>();
 
     while (!pIsStart.apply(currentARGState)) {
@@ -299,15 +297,13 @@ public class ARGUtils {
 
       if (seenElements.contains(parentElement)) {
         // Backtrack
-        if (backTrackPoints.isEmpty()) {
-          throw new IllegalArgumentException("No ARG path from the target state to a root state.");
-        }
+        checkArgument(
+            !backTrackPoints.isEmpty(), "No ARG path from the target state to a root state.");
         ARGState backTrackPoint = backTrackPoints.pop();
         ListIterator<ARGState> stateIterator = states.listIterator(states.size());
         while (stateIterator.hasPrevious() && !stateIterator.previous().equals(backTrackPoint)) {
           stateIterator.remove();
         }
-        seenElements = backTrackSeenElements.pop();
         List<ARGState> options = backTrackOptions.pop();
         for (ARGState parent : backTrackPoint.getParents()) {
           if (!options.contains(parent)) {
@@ -328,7 +324,6 @@ public class ARGUtils {
           if (!options.isEmpty()) {
             backTrackPoints.push(currentARGState);
             backTrackOptions.push(options);
-            backTrackSeenElements.push(new HashSet<>(seenElements));
           }
         }
 
@@ -389,7 +384,7 @@ public class ARGUtils {
     Preconditions.checkNotNull(pTracePosition);
     Preconditions.checkNotNull(pPostfixLocation);
 
-    Builder<PathPosition> result = ImmutableList.builder();
+    ImmutableList.Builder<PathPosition> result = ImmutableList.builder();
 
     for (PathPosition p: pTracePosition) {
 
@@ -417,7 +412,7 @@ public class ARGUtils {
 
     List<ARGState> states = new ArrayList<>();
     ARGState currentElement = root;
-    while (currentElement.getChildren().size() > 0) {
+    while (!currentElement.getChildren().isEmpty()) {
       states.add(currentElement);
       currentElement = currentElement.getChildren().iterator().next();
     }
@@ -508,7 +503,7 @@ public class ARGUtils {
     ARGPathBuilder builder = ARGPath.builder();
     ARGState currentElement = root;
     while (!currentElement.isTarget()) {
-      Set<ARGState> children = Sets.newHashSet(currentElement.getChildren());
+      Set<ARGState> children = new HashSet<>(currentElement.getChildren());
       Set<ARGState> childrenInArg = Sets.intersection(children, arg).immutableCopy();
 
       ARGState child;
@@ -575,9 +570,7 @@ public class ARGUtils {
         throw new IllegalArgumentException("ARG splits with more than two branches!");
       }
 
-      if (!arg.contains(child)) {
-        throw new IllegalArgumentException("ARG and direction information from solver disagree!");
-      }
+      checkArgument(arg.contains(child), "ARG and direction information from solver disagree!");
 
       builder.add(currentElement, edge);
       currentElement = child;
@@ -608,9 +601,8 @@ public class ARGUtils {
 
     ARGPath result = getPathFromBranchingInformation(root, arg, branchingInformation);
 
-    if (result.getLastState() != target) {
-      throw new IllegalArgumentException("ARG target path reached the wrong target state!");
-    }
+    checkArgument(
+        result.getLastState() == target, "ARG target path reached the wrong target state!");
 
     return result;
   }
@@ -736,7 +728,7 @@ public class ARGUtils {
     Function<ARGState, String> getLocationName =
         s -> Joiner.on("_OR_").join(AbstractStates.extractLocations(s));
     Function<Integer, Function<ARGState, String>> getStateNameFunction =
-        i -> (s -> "S" + i + "at" + getLocationName.apply(s));
+        i -> s -> "S" + i + "at" + getLocationName.apply(s);
 
     sb.append("CONTROL AUTOMATON " + name + "\n\n");
     String stateName = getStateNameFunction.apply(index).apply(rootState);
@@ -792,7 +784,7 @@ public class ARGUtils {
 
     int multiEdgeCount = 0; // see below
 
-    for (ARGState s : Ordering.natural().immutableSortedCopy(pPathStates)) {
+    for (ARGState s : ImmutableList.sortedCopyOf(pPathStates)) {
 
       sb.append("STATE USEFIRST ARG" + s.getStateId() + " :\n");
 
@@ -806,7 +798,11 @@ public class ARGUtils {
           List<CFAEdge> allEdges = s.getEdgesToChild(child);
           CFAEdge edge;
 
-          if (allEdges.size() == 1) {
+          if (allEdges.isEmpty()) {
+            // this is a missing edge, e.g., caused by SSCCPA
+            edge = new DummyCFAEdge(extractLocation(s), extractLocation(child));
+
+          } else if (allEdges.size() == 1) {
             edge = Iterables.getOnlyElement(allEdges);
 
             // this is a dynamic multi edge
@@ -893,7 +889,7 @@ public class ARGUtils {
     CFANode inLoopNode = null;
     CFANode inFunctionNode = null;
 
-    ImmutableList<ARGState> sortedStates = Ordering.natural().immutableSortedCopy(pPathStates);
+    ImmutableList<ARGState> sortedStates = ImmutableList.sortedCopyOf(pPathStates);
 
     Deque<String> sortedFunctionOccurrence = new ArrayDeque<>();
     for (ARGState s : sortedStates) {

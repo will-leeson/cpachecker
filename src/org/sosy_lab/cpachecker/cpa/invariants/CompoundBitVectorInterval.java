@@ -33,7 +33,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cpa.invariants.operators.Operator;
 import org.sosy_lab.cpachecker.cpa.invariants.operators.bitvector.ICCOperatorFactory;
 import org.sosy_lab.cpachecker.cpa.invariants.operators.bitvector.IICOperatorFactory;
@@ -195,7 +195,7 @@ public class CompoundBitVectorInterval implements CompoundIntegralInterval, BitV
     checkBitVectorCompatibilityWith(pOther.getTypeInfo());
     if (contains(pOther)) { return this; }
     if (isBottom() || pOther.isTop()) { return getInternal(pOther); }
-    ArrayList<BitVectorInterval> resultIntervals = new ArrayList<>();
+    List<BitVectorInterval> resultIntervals = new ArrayList<>();
     int start = 0;
     BitVectorInterval lastInterval = null;
     if (pOther.hasLowerBound() && hasUpperBound()) {

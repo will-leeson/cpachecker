@@ -23,12 +23,12 @@
  */
 package org.sosy_lab.cpachecker.cpa.powerset;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.core.defaults.SingleEdgeTransferRelation;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
@@ -55,13 +55,13 @@ public class PowerSetTransferRelation extends SingleEdgeTransferRelation {
       successors.addAll(wrapperTransfer.getAbstractSuccessorsForEdge(wrappedState, pPrecision, pCfaEdge));
     }
 
-    return Collections.singleton(new PowerSetState(successors));
+    return ImmutableSet.of(new PowerSetState(successors));
   }
 
   @Override
   public Collection<? extends AbstractState> strengthen(
       AbstractState state,
-      List<AbstractState> otherStates,
+      Iterable<AbstractState> otherStates,
       @Nullable CFAEdge cfaEdge,
       Precision precision)
       throws CPATransferException, InterruptedException {
@@ -76,14 +76,13 @@ public class PowerSetTransferRelation extends SingleEdgeTransferRelation {
       Collection<? extends AbstractState> strengtheningRes =
           wrapperTransfer.strengthen(
               stateInSet, Collections.singletonList(stateInSet), cfaEdge, precision);
-      if (strengtheningRes != null && strengtheningRes.size() > 0) {
+      if (strengtheningRes != null && !strengtheningRes.isEmpty()) {
         changed = true;
         newStates.addAll(strengtheningRes);
       }
     }
 
-
-    return changed ? Collections.singleton(new PowerSetState(newStates)) : Collections.emptySet();
+    return changed ? ImmutableSet.of(new PowerSetState(newStates)) : ImmutableSet.of();
   }
 
 }

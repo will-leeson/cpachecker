@@ -31,6 +31,7 @@ import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.core.defaults.AbstractCPA;
 import org.sosy_lab.cpachecker.core.defaults.AutomaticCPAFactory;
+import org.sosy_lab.cpachecker.core.defaults.DelegateAbstractDomain;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
 import org.sosy_lab.cpachecker.core.interfaces.CPAFactory;
 import org.sosy_lab.cpachecker.core.interfaces.StateSpacePartition;
@@ -49,19 +50,34 @@ public class TestTargetCPA extends AbstractCPA {
   )
   private boolean runParallel = false;
 
+  @Option(
+    secure = true,
+    name = "targets.type", // adapt CPAMain.java if adjust name
+    description = "Which CFA edges to use as test targets"
+  )
+  private TestTargetType targetType = TestTargetType.ASSUME;
+
+  @Option(
+    secure = true,
+    name = "targets.optimization.strategy",
+    description = "Which strategy to use to optimize set of test target edges"
+  )
+  private TestTargetAdaption targetOptimization = TestTargetAdaption.NONE;
+
   public static CPAFactory factory() {
     return AutomaticCPAFactory.forType(TestTargetCPA.class);
   }
 
   public TestTargetCPA(final CFA pCfa, final Configuration pConfig)
       throws InvalidConfigurationException {
-    super("sep", "sep", null);
+    super("sep", "sep", DelegateAbstractDomain.<TestTargetState>getInstance(), null);
 
     pConfig.inject(this);
 
     precisionAdjustment = new TestTargetPrecisionAdjustment();
     transferRelation =
-        new TestTargetTransferRelation(TestTargetProvider.getTestTargets(pCfa, runParallel));
+        new TestTargetTransferRelation(
+            TestTargetProvider.getTestTargets(pCfa, runParallel, targetType, targetOptimization));
   }
 
   @Override
@@ -72,7 +88,7 @@ public class TestTargetCPA extends AbstractCPA {
   @Override
   public AbstractState getInitialState(final CFANode pNode, final StateSpacePartition pPartition)
       throws InterruptedException {
-    return TestTargetState.NO_TARGET;
+    return TestTargetState.noTargetState();
   }
 
   @Override

@@ -32,11 +32,12 @@ import static org.sosy_lab.cpachecker.util.AbstractStates.IS_TARGET_STATE;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -48,15 +49,20 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
+import java.util.logging.Level;
+import java.util.regex.Pattern;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.JSON;
 import org.sosy_lab.common.Optionals;
 import org.sosy_lab.common.configuration.Configuration;
@@ -75,16 +81,23 @@ import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.cfa.model.FunctionEntryNode;
 import org.sosy_lab.cpachecker.cfa.model.FunctionExitNode;
 import org.sosy_lab.cpachecker.core.CPAchecker;
+import org.sosy_lab.cpachecker.core.CPAcheckerResult.Result;
+import org.sosy_lab.cpachecker.core.Specification;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
 import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
 import org.sosy_lab.cpachecker.cpa.arg.ARGState;
 import org.sosy_lab.cpachecker.cpa.arg.ARGUtils;
+import org.sosy_lab.cpachecker.cpa.arg.witnessexport.Witness;
+import org.sosy_lab.cpachecker.cpa.arg.witnessexport.WitnessExporter;
+import org.sosy_lab.cpachecker.cpa.arg.witnessexport.WitnessToOutputFormatsUtils;
 import org.sosy_lab.cpachecker.util.AbstractStates;
+import org.sosy_lab.cpachecker.util.BiPredicates;
 
 @Options
 public class ReportGenerator {
 
-  private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+  private static final DateTimeFormatter DATE_TIME_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   private static final Splitter LINE_SPLITTER = Splitter.on('\n');
 
@@ -121,6 +134,11 @@ public class ReportGenerator {
   private final Map<String, Object> argEdges;
   private final Map<String, Object> argRelevantEdges;
   private final Map<Integer, Object> argRelevantNodes;
+  private final Map<String, Object> argReducedEdges;
+  private final Map<String, Object> argReducedNodes;
+  private Optional<Witness> witnessOptional;
+
+  private final String producer; // HTML-escaped producer string
 
   public ReportGenerator(
       Configuration pConfig,
@@ -137,9 +155,15 @@ public class ReportGenerator {
     argEdges = new HashMap<>();
     argRelevantEdges = new HashMap<>();
     argRelevantNodes = new HashMap<>();
+    argReducedEdges = new HashMap<>();
+    argReducedNodes = new HashMap<>();
+    witnessOptional = Optional.empty();
+    producer = htmlEscaper().escape(CPAchecker.getVersion(pConfig));
   }
 
-  public void generate(CFA pCfa, UnmodifiableReachedSet pReached, String pStatistics) {
+  public void generate(
+      Result pResult, CFA pCfa, UnmodifiableReachedSet pReached, String pStatistics) {
+    checkNotNull(pResult);
     checkNotNull(pCfa);
     checkNotNull(pReached);
     checkNotNull(pStatistics);
@@ -158,10 +182,13 @@ public class ReportGenerator {
       return;
     }
 
+    extractWitness(pResult, pCfa, pReached);
+
     // we cannot export the graph for some special analyses, e.g., termination analysis
     if (!pReached.isEmpty() && pReached.getFirstState() instanceof ARGState) {
       buildArgGraphData(pReached);
       buildRelevantArgGraphData(pReached);
+      buildReducedArgGraphData();
     }
 
     DOTBuilder2 dotBuilder = new DOTBuilder2(pCfa);
@@ -194,6 +221,27 @@ public class ReportGenerator {
               counterExamples.transform(cex -> counterExampleFiles.getPath(cex.getUniqueId())));
       counterExFiles.append("\".");
       console.println(counterExFiles.toString());
+    }
+  }
+
+  private void extractWitness(Result pResult, CFA pCfa, UnmodifiableReachedSet pReached) {
+    if (EnumSet.of(Result.TRUE, Result.UNKNOWN).contains(pResult)) {
+      ImmutableSet<ARGState> rootStates = ARGUtils.getRootStates(pReached);
+      if (rootStates.size() != 1) {
+        logger.log(Level.INFO, "Could not determine ARG root for witness view");
+        return;
+      }
+      ARGState rootState = rootStates.iterator().next();
+      try {
+        WitnessExporter argWitnessExporter =
+            new WitnessExporter(config, logger, Specification.alwaysSatisfied(), pCfa);
+        witnessOptional =
+            Optional.of(
+                argWitnessExporter.generateProofWitness(
+                    rootState, Predicates.alwaysTrue(), BiPredicates.alwaysTrue()));
+      } catch (InvalidConfigurationException e) {
+        logger.logUserException(Level.WARNING, e, "Could not generate witness for witness view");
+      }
     }
   }
 
@@ -231,7 +279,8 @@ public class ReportGenerator {
         } else if (line.contains("GENERATED")) {
           insertDateAndVersion(writer);
         } else {
-          writer.write(line + "\n");
+          writer.write(line);
+          writer.write('\n');
         }
       }
     } catch (IOException e) {
@@ -260,109 +309,101 @@ public class ReportGenerator {
         } else if (line.contains("SOURCE_FILES")) {
           insertSourceFileNames(writer);
         } else {
-          writer.write(line + "\n");
+          writer.write(line);
+          writer.write('\n');
         }
       }
     }
   }
 
   private void insertCfaJson(
-      Writer writer,
-      CFA cfa,
-      DOTBuilder2 dotBuilder,
-      @Nullable CounterexampleInfo counterExample) {
-    try {
-      writer.write("var cfaJson = {\n");
-      insertFunctionNames(writer, cfa);
-      writer.write(",\n");
-      insertFCallEdges(writer, dotBuilder);
-      writer.write(",\n");
-      insertCombinedNodesData(writer, dotBuilder);
-      writer.write(",\n");
-      insertCombinedNodesLabelsData(writer, dotBuilder);
-      writer.write(",\n");
-      insertMergedNodesListData(writer, dotBuilder);
-      writer.write(",\n");
-      if (counterExample != null) {
-        insertErrorPathData(counterExample, writer);
-      }
-      dotBuilder.writeCfaInfo(writer);
-      writer.write("\n}\n");
-    } catch (IOException e) {
-      logger.logUserException(WARNING, e, "Could not create report: Inserting CFA Json failed.");
+      Writer writer, CFA cfa, DOTBuilder2 dotBuilder, @Nullable CounterexampleInfo counterExample)
+      throws IOException {
+    writer.write("var cfaJson = {\n");
+
+    // Program entry function at first place is important for the graph generation
+    writer.write("\"functionNames\":");
+    Set<String> allFunctionsEntryFirst =
+        ImmutableSet.<String>builder()
+            .add(cfa.getMainFunction().getFunctionName())
+            .addAll(cfa.getAllFunctionNames())
+            .build();
+    JSON.writeJSONString(allFunctionsEntryFirst, writer);
+
+    writer.write(",\n\"functionCallEdges\":");
+    dotBuilder.writeFunctionCallEdges(writer);
+
+    writer.write(",\n\"combinedNodes\":");
+    dotBuilder.writeCombinedNodes(writer);
+
+    writer.write(",\n\"combinedNodesLabels\":");
+    dotBuilder.writeCombinedNodesLabels(writer);
+
+    writer.write(",\n\"mergedNodes\":");
+    dotBuilder.writeMergedNodesList(writer);
+
+    if (counterExample != null) {
+      writer.write(",\n\"errorPath\":");
+      counterExample.toJSON(writer);
     }
+
+    writer.write(",\n");
+    dotBuilder.writeCfaInfo(writer);
+    writer.write("\n}\n");
   }
 
-  private void insertArgJson(Writer writer) {
-    try {
-      writer.write("var argJson = {");
-      if (!argNodes.isEmpty() && !argEdges.isEmpty()) {
-        writer.write("\n\"nodes\":");
-        JSON.writeJSONString(argNodes.values(), writer);
-        writer.write(",\n\"edges\":");
-        JSON.writeJSONString(argEdges.values(), writer);
-        writer.write("\n");
-      }
-      if(!argRelevantEdges.isEmpty() && !argRelevantNodes.isEmpty()){
-        writer.write(",\n\"relevantnodes\":");
-        JSON.writeJSONString(argRelevantNodes.values(), writer);
-        writer.write(",\n\"relevantedges\":");
-        JSON.writeJSONString(argRelevantEdges.values(), writer);
-        writer.write("\n");
-      }
-      writer.write("}\n");
-    } catch (IOException e) {
-      logger.logUserException(WARNING, e, "Could not create report: Inserting ARG Json failed.");
+  private void insertArgJson(Writer writer) throws IOException {
+    writer.write("var argJson = {");
+    if (!argNodes.isEmpty() && !argEdges.isEmpty()) {
+      writer.write("\n\"nodes\":");
+      JSON.writeJSONString(argNodes.values(), writer);
+      writer.write(",\n\"edges\":");
+      JSON.writeJSONString(argEdges.values(), writer);
+      writer.write("\n");
     }
+    if (!argRelevantEdges.isEmpty() && !argRelevantNodes.isEmpty()) {
+      writer.write(",\n\"relevantnodes\":");
+      JSON.writeJSONString(argRelevantNodes.values(), writer);
+      writer.write(",\n\"relevantedges\":");
+      JSON.writeJSONString(argRelevantEdges.values(), writer);
+      writer.write("\n");
+    }
+    if (!argReducedEdges.isEmpty() || !argReducedNodes.isEmpty()) {
+      writer.write(",\n\"reducednodes\":");
+      JSON.writeJSONString(argReducedNodes.values(), writer);
+      writer.write(",\n\"reducededges\":");
+      JSON.writeJSONString(argReducedEdges.values(), writer);
+      writer.write("\n");
+    }
+    writer.write("}\n");
   }
 
   private void insertCss(Writer writer) throws IOException {
-    writer.write("<style>" + "\n");
+    writer.write("<style>\n");
     Resources.asCharSource(Resources.getResource(getClass(), CSS_TEMPLATE), Charsets.UTF_8)
         .copyTo(writer);
     writer.write("</style>");
   }
 
-  private void insertMetaTags(Writer writer) {
-    try {
-      writer.write(
-          "<meta name='generator'"
-              + " content='CPAchecker "
-              + CPAchecker.getCPAcheckerVersion()
-              + "'>\n");
-    } catch (IOException e) {
-      logger.logUserException(WARNING, e, "Could not create report: Inserting metatags failed.");
-    }
+  private void insertMetaTags(Writer writer) throws IOException {
+    writer.write(String.format("<meta name='generator' content='%s'>%n", producer));
   }
 
-  private void insertDateAndVersion(Writer writer) {
-    try {
-      String generated =
-          String.format(
-              "Generated on %s by CPAchecker %s",
-              new SimpleDateFormat(DATE_TIME_FORMAT).format(new Date()),
-              CPAchecker.getCPAcheckerVersion());
-      writer.write(generated);
-    } catch (IOException e) {
-      logger.logUserException(
-          WARNING,
-          e,
-          "Could not create report: Inserting date and version failed.");
-    }
+  private void insertDateAndVersion(Writer writer) throws IOException {
+    writer.write(
+        String.format(
+            "Generated on %s by %s",
+            DATE_TIME_FORMAT.format(LocalDateTime.now(ZoneId.systemDefault())), producer));
   }
 
-  private void insertReportName(@Nullable CounterexampleInfo counterExample, Writer writer) {
-    try {
-      if (counterExample == null) {
-        writer.write(sourceFiles.get(0));
-      } else {
-        String title =
-            String
-                .format("%s (Counterexample %s)", sourceFiles.get(0), counterExample.getUniqueId());
-        writer.write(title);
-      }
-    } catch (IOException e) {
-      logger.logUserException(WARNING, e, "Could not create report: Inserting report name failed.");
+  private void insertReportName(@Nullable CounterexampleInfo counterExample, Writer writer)
+      throws IOException {
+    if (counterExample == null) {
+      writer.write(sourceFiles.get(0));
+    } else {
+      String title =
+          String.format("%s (Counterexample %s)", sourceFiles.get(0), counterExample.getUniqueId());
+      writer.write(title);
     }
   }
 
@@ -372,7 +413,7 @@ public class ReportGenerator {
         "<table  id=\"statistics_table\" class=\"display\" style=\"width:100%;padding: 10px\" class=\"table table-bordered\"><thead class=\"thead-light\"><tr><th scope=\"col\">Statistics Name</th><th scope=\"col\">Statistics Value</th scope=\"col\"><th>Additional Value</th></tr></thead><tbody>\n";
     writer.write(insertTableLine);
     for (String line : LINE_SPLITTER.split(statistics)) {
-      if (!line.contains(":") && !(line.trim().isEmpty()) && !line.contains("----------")) {
+      if (!line.contains(":") && !line.trim().isEmpty() && !line.contains("----------")) {
         String insertTableHead =
             "<tr class=\"table_head\" id=\"statistics-"
                 + counter
@@ -456,9 +497,6 @@ public class ReportGenerator {
           lineNumber++;
         }
         writer.write("</table></div>\n");
-      } catch (IOException e) {
-        logger
-            .logUserException(WARNING, e, "Could not create report: Inserting source code failed.");
       }
     } else {
       writer.write("<p>No Source-File available</p>");
@@ -495,135 +533,64 @@ public class ReportGenerator {
 
   private void insertLog(Writer writer) throws IOException {
     if (logFile != null && Files.isReadable(logFile)) {
+      final Pattern logLinePattern = Pattern.compile("[0-9-]* [0-9:]*\t[A-Z]*\t.*\t.*");
+      final Splitter logLineSplitter = Splitter.on('\t').limit(4);
+      final Splitter logDateSplitter = Splitter.on(' ').limit(2);
+
       String insertTableLine =
-          "<table  id=\"log_table\" class=\"display\" style=\"width:100%;padding: 10px\" class=\"table table-bordered\"><thead class=\"thead-light\"><tr><th scope=\"col\">Date</th><th scope=\"col\">Time</th><th scope=\"col\">Log Level</th><th scope=\"col\">Log Info</th><th scope=\"col\">Log Message</th></tr></thead><tbody>\n";
+          "<table  id=\"log_table\" class=\"display\" style=\"width:100%;padding: 10px\" class=\"table table-bordered\">"
+              + "<thead class=\"thead-light\"><tr>"
+              + "<th scope=\"col\">Date</th>"
+              + "<th scope=\"col\">Time</th>"
+              + "<th scope=\"col\">Level</th>"
+              + "<th scope=\"col\">Component</th>"
+              + "<th scope=\"col\">Message</th>"
+              + "</tr></thead><tbody>\n";
       writer.write(insertTableLine);
       try (BufferedReader log = Files.newBufferedReader(logFile, Charset.defaultCharset())) {
         int counter = 0;
         String line;
-        while (null != (line = log.readLine())) {
-          String getDate = line.replaceFirst("\\s", "-i-");
-          String getLogLevel = getDate.replaceFirst("\\s", "-i-");
-          String getLogInfo = getLogLevel.replaceFirst("\\s", "-i-");
-          String getLogMessage = getLogInfo.replaceFirst("\\s", "-i-");
-          List<String> splitLine = Splitter.onPattern("-i-").limit(5).splitToList(getLogMessage);
-          if (splitLine.size() == 5) {
-            line =
-                "<tr id=\"log-"
-                    + counter
-                    + "\"><th scope=\"row\">"
-                    + htmlEscaper().escape(splitLine.get(0))
-                    + "</th><td>"
-                    + htmlEscaper().escape(splitLine.get(1))
-                    + "</td><td>"
-                    + htmlEscaper().escape(splitLine.get(2))
-                    + "</td><td>"
-                    + htmlEscaper().escape(splitLine.get(3))
-                    + "</td><td>"
-                    + htmlEscaper().escape(splitLine.get(4))
-                    + "</td></tr>\n";
-            writer.write(line);
+        // If there is junk at the beginning, ignore it
+        while ((line = log.readLine()) != null && !logLinePattern.matcher(line).matches()) {}
+        while (line != null) {
+          List<String> splitLine = logLineSplitter.splitToList(line);
+          List<String> dateTime = logDateSplitter.splitToList(splitLine.get(0));
+
+          writer.write("<tr id=\"log-" + counter + "\">");
+          writer.write("<th scope=\"row\">");
+          writer.write(htmlEscaper().escape(dateTime.get(0)));
+          writer.write("</th><td>");
+          writer.write(htmlEscaper().escape(dateTime.get(1)));
+          writer.write("</td><td>");
+          writer.write(htmlEscaper().escape(splitLine.get(1)));
+          writer.write("</td><td>");
+          writer.write(htmlEscaper().escape(splitLine.get(2)).replaceAll(":", "<br>"));
+          writer.write("</td><td>");
+          writer.write(htmlEscaper().escape(splitLine.get(3)));
+
+          // peek at next line to handle multi-line log messages
+          while ((line = log.readLine()) != null && !logLinePattern.matcher(line).matches()) {
+            if (!line.isEmpty()) {
+              writer.write("<br>");
+              writer.write(htmlEscaper().escape(line));
+            }
           }
+          writer.write("</td></tr>\n");
+
           counter++;
         }
         String exitTableLine = "</tbody></table>\n";
         writer.write(exitTableLine);
-      } catch (IOException e) {
-        logger.logUserException(WARNING, e, "Could not create report: Adding log failed.");
       }
     } else {
       writer.write("<p>Log not available</p>");
     }
   }
 
-  private void insertFCallEdges(Writer writer, DOTBuilder2 dotBuilder) {
-    try {
-      writer.write("\"functionCallEdges\":");
-      dotBuilder.writeFunctionCallEdges(writer);
-    } catch (IOException e) {
-      logger.logUserException(
-          WARNING,
-          e,
-          "Could not create report: Insertion of function call edges failed.");
-    }
-  }
-
-  private void insertCombinedNodesData(Writer writer, DOTBuilder2 dotBuilder) {
-    try {
-      writer.write("\"combinedNodes\":");
-      dotBuilder.writeCombinedNodes(writer);
-    } catch (IOException e) {
-      logger.logUserException(
-          WARNING,
-          e,
-          "Could not create report: Insertion of combined nodes failed.");
-    }
-  }
-
-  private void insertCombinedNodesLabelsData(Writer writer, DOTBuilder2 dotBuilder) {
-    try {
-      writer.write("\"combinedNodesLabels\":");
-      dotBuilder.writeCombinedNodesLabels(writer);
-    } catch (IOException e) {
-      logger.logUserException(
-          WARNING,
-          e,
-          "Could not create report: Insertion of combined nodes labels failed.");
-    }
-  }
-
-  private void insertMergedNodesListData(Writer writer, DOTBuilder2 dotBuilder) {
-    try {
-      writer.write("\"mergedNodes\":");
-      dotBuilder.writeMergedNodesList(writer);
-    } catch (IOException e) {
-      logger.logUserException(
-          WARNING,
-          e,
-          "Could not create report: Insertion of merged nodes failed.");
-    }
-  }
-
-  private void insertErrorPathData(CounterexampleInfo counterExample, Writer writer) {
-    try {
-      writer.write("\"errorPath\":");
-      counterExample.toJSON(writer);
-      writer.write(",\n");
-    } catch (IOException e) {
-      logger.logUserException(
-          WARNING,
-          e,
-          "Could not create report: Insertion of counter example failed.");
-    }
-  }
-
-  // Program entry function at first place is important for the graph generation
-  private void insertFunctionNames(Writer writer, CFA cfa) {
-    try {
-      writer.write("\"functionNames\":");
-      Set<String> allFunctionsEntryFirst = Sets.newLinkedHashSet();
-      allFunctionsEntryFirst.add(cfa.getMainFunction().getFunctionName());
-      allFunctionsEntryFirst.addAll(cfa.getAllFunctionNames());
-      JSON.writeJSONString(allFunctionsEntryFirst, writer);
-    } catch (IOException e) {
-      logger.logUserException(
-          WARNING,
-          e,
-          "Could not create report: Insertion of function names failed.");
-    }
-  }
-
-  private void insertSourceFileNames(Writer writer) {
-    try {
-      writer.write("var sourceFiles = ");
-      JSON.writeJSONString(sourceFiles, writer);
-      writer.write(";\n");
-    } catch (IOException e) {
-      logger.logUserException(
-          WARNING,
-          e,
-          "Could not create report: Insertion of source file names failed.");
-    }
+  private void insertSourceFileNames(Writer writer) throws IOException {
+    writer.write("var sourceFiles = ");
+    JSON.writeJSONString(sourceFiles, writer);
+    writer.write(";\n");
   }
 
   /** Build ARG data for all ARG states in the reached set. */
@@ -682,6 +649,15 @@ public class ReportGenerator {
         }
       }
     }
+  }
+
+  /** Build graph data for the reduced ARG */
+  private void buildReducedArgGraphData() {
+    if (!witnessOptional.isPresent()) {
+      return;
+    }
+    Witness witness = witnessOptional.get();
+    WitnessToOutputFormatsUtils.witnessToMapsForHTMLReport(witness, argReducedNodes, argReducedEdges);
   }
 
   private Map<String, Object> createArgNode(int parentStateId, CFANode node, ARGState argState) {
@@ -749,7 +725,7 @@ public class ReportGenerator {
     argEdges.put("" + coveringStateId + "->" + parentStateId, coveredEdge);
   }
 
-  private Map<String, Object> createArgEdge(
+  public static Map<String, Object> createArgEdge(
       int parentStateId, int childStateId, List<CFAEdge> edges) {
     Map<String, Object> argEdge = new HashMap<>();
     argEdge.put("source", parentStateId);
