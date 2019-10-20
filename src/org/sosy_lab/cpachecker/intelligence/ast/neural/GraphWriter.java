@@ -165,7 +165,7 @@ public class GraphWriter {
 
 
       List<GEdge> edges = edges();
-      if(edges.size() > 0 && ast.size() > 0)writer.write(", ");
+      if(edges.size() > 0 && ast.size() == 0)writer.write(", ");
 
       for(int i = 0; i < edges.size(); i++){
         GEdge edge = edges.get(i);
@@ -261,6 +261,48 @@ public class GraphWriter {
       if(file != null)file.close();
       if(channel != null)channel.close();
     }
+
+  }
+
+  private void processNodePosition(GNode pGNode, GNode pParent, Consumer<String> appender){
+      String id = getId(pGNode, pParent);
+      int start = pGNode.getOption(OptionKeys.START_POS);
+      int end = pGNode.getOption(OptionKeys.END_POS);
+      appender.accept("\""+id+"\":[" + start + ","+ end + "]");
+  }
+
+  public void writePositionTo(Path pPath) throws IOException {
+
+    BufferedWriter writer = Files.newBufferedWriter(pPath);
+    try{
+      writer.write("{");
+
+
+      List<Pair<GNode, GNode>> nodes = nodes();
+      nodes = nodes.stream().filter(x -> x.getFirst().containsOption(OptionKeys.START_POS) &&
+                                    x.getFirst().containsOption(OptionKeys.END_POS))
+                            .collect(Collectors.toList());
+
+      final int size = nodes.size();
+      for(int i = 0; i < nodes.size(); i++){
+
+        Pair<GNode, GNode> pair = nodes.get(i);
+
+        final int f = i;
+        processNodePosition(pair.getFirst(), pair.getSecond(),
+            x -> {
+              try {
+                writer.write(x+(f == size-1?"":", "));
+              } catch (IOException pE) {
+              }
+            });
+
+      }
+      writer.write("}");
+    }finally {
+      writer.close();
+    }
+
 
   }
 

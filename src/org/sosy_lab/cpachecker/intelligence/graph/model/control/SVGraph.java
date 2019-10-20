@@ -23,18 +23,9 @@
  */
 package org.sosy_lab.cpachecker.intelligence.graph.model.control;
 
-import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.CDEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.CFGEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.DDEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.DummyEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.SEdge;
 
 public class SVGraph extends StructureGraph {
 

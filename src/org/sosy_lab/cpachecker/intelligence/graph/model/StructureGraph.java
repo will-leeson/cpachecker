@@ -56,16 +56,20 @@ public class StructureGraph {
     }
 
     public boolean addNode(String id, String label){
-      if(nodes.containsKey(id)){
-        if(label.isEmpty() || !nodes.get(id).getLabel().isEmpty()){
-          return false;
-        }else{
-          nodes.get(id).setLabel(label);
-          return true;
+      return addNode(new GNode(id, label));
+    }
+
+    protected boolean addNode(GNode node){
+        if(nodes.containsKey(node.getId())){
+            if(node.getLabel().isEmpty() || !nodes.get(node.getId()).getLabel().isEmpty()){
+                return false;
+            }else{
+                nodes.get(node.getId()).setLabel(node.getLabel());
+                return true;
+            }
         }
-      }
-      nodes.put(id, new GNode(id, label));
-      return true;
+        nodes.put(node.getId(), node);
+        return true;
     }
 
     private void add(Map<String, Map<String, GEdge>> map, String id, GEdge pGEdge){

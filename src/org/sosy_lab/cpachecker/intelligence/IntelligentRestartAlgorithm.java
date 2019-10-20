@@ -243,6 +243,12 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
   )
   private boolean onlyPrediction = false;
 
+  @Option(
+      secure = true,
+      description = "Switch to an accelerated prediction model. Use with caution: The pretrained model might not support the accelerated model."
+  )
+  private boolean accelerated = false;
+
   private final LogManager logger;
   private final ShutdownNotifier shutdownNotifier;
   private final ShutdownManager predictionShutdown;
@@ -301,7 +307,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     }
 
     SampleRegistry sampleRegistry = new SampleRegistry(
-        registry, 1, 5, backend
+        registry, 1, 5, backend, accelerated
     );
 
 

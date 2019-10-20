@@ -37,13 +37,20 @@ public class SampleRegistry {
   private int astDepth;
   private FeatureRegistry registry;
   private ISampleBackend backend;
+  private boolean accelerated = false;
 
   public SampleRegistry(FeatureRegistry pFeatureRegistry, int pMaxIteration, int pAstDepth,
-                        ISampleBackend pISampleBackend) {
+                        ISampleBackend pISampleBackend, boolean pAccelerated) {
     this.registry = pFeatureRegistry;
     maxIteration = pMaxIteration;
     astDepth = pAstDepth;
     this.backend = pISampleBackend;
+    this.accelerated = pAccelerated;
+  }
+
+  public SampleRegistry(FeatureRegistry pFeatureRegistry, int pMaxIteration, int pAstDepth,
+                        ISampleBackend pISampleBackend) {
+    this(pFeatureRegistry, pMaxIteration, pAstDepth, pISampleBackend, false);
   }
 
 
@@ -52,8 +59,17 @@ public class SampleRegistry {
   }
 
   public IProgramSample registerSample(String id, CFA pCFA){
+
+    IWLFeatureModel featureModel;
+
+    if(accelerated){
+      featureModel = new AccWLFeatureModel(pCFA, this.astDepth);
+    }else{
+      featureModel = new WLFeatureModel(pCFA, this.astDepth);
+    }
+
     RealProgramSample sample = new RealProgramSample(
-        id, this.maxIteration, new WLFeatureModel(pCFA, this.astDepth), registry
+        id, this.maxIteration, featureModel, registry
     );
 
     backend.saveSample(id, sample);

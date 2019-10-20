@@ -12,7 +12,7 @@ L1b:	/* beginning b of loop 1 */
 		x = 1;
 	}
 
-	while (0) { /* loop 2 */
+	while (x < 1) { /* loop 2 */
 		if (p2) {
 			goto L2;
 		}

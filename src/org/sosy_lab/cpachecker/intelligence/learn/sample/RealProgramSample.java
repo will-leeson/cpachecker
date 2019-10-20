@@ -38,7 +38,7 @@ public class RealProgramSample implements IProgramSample {
 
   private String id;
   private int maxIteration;
-  private WLFeatureModel model;
+  private IWLFeatureModel model;
   private FeatureRegistry registry;
 
   private Map<String, ProgramLabel> labels = new HashMap<>();
@@ -49,7 +49,7 @@ public class RealProgramSample implements IProgramSample {
   public RealProgramSample(
       String pId,
       int pMaxIteration,
-      WLFeatureModel pModel,
+      IWLFeatureModel pModel,
       FeatureRegistry pRegistry) {
     id = pId;
     maxIteration = pMaxIteration;
