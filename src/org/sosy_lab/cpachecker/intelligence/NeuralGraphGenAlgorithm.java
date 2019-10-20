@@ -25,16 +25,14 @@ package org.sosy_lab.cpachecker.intelligence;
 
 import com.google.common.base.Stopwatch;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
+
+import com.google.protobuf.Struct;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -47,22 +45,20 @@ import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.ast.neural.GraphWriter;
 import org.sosy_lab.cpachecker.intelligence.ast.neural.SVGraphProcessor;
+import org.sosy_lab.cpachecker.intelligence.ast.neural.SVPEProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.NativeGraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
-import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.model.control.CDEdge;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.BlockedGraphAnalyser;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.pointer.AliasAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 @Options(prefix = "neuralGraphGen")
 public class NeuralGraphGenAlgorithm implements Algorithm {
 
   @Option(secure = true,
-          description = "depth of AST tree")
-  private int astDepth = 5;
+          description = "export node postitions")
+  private String nodePosition = null;
 
   @Option(
       secure = true,
@@ -92,19 +88,29 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
     Stopwatch stopwatch = Stopwatch.createStarted();
 
     logger.log(Level.INFO, "Start CFA processing....");
-    SVGraph graph = new SVGraphProcessor().process(cfa, notifier);
+    SVGraph graph = new SVPEProcessor().process(cfa, notifier);
+
+    Map<String, Set<String>> aliases = null;
+
+    if(graph.getGlobalOption(OptionKeys.POINTER_GRAPH) != null){
+      AliasAnalyser aliasAnalyser = new AliasAnalyser(graph.getGlobalOption(OptionKeys.POINTER_GRAPH), notifier);
+      aliases = aliasAnalyser.getAliases();
+
+      graph.setGlobalOption(OptionKeys.POINTER_GRAPH, null);
+      aliasAnalyser = null;
+    }
 
     System.out.println("Time for CFA: "+stopwatch.elapsed());
     stopwatch.reset();
 
-    GraphAnalyser graphAnalyser = new GraphAnalyser(graph, notifier, logger);
+    GraphAnalyser graphAnalyser = new BlockedGraphAnalyser(graph, notifier, logger);
     graphAnalyser.simplify();
     graphAnalyser.recursionDetection();
 
     stopwatch.start();
 
     logger.log(Level.INFO, "Add data dependencies");
-    graphAnalyser.applyDD();
+    graphAnalyser.applyDD(aliases);
 
     System.out.println("Time for DD: "+stopwatch.elapsed());
     stopwatch.reset().start();
@@ -119,9 +125,14 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
     System.out.println("Time for CD: "+stopwatch.elapsed());
     stopwatch = stopwatch.reset().start();
 
+    graph = graphAnalyser.getGraph();
+
+    //System.out.println(graph.toDot());
+
     logger.log(Level.INFO, "Write graph to "+output.toString());
     try {
       exportGraph(graph);
+      exportNodePostition(graph);
     } catch (IOException pE) {
       logger.log(Level.WARNING, "Problem while writing "+output.toString(), pE);
     }
@@ -134,12 +145,26 @@ public class NeuralGraphGenAlgorithm implements Algorithm {
     Path out = Paths.get(output);
     Path parent = out.getParent();
 
-    if(!Files.exists(parent) || !Files.isDirectory(parent)){
+    if(parent != null && !Files.exists(parent) || !Files.isDirectory(parent)){
       Files.createDirectory(parent);
     }
 
     GraphWriter writer = new GraphWriter(pGraph);
     writer.writeTo(out);
+  }
+
+  private void exportNodePostition(SVGraph pGraph) throws IOException {
+    if(nodePosition == null) return;
+
+    Path out = Paths.get(nodePosition);
+    Path parent = out.getParent();
+
+    if(parent != null && !Files.exists(parent) || !Files.isDirectory(parent)){
+      Files.createDirectory(parent);
+    }
+
+    GraphWriter writer = new GraphWriter(pGraph);
+    writer.writePositionTo(out);
   }
 
 }

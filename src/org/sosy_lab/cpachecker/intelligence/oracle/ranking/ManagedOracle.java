@@ -163,7 +163,8 @@ public class ManagedOracle implements IConfigOracle {
       return labelToPath.get(label);
     }
 
-    if(Files.exists(PathFinder.find("config/%s", label))){
+    Path path = PathFinder.find("config/%s", label);
+    if(path != null && Files.exists(path)){
       Path p = Paths.get("config/"+label);
       AnnotatedValue<Path> annotatedValue = AnnotatedValue.create(p);
       return annotatedValue;

@@ -37,6 +37,8 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Predicate;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.intelligence.ast.ASTNodeLabel;
@@ -46,7 +48,6 @@ import org.sosy_lab.cpachecker.intelligence.graph.analysis.SCCUtil.SCC;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.dominator.IDominator;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
-import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.IGraphNavigator;
 import org.sosy_lab.cpachecker.intelligence.graph.model.navigator.InverseGraphNavigator;
@@ -334,8 +335,32 @@ public class GraphAnalyser {
 
   }
 
-
   public void applyDD() throws InterruptedException {
+    applyDD(null);
+  }
+
+  protected Set<String> aliasGet(Set<String> set, Map<String, Set<String>> aliases){
+
+    Set<String> out = new HashSet<>();
+
+    for(String d : set){
+
+      out.add(d);
+      if(aliases.containsKey(d)){
+        out.addAll(aliases.get(d));
+      }
+
+    }
+
+    return out;
+  }
+
+
+  public void applyDD(Map<String, Set<String>> aliases) throws InterruptedException {
+
+    if(aliases == null){
+      aliases = new HashMap<>();
+    }
 
     Map<String, Integer> rpo = rpo();
 
@@ -359,11 +384,12 @@ public class GraphAnalyser {
       GNode node = graph.getNode(n);
 
       if(node.containsOption(OptionKeys.DECL_VARS)){
-        output.put(n, node.getOption(OptionKeys.DECL_VARS));
+        Set<String> decl = node.getOption(OptionKeys.DECL_VARS);
+        output.put(n, aliasGet(decl, aliases));
       }
 
       if(node.containsOption(OptionKeys.VARS)){
-        variables.put(n, node.getOption(OptionKeys.VARS));
+        variables.put(n, aliasGet(node.getOption(OptionKeys.VARS), aliases));
       }
 
       queue.add(n);
@@ -528,7 +554,7 @@ public class GraphAnalyser {
     return id;
   }
 
-  private void applyGeneralCD(String pStartNode, String pEndNode) throws InterruptedException {
+  private void generalCDProcedure(String pStartNode, String pEndNode, Predicate<GNode> filter) throws InterruptedException {
     initNavigator();
     IGraphNavigator navi = new InverseGraphNavigator(navigator);
     IDominator dominator = new IterativeDominator(navi, pEndNode);
@@ -543,6 +569,9 @@ public class GraphAnalyser {
 
       if(shutdownNotifier != null)
         shutdownNotifier.shutdownIfNecessary();
+
+      if(filter.apply(graph.getNode(n)))
+        continue;
 
       if(pred.size() > 1 && !n.equals(pStartNode)) {
 
@@ -584,59 +613,17 @@ public class GraphAnalyser {
     }
   }
 
+  private void applyGeneralCD(String pStartNode, String pEndNode) throws InterruptedException {
+    generalCDProcedure(pStartNode, pEndNode, x -> false);
+  }
+
   private void applyContextCD(String context, String pStartNode, String pEndNode)
       throws InterruptedException {
 
-    initNavigator();
-    IGraphNavigator navi = new InverseGraphNavigator(navigator);
-    IDominator dominator = new IterativeDominator(navi, pEndNode);
-
-    for(String n : graph.nodes()){
-      GNode node = graph.getNode(n);
-
-      if(node.getOption(OptionKeys.PARENT_FUNC) == null) {
-        if(!context.equals("main"))
-          continue;
-
-      }else if(!node.getOption(OptionKeys.PARENT_FUNC).equals(context))
-        continue;
-
-      Set<String> pred = navi.predecessor(n);
-
-      if(shutdownNotifier != null)
-        shutdownNotifier.shutdownIfNecessary();
-
-      if(pred.size() > 1 && !n.equals(pStartNode)) {
-
-        String idom = dominator.getIDom(n);
-
-        for (String p : pred) {
-
-          Set<String> runnerSet = new HashSet<>();
-
-          String runner = p;
-
-          while (!Objects.equals(runner, idom)) {
-            runnerSet.add(runner);
-
-            String pRunner = runner;
-            runner = dominator.getIDom(runner);
-
-            if (runner == null || runner.equals(pRunner)) {
-              runnerSet.clear();
-              break;
-            }
-
-          }
-
-
-          for (String r : runnerSet)
-            graph.addCDEdge(n, r);
-
-        }
-      }
-
-    }
+    generalCDProcedure(pStartNode, pEndNode, node -> {
+      String ctx = node.getOption(OptionKeys.PARENT_FUNC);
+      return (ctx == null && !context.equals("main")) || (ctx != null && !ctx.equals(context));
+    });
   }
 
   private void applyCD(String pStartNode, String pEndNode) throws InterruptedException {
@@ -730,36 +717,6 @@ public class GraphAnalyser {
         }
       }
     }
-
-    Queue<String> possible = new ArrayDeque<>(graph.nodes());
-
-    while(!possible.isEmpty()){
-
-      String id = possible.poll();
-
-      if(prune.contains(id))
-        continue;
-
-      GNode node = graph.getNode(id);
-
-      if(node.getLabel().equals("START"))
-        continue;
-
-      boolean remain = false;
-
-      for(GEdge pre : graph.getIngoing(id))
-        if(!prune.contains(pre.getSource().getId())){
-          remain = true;
-          break;
-        }
-
-      if(!remain){
-        prune.add(node.getId());
-        possible.addAll(graph.getOutgoingStream(node.getId()).map(e -> e.getSink().getId()).collect(
-            Collectors.toSet()));
-      }
-    }
-
 
     pruneNodes(prune);
   }
@@ -872,15 +829,8 @@ public class GraphAnalyser {
   }
 
 
-  public void defaultAnalysis() throws InterruptedException {
-    pruneBlank();
-    connectComponents();
-    applyDummyEdges();
-    applyDD();
-    applyCD();
+  public SVGraph getGraph(){
+    return graph;
   }
-
-
-
 
 }
