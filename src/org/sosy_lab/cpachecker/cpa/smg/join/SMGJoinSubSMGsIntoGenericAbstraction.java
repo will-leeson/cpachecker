@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.types.MachineModel;
 import org.sosy_lab.cpachecker.cpa.smg.SMGUtils;
 import org.sosy_lab.cpachecker.cpa.smg.graphs.UnmodifiableSMG;
@@ -57,21 +57,14 @@ import org.sosy_lab.cpachecker.cpa.smg.graphs.value.SMGValue;
 public class SMGJoinSubSMGsIntoGenericAbstraction {
 
   private final MachineModel machineModel;
-
   private final GenericAbstractionCandidateTemplate template;
   private final UnmodifiableSMG inputSMG1;
-
   private final UnmodifiableSMG inputSMG2;
-
   private final SMGObject rootObject1;
-
   private final SMGObject rootObject2;
-
-  private SMGNodeMapping mapping1;
-
-  private SMGNodeMapping mapping2;
-
-  private Map<SMGValue, List<GenericAbstractionCandidate>> previouslyMatched;
+  private final SMGNodeMapping mapping1;
+  private final SMGNodeMapping mapping2;
+  private final Map<SMGValue, List<GenericAbstractionCandidate>> previouslyMatched;
 
   public SMGJoinSubSMGsIntoGenericAbstraction(
       MachineModel pMachineModel,

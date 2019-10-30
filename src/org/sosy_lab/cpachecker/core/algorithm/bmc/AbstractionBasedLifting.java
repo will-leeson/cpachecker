@@ -23,12 +23,16 @@
  */
 package org.sosy_lab.cpachecker.core.algorithm.bmc;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.FluentIterable;
 import java.util.Objects;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.core.algorithm.bmc.StandardLiftings.UnsatCallback;
-import org.sosy_lab.cpachecker.core.algorithm.bmc.SymbolicCandiateInvariant.BlockedCounterexampleToInductivity;
+import org.sosy_lab.cpachecker.core.algorithm.bmc.candidateinvariants.CandidateInvariant;
+import org.sosy_lab.cpachecker.core.algorithm.bmc.candidateinvariants.SymbolicCandiateInvariant;
+import org.sosy_lab.cpachecker.core.algorithm.bmc.candidateinvariants.SymbolicCandiateInvariant.BlockedCounterexampleToInductivity;
 import org.sosy_lab.cpachecker.cpa.predicate.PredicateAbstractionManager;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.util.predicates.smt.FormulaManagerView;
@@ -155,14 +159,12 @@ public class AbstractionBasedLifting implements Lifting {
     }
 
     public @Nullable BooleanFormula getInterpolant() {
-      if (!isSuccessful()) {
-        throw new IllegalStateException("Lifting not yet performed or unsuccessful.");
-      }
+      checkState(isSuccessful(), "Lifting not yet performed or unsuccessful.");
       return interpolant;
     }
   }
 
-  interface LiftingAbstractionFailureStrategy {
+  public interface LiftingAbstractionFailureStrategy {
 
     SymbolicCandiateInvariant handleLAF(
         FormulaManagerView pFMGR,

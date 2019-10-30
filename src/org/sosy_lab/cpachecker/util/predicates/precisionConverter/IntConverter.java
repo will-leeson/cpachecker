@@ -29,14 +29,14 @@ import static java.lang.String.format;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.util.Pair;
@@ -44,13 +44,12 @@ import org.sosy_lab.cpachecker.util.predicates.precisionConverter.SymbolEncoding
 import org.sosy_lab.cpachecker.util.predicates.precisionConverter.SymbolEncoding.UnknownFormulaSymbolException;
 import org.sosy_lab.java_smt.api.FormulaType;
 
-
 public class IntConverter extends Converter {
 
   private final Map<String,String> unaryOps; // input-type == output-type
   private final Map<String,String> binOps; // type is Bool
   private final Map<String,String> arithmeticOps; // type is Int
-  private final Set<String> ignorableFunctions = Sets.newHashSet();
+  private final Set<String> ignorableFunctions = new HashSet<>();
 
   public IntConverter(CFA pCfa, LogManager pLogger) {
     super(pLogger, pCfa);

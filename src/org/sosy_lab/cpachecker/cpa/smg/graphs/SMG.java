@@ -32,7 +32,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.types.MachineModel;
 import org.sosy_lab.cpachecker.cfa.types.c.CType;
 import org.sosy_lab.cpachecker.cpa.smg.graphs.edge.SMGEdge;
@@ -152,6 +152,8 @@ public class SMG implements UnmodifiableSMG {
    *
    */
   final public void addObject(final SMGObject pObj) {
+    Preconditions.checkArgument(
+        SMGNullObject.INSTANCE != pObj, "NULL can not be added as valid object");
     addObject(pObj, true, false);
   }
 
@@ -473,7 +475,7 @@ public class SMG implements UnmodifiableSMG {
     TreeMap<Long, Integer> offsetToSize = new TreeMap<>();
     for (SMGEdgeHasValue edge : nullValueFilter.filter(hv_edges)) {
       long offset = edge.getOffset();
-      int size = edge.getSizeInBits(machine_model);
+      int size = (int) edge.getSizeInBits();
       Integer existingSize = offsetToSize.get(offset);
       if (existingSize != null) {
         size = Math.max(size, existingSize);
@@ -530,15 +532,16 @@ public class SMG implements UnmodifiableSMG {
 
   @Override
   public boolean isCoveredByNullifiedBlocks(SMGEdgeHasValue pEdge) {
-    return isCoveredByNullifiedBlocks(pEdge.getObject(), pEdge.getOffset(), pEdge.getSizeInBits(machine_model));
+    return isCoveredByNullifiedBlocks(pEdge.getObject(), pEdge.getOffset(), pEdge.getSizeInBits());
   }
 
   @Override
   public boolean isCoveredByNullifiedBlocks(SMGObject pObject, long pOffset, CType pType ) {
-    return isCoveredByNullifiedBlocks(pObject, pOffset, machine_model.getSizeofInBits(pType));
+    return isCoveredByNullifiedBlocks(
+        pObject, pOffset, machine_model.getSizeofInBits(pType).longValueExact());
   }
 
-  private boolean isCoveredByNullifiedBlocks(SMGObject pObject, long pOffset, int size) {
+  private boolean isCoveredByNullifiedBlocks(SMGObject pObject, long pOffset, long size) {
     long expectedMinClear = pOffset + size;
 
     TreeMap<Long, Integer> nullEdgesOffsetToSize = getNullEdgesMapOffsetToSizeForObject(pObject);
@@ -570,7 +573,11 @@ public class SMG implements UnmodifiableSMG {
 
     for (SMGEdgeHasValue old_hve : getHVEdges(SMGEdgeHasValueFilter.valueFilter(old))) {
       SMGEdgeHasValue newHvEdge =
-          new SMGEdgeHasValue(old_hve.getType(), old_hve.getOffset(), old_hve.getObject(), fresh);
+          new SMGEdgeHasValue(
+              old_hve.getSizeInBits(),
+              old_hve.getOffset(),
+              old_hve.getObject(),
+              fresh);
       hv_edges = hv_edges.removeEdgeAndCopy(old_hve);
       hv_edges = hv_edges.addEdgeAndCopy(newHvEdge);
     }
@@ -578,7 +585,8 @@ public class SMG implements UnmodifiableSMG {
     if (pt_edges.containsEdgeWithValue(old)) {
       SMGEdgePointsTo pt_edge = pt_edges.getEdgeWithValue(old);
       pt_edges = pt_edges.removeAndCopy(pt_edge);
-      Preconditions.checkArgument(!pt_edges.containsEdgeWithValue(fresh));
+      Preconditions.checkArgument(
+          !pt_edges.containsEdgeWithValue(fresh) || fresh.equals(SMGZeroValue.INSTANCE));
       pt_edges =
           pt_edges.addAndCopy(
               new SMGEdgePointsTo(

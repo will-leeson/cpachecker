@@ -24,7 +24,9 @@
 package org.sosy_lab.cpachecker.cpa.invariants.operators.mathematical;
 
 import java.math.BigInteger;
-import javax.annotation.Nullable;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.sosy_lab.cpachecker.cpa.invariants.SimpleInterval;
 
 /**

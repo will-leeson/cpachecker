@@ -37,7 +37,6 @@ import apron.Texpr0Node;
 import apron.Texpr0UnNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -129,7 +128,7 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
     logger = log;
     splitDisequalities = pSplitDisequalities;
 
-    Builder<CFANode> builder = new ImmutableSet.Builder<>();
+    ImmutableSet.Builder<CFANode> builder = new ImmutableSet.Builder<>();
     for (Loop l : loops.getAllLoops()) {
       // function edges do not count as incoming/outgoing edges
           builder.addAll(l.getLoopHeads());
@@ -509,7 +508,7 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
         || (!truthAssumption && !result)) {
       return Collections.singleton(state);
     } else {
-      return Collections.emptySet();
+      return ImmutableSet.of();
     }
   }
 
@@ -527,7 +526,7 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
     if ((value != 0) == truthAssumption) {
       return Collections.singleton(pState);
     } else {
-      return Collections.emptySet();
+      return ImmutableSet.of();
     }
   }
 
@@ -870,7 +869,7 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
    */
   @Override
   protected Set<ApronState> handleFunctionSummaryEdge(CFunctionSummaryEdge cfaEdge) throws CPATransferException {
-    return Collections.emptySet();
+    return ImmutableSet.of();
   }
 
   /**
@@ -881,7 +880,7 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
 
     @Override
     protected Set<Texpr0Node> visitDefault(CExpression pExp) throws CPATransferException {
-      return Collections.emptySet();
+      return ImmutableSet.of();
     }
 
     @Override
@@ -898,7 +897,7 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
           case BINARY_XOR:
           case SHIFT_LEFT:
           case SHIFT_RIGHT:
-            return Collections.emptySet();
+            return ImmutableSet.of();
           case MODULO:
             returnCoefficients.add(new Texpr0BinNode(Texpr0BinNode.OP_MOD, leftCoeffs, rightCoeffs));
             break;
@@ -1031,7 +1030,9 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
     public Set<Texpr0Node> visit(CIdExpression e) throws CPATransferException {
       MemoryLocation varName = buildVarName(e, functionName);
       Integer varIndex = state.getVariableIndexFor(varName);
-      if (varIndex == -1) { return Collections.emptySet(); }
+      if (varIndex == -1) {
+        return ImmutableSet.of();
+      }
       return Collections.singleton((Texpr0Node)new Texpr0DimNode(varIndex));
     }
 
@@ -1059,7 +1060,7 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
       case AMPER:
       case SIZEOF:
       case TILDE:
-        return Collections.emptySet();
+        return ImmutableSet.of();
 
       case MINUS:
         Set<Texpr0Node> returnCoefficients = new HashSet<>();
@@ -1101,7 +1102,7 @@ public class ApronTransferRelation extends ForwardingTransferRelation<Collection
             }
         }
       }
-      return Collections.emptySet();
+      return ImmutableSet.of();
     }
   }
 

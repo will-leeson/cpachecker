@@ -31,17 +31,20 @@ import static org.sosy_lab.common.collect.PersistentSortedMaps.merge;
 import static org.sosy_lab.cpachecker.util.predicates.pathformula.pointeraliasing.CTypeUtils.checkIsSimplified;
 
 import com.google.common.base.Equivalence;
+import com.google.common.base.Joiner;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.errorprone.annotations.CheckReturnValue;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.Set;
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.collect.CopyOnWriteSortedMap;
 import org.sosy_lab.common.collect.MapsDifference;
@@ -66,7 +69,6 @@ import org.sosy_lab.cpachecker.util.predicates.pathformula.SSAMap;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.SSAMap.SSAMapBuilder;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.SSAMapMerger.MergeResult;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.ctoformula.Constraints;
-import org.sosy_lab.cpachecker.util.predicates.pathformula.ctoformula.CtoFormulaConverter;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.pointeraliasing.PointerTargetSetBuilder.RealPointerTargetSetBuilder;
 import org.sosy_lab.cpachecker.util.predicates.smt.ArrayFormulaManagerView;
 import org.sosy_lab.cpachecker.util.predicates.smt.BooleanFormulaManagerView;
@@ -254,15 +256,11 @@ class PointerTargetSetManager {
    * @param pts1 The first {@code PointerTargetSet}.
    * @param pts2 The second {@code PointerTargetSet}.
    * @param ssa The map of SSA indices.
-   * @param pConv The converter for C code to SMT formulae.
    * @return The merged {@code PointerTargetSet}s.
    * @throws InterruptedException If the algorithms gets interrupted by an external shutdown.
    */
   MergeResult<PointerTargetSet> mergePointerTargetSets(
-      final PointerTargetSet pts1,
-      final PointerTargetSet pts2,
-      final SSAMap ssa,
-      final CtoFormulaConverter pConv)
+      final PointerTargetSet pts1, final PointerTargetSet pts2, final SSAMap ssa)
       throws InterruptedException {
 
     if (pts1.isEmpty() && pts2.isEmpty()) {
@@ -387,7 +385,9 @@ class PointerTargetSetManager {
     INSTANCE;
 
     /**
-     * Resolves a merge conflict between two types and returns the resolved type
+     * Resolves a merge conflict between two types and returns the resolved type.
+     *
+     * <p>We build up a new union-type containing all given types, except for fake-types.
      *
      * @param key   Not used in the algorithm.
      * @param type1 The first type to merge.
@@ -404,53 +404,60 @@ class PointerTargetSetManager {
       int currentFieldIndex = 0;
       final ImmutableList.Builder<CCompositeTypeMemberDeclaration> membersBuilder =
           ImmutableList.builder();
-      if (type1 instanceof CCompositeType) {
-        final CCompositeType compositeType1 = (CCompositeType) type1;
-        if (compositeType1.getKind() == ComplexTypeKind.UNION &&
-            !compositeType1.getMembers().isEmpty() &&
-            compositeType1.getMembers().get(0).getName().equals(getUnitedFieldBaseName(0))) {
-          membersBuilder.addAll(compositeType1.getMembers());
-          currentFieldIndex += compositeType1.getMembers().size();
-        } else {
-          membersBuilder.add(new CCompositeTypeMemberDeclaration(compositeType1,
-                                                                 getUnitedFieldBaseName(currentFieldIndex)));
+      final Set<CType> seenMembers = new HashSet<>();
+      if (isAlreadyMergedCompositeType(type1)) {
+        // if already a merged type, just copy the inner types, without creating new base-names
+        for (CCompositeTypeMemberDeclaration innerType : ((CCompositeType) type1).getMembers()) {
+          membersBuilder.add(innerType);
+          seenMembers.add(innerType.getType());
           currentFieldIndex++;
         }
       } else {
-        membersBuilder.add(new CCompositeTypeMemberDeclaration(type1,
-                                                               getUnitedFieldBaseName(currentFieldIndex)));
+        membersBuilder.add(
+            new CCompositeTypeMemberDeclaration(type1, getUnitedFieldBaseName(currentFieldIndex)));
+        seenMembers.add(type1);
         currentFieldIndex++;
       }
-      if (type2 instanceof CCompositeType) {
-        final CCompositeType compositeType2 = (CCompositeType) type2;
-        if (compositeType2.getKind() == ComplexTypeKind.UNION &&
-            !compositeType2.getMembers().isEmpty() &&
-            compositeType2.getMembers().get(0).getName().equals(getUnitedFieldBaseName(0))) {
-          for (CCompositeTypeMemberDeclaration memberDeclaration : compositeType2.getMembers()) {
-            membersBuilder.add(new CCompositeTypeMemberDeclaration(memberDeclaration.getType(),
-                                                                   getUnitedFieldBaseName(currentFieldIndex)));
+      if (isAlreadyMergedCompositeType(type2)) {
+        // if already a merged type, just copy the inner types, if needed
+        for (CCompositeTypeMemberDeclaration innerType : ((CCompositeType) type2).getMembers()) {
+          if (seenMembers.add(innerType.getType())) {
+            membersBuilder.add(
+                new CCompositeTypeMemberDeclaration(
+                    innerType.getType(), getUnitedFieldBaseName(currentFieldIndex)));
             currentFieldIndex++;
           }
-        } else {
-          membersBuilder.add(new CCompositeTypeMemberDeclaration(compositeType2,
-                                                                 getUnitedFieldBaseName(currentFieldIndex)));
         }
       } else {
-        membersBuilder.add(new CCompositeTypeMemberDeclaration(type2,
-                                                               getUnitedFieldBaseName(currentFieldIndex)));
+        if (seenMembers.add(type2)) {
+          membersBuilder.add(
+              new CCompositeTypeMemberDeclaration(
+                  type2, getUnitedFieldBaseName(currentFieldIndex)));
+        }
       }
 
+      ImmutableList<CCompositeTypeMemberDeclaration> members = membersBuilder.build();
+      String varName =
+          UNITED_BASE_UNION_TAG_PREFIX
+              + Joiner.on("_and_")
+                  .join(
+                      Iterables.transform(members, m -> m.getType().toString().replace(" ", "_")));
+      return new CCompositeType(false, false, ComplexTypeKind.UNION, members, varName, varName);
+    }
 
-      String varName = UNITED_BASE_UNION_TAG_PREFIX
-                       + type1.toString().replace(' ', '_')
-                       + "_and_"
-                       + type2.toString().replace(' ', '_');
-      return new CCompositeType(false,
-                                false,
-                                ComplexTypeKind.UNION,
-                                membersBuilder.build(),
-                                varName,
-                                varName);
+    /**
+     * check whether the given type was already build by a previous merge of other types.
+     *
+     * <p>We check for UNION-type with special fieldnames.
+     */
+    private static boolean isAlreadyMergedCompositeType(final CType type) {
+      if (type instanceof CCompositeType) {
+        final CCompositeType compositeType = (CCompositeType) type;
+        return compositeType.getKind() == ComplexTypeKind.UNION
+            && !compositeType.getMembers().isEmpty()
+            && compositeType.getMembers().get(0).getName().equals(getUnitedFieldBaseName(0));
+      }
+      return false;
     }
   }
 
@@ -564,16 +571,28 @@ class PointerTargetSetManager {
       for (int i = 0; i < length; ++i) {
         //TODO: create region with arrayType.getType()
         targets = addToTargets(base, null, arrayType.getType(), arrayType, offset, containerOffset + properOffset, targets, fields);
-        offset += typeHandler.getBitSizeof(arrayType.getType());
+        offset += typeHandler.getSizeof(arrayType.getType());
       }
     } else if (cType instanceof CCompositeType) {
       final CCompositeType compositeType = (CCompositeType) cType;
       assert compositeType.getKind() != ComplexTypeKind.ENUM : "Enums are not composite: " + compositeType;
       for (final CCompositeTypeMemberDeclaration memberDeclaration : compositeType.getMembers()) {
-        final long offset = typeHandler.getBitOffset(compositeType, memberDeclaration);
+        final OptionalLong offset = typeHandler.getOffset(compositeType, memberDeclaration);
+        if (!offset.isPresent()) {
+          continue; // TODO this looses values of bit fields
+        }
         if (fields.containsKey(CompositeField.of(compositeType, memberDeclaration))) {
           MemoryRegion newRegion = regionMgr.makeMemoryRegion(compositeType, memberDeclaration);
-          targets = addToTargets(base, newRegion, memberDeclaration.getType(), compositeType, offset, containerOffset + properOffset, targets, fields);
+          targets =
+              addToTargets(
+                  base,
+                  newRegion,
+                  memberDeclaration.getType(),
+                  compositeType,
+                  offset.getAsLong(),
+                  containerOffset + properOffset,
+                  targets,
+                  fields);
         }
       }
     } else {

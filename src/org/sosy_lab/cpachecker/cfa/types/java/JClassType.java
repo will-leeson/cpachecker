@@ -29,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.ast.java.VisibilityModifier;
 
 /**
@@ -437,9 +437,7 @@ public class JClassType extends JClassOrInterfaceType implements JReferenceType 
    */
   public final Set<JClassType> getAllSubTypesOfClass() {
 
-    Set<JClassType> result = new HashSet<>();
-
-    result.addAll(directSubClasses);
+    Set<JClassType> result = new HashSet<>(directSubClasses);
 
     // Recursion stops, if the Set directSubClasses is empty
     for (JClassType directSubClass : directSubClasses) {

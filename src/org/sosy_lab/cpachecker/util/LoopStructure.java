@@ -28,6 +28,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static org.sosy_lab.cpachecker.util.CFAUtils.hasBackWardsEdges;
 import static org.sosy_lab.cpachecker.util.CFAUtils.leavingEdges;
 
+import com.google.common.collect.Comparators;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -35,12 +36,12 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -53,7 +54,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.cfa.Language;
 import org.sosy_lab.cpachecker.cfa.MutableCFA;
@@ -121,6 +122,9 @@ public final class LoopStructure implements Serializable {
   public static class Loop implements Serializable, Comparable<Loop> {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Comparator<Iterable<CFANode>> NODES_COMPARATOR =
+        Comparators.lexicographical(Comparator.<CFANode>naturalOrder());
 
     // Technically not immutable, but all modifying methods are private
     // and never called after the LoopStructure information has been collected.
@@ -280,7 +284,7 @@ public final class LoopStructure implements Serializable {
       return "Loop with heads " + loopHeads + "\n"
            + "  incoming: " + incomingEdges + "\n"
            + "  outgoing: " + outgoingEdges + "\n"
-           + "  nodes:    " + nodes;
+           + "  nodes:    " + nodes + "\n";
     }
 
     @Override
@@ -304,7 +308,7 @@ public final class LoopStructure implements Serializable {
     public int compareTo(Loop pOther) {
       return ComparisonChain.start()
           .compare(nodes.size(), pOther.nodes.size())
-          .compare(nodes, pOther.nodes, Ordering.natural().lexicographical())
+          .compare(nodes, pOther.nodes, NODES_COMPARATOR)
           .result();
     }
   }
@@ -982,7 +986,7 @@ public final class LoopStructure implements Serializable {
           from(nodes)
               .filter(FunctionEntryNode.class)
               .filter(entry -> entry.getNumEnteringEdges() > 1)) {
-        l.mergeWith((new Loop(entry, nodes)));
+        l.mergeWith(new Loop(entry, nodes));
       }
 
       result.add(l);

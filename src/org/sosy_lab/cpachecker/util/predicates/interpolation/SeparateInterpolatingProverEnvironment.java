@@ -98,7 +98,7 @@ public class SeparateInterpolatingProverEnvironment<T>
   }
 
   @Override
-  public BooleanFormula getInterpolant(List<T> pFormulasOfA)
+  public BooleanFormula getInterpolant(Collection<T> pFormulasOfA)
       throws SolverException, InterruptedException {
     BooleanFormula itpF = itpEnv.getInterpolant(pFormulasOfA);
     return convertToMain(itpF);
@@ -112,12 +112,22 @@ public class SeparateInterpolatingProverEnvironment<T>
   }
 
   @Override
+  public List<BooleanFormula> getSeqInterpolants0(List<T> formulas) throws SolverException, InterruptedException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public List<BooleanFormula> getTreeInterpolants(
       List<? extends Collection<T>> partitionedFormulas, int[] startOfSubTree)
       throws SolverException, InterruptedException {
     final List<BooleanFormula> itps =
         itpEnv.getTreeInterpolants(partitionedFormulas, startOfSubTree);
     return Lists.transform(itps, this::convertToMain);
+  }
+
+  @Override
+  public List<BooleanFormula> getTreeInterpolants0(List<T> formulas, int[] startOfSubTree) throws SolverException, InterruptedException {
+    throw new UnsupportedOperationException();
   }
 
   private BooleanFormula convertToItp(BooleanFormula f) {

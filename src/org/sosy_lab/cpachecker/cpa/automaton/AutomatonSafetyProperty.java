@@ -24,15 +24,14 @@
 package org.sosy_lab.cpachecker.cpa.automaton;
 
 import com.google.common.base.Preconditions;
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.sosy_lab.cpachecker.core.interfaces.Property;
-
 
 public class AutomatonSafetyProperty implements Property {
 
-  @Nonnull private final Automaton automaton;
-  @Nonnull private final AutomatonTransition automatonTrans;
-  @Nonnull private final String propertyInstanceDescription;
+  private final @NonNull Automaton automaton;
+  private final @NonNull AutomatonTransition automatonTrans;
+  private final @NonNull String propertyInstanceDescription;
 
   public AutomatonSafetyProperty(Automaton pAutomaton, AutomatonTransition pTransition, String pDesc) {
     this.automaton = Preconditions.checkNotNull(pAutomaton);
@@ -52,7 +51,7 @@ public class AutomatonSafetyProperty implements Property {
 
   @Override
   public String toString() {
-    return propertyInstanceDescription.length() > 0
+    return !propertyInstanceDescription.isEmpty()
         ? propertyInstanceDescription
         : automaton.getName();
   }
