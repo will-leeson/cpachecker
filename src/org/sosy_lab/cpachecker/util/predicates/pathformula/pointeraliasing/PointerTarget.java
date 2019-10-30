@@ -23,11 +23,13 @@
  */
 package org.sosy_lab.cpachecker.util.predicates.pathformula.pointeraliasing;
 
-import java.io.Serializable;
 import java.util.Objects;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 import org.sosy_lab.cpachecker.cfa.types.c.CType;
+
+import java.io.Serializable;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public final class PointerTarget implements Serializable {

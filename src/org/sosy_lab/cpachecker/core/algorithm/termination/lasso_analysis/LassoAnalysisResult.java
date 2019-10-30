@@ -28,7 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import de.uni_freiburg.informatik.ultimate.lassoranker.nontermination.NonTerminationArgument;
 import java.util.Optional;
-import javax.annotation.CheckReturnValue;
+import com.google.errorprone.annotations.CheckReturnValue;
 
 public class LassoAnalysisResult {
 
@@ -65,7 +65,7 @@ public class LassoAnalysisResult {
     return terminationArgument.get();
   }
 
-  public boolean isUnknowm() {
+  public boolean isUnknown() {
     return !hasNonTerminationArgument() && !hasTerminationArgument();
   }
 
@@ -79,9 +79,9 @@ public class LassoAnalysisResult {
 
   @CheckReturnValue
   public LassoAnalysisResult update(LassoAnalysisResult pOther) {
-    if (isUnknowm()) {
+    if (isUnknown()) {
       return pOther;
-    } else if (pOther.isUnknowm()) {
+    } else if (pOther.isUnknown()) {
       return this;
     } else if (hasNonTerminationArgument()) {
       return this;

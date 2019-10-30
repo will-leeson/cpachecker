@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.ast.AFunctionCall;
 import org.sosy_lab.cpachecker.cfa.ast.AFunctionCallAssignmentStatement;
@@ -718,6 +718,48 @@ interface AutomatonBoolExpr extends AutomatonExpression<Boolean> {
     }
   }
 
+  static class MatchCFAEdgeNodes implements AutomatonBoolExpr {
+
+    private final int predecessorNodeNumber;
+    private final int successorNodeNumber;
+
+    public MatchCFAEdgeNodes(CFAEdge pEdge) {
+      this(pEdge.getPredecessor().getNodeNumber(), pEdge.getSuccessor().getNodeNumber());
+    }
+
+    public MatchCFAEdgeNodes(int pPredecessorNodeNumber, int pSuccessorNodeNumber) {
+      predecessorNodeNumber = pPredecessorNodeNumber;
+      successorNodeNumber = pSuccessorNodeNumber;
+    }
+
+    @Override
+    public ResultValue<Boolean> eval(AutomatonExpressionArguments pArgs) {
+      if (predecessorNodeNumber == pArgs.getCfaEdge().getPredecessor().getNodeNumber()
+          && successorNodeNumber == pArgs.getCfaEdge().getSuccessor().getNodeNumber()) {
+        return CONST_TRUE;
+      } else {
+        return CONST_FALSE;
+      }
+    }
+
+    @Override
+    public String toString() {
+      return "MATCH TRANSITION [" + predecessorNodeNumber + " -> " + successorNodeNumber + "]";
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(predecessorNodeNumber, successorNodeNumber);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj instanceof MatchCFAEdgeNodes
+          && predecessorNodeNumber == ((MatchCFAEdgeNodes) obj).predecessorNodeNumber
+          && successorNodeNumber == ((MatchCFAEdgeNodes) obj).successorNodeNumber;
+    }
+  }
+
   static class MatchCFAEdgeExact implements AutomatonBoolExpr {
 
     private final String pattern;
@@ -963,28 +1005,6 @@ interface AutomatonBoolExpr extends AutomatonExpression<Boolean> {
     public boolean equals(Object o) {
       return o instanceof MatchAnySuccessorEdgesBoolExpr
           && operandExpression.equals(((MatchAnySuccessorEdgesBoolExpr) o).operandExpression);
-    }
-  }
-
-  static interface OnRelevantEdgesBoolExpr extends AutomatonBoolExpr {
-
-    // Marker interface
-
-  }
-
-  static enum MatchPathRelevantEdgesBoolExpr implements OnRelevantEdgesBoolExpr {
-    INSTANCE;
-
-    @Override
-    public ResultValue<Boolean> eval(AutomatonExpressionArguments pArgs) {
-      return AutomatonGraphmlCommon.handleAsEpsilonEdge(pArgs.getCfaEdge())
-          ? CONST_FALSE
-          : CONST_TRUE;
-    }
-
-    @Override
-    public String toString() {
-      return "MATCH PATH RELEVANT EDGE";
     }
   }
 
@@ -1328,14 +1348,14 @@ interface AutomatonBoolExpr extends AutomatonExpression<Boolean> {
   /** Tests the equality of the values of two instances of {@link AutomatonIntExpr}. */
   static class IntEqTest extends IntBinaryTest {
     public IntEqTest(AutomatonIntExpr pA, AutomatonIntExpr pB) {
-      super(pA, pB, ((a, b) -> a.equals(b)), "==");
+      super(pA, pB, (a, b) -> a.equals(b), "==");
     }
   }
 
   /** Tests whether two instances of {@link AutomatonIntExpr} evaluate to different integers. */
   static class IntNotEqTest extends IntBinaryTest {
     public IntNotEqTest(AutomatonIntExpr pA, AutomatonIntExpr pB) {
-      super(pA, pB, ((a, b) -> !a.equals(b)), "!=");
+      super(pA, pB, (a, b) -> !a.equals(b), "!=");
     }
   }
 
@@ -1356,7 +1376,7 @@ interface AutomatonBoolExpr extends AutomatonExpression<Boolean> {
       ResultValue<Boolean> resA = a.eval(pArgs);
       if (resA.canNotEvaluate()) {
         ResultValue<Boolean> resB = b.eval(pArgs);
-        if ((!resB.canNotEvaluate()) && resB.getValue().equals(Boolean.TRUE)) {
+        if (!resB.canNotEvaluate() && resB.getValue().equals(Boolean.TRUE)) {
           return resB;
         } else {
           return resA;
@@ -1397,7 +1417,7 @@ interface AutomatonBoolExpr extends AutomatonExpression<Boolean> {
       ResultValue<Boolean> resA = a.eval(pArgs);
       if (resA.canNotEvaluate()) {
         ResultValue<Boolean> resB = b.eval(pArgs);
-        if ((!resB.canNotEvaluate()) && resB.getValue().equals(Boolean.FALSE)) {
+        if (!resB.canNotEvaluate() && resB.getValue().equals(Boolean.FALSE)) {
           return resB;
         } else {
           return resA;
@@ -1506,7 +1526,7 @@ interface AutomatonBoolExpr extends AutomatonExpression<Boolean> {
 
     @Override
     public String toString() {
-      return String.format("(%s %s %s)", a, repr, b);
+      return "(" + a + " " + repr + " " + b + ")";
     }
 
     @Override
@@ -1530,14 +1550,14 @@ interface AutomatonBoolExpr extends AutomatonExpression<Boolean> {
   /** Boolean Equality */
   static class BoolEqTest extends BoolBinaryTest {
     public BoolEqTest(AutomatonBoolExpr pA, AutomatonBoolExpr pB) {
-      super(pA, pB, ((a, b) -> a.equals(b)), "==");
+      super(pA, pB, (a, b) -> a.equals(b), "==");
     }
   }
 
   /** Boolean != */
   static class BoolNotEqTest extends BoolBinaryTest {
     public BoolNotEqTest(AutomatonBoolExpr pA, AutomatonBoolExpr pB) {
-      super(pA, pB, ((a, b) -> !a.equals(b)), "!=");
+      super(pA, pB, (a, b) -> !a.equals(b), "!=");
     }
   }
 }

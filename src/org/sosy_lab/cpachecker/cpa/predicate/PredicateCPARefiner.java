@@ -31,11 +31,10 @@ import static org.sosy_lab.cpachecker.util.statistics.StatisticsWriter.writingSt
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -52,7 +51,6 @@ import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.core.CPAcheckerResult.Result;
 import org.sosy_lab.cpachecker.core.counterexample.CounterexampleInfo;
-import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 import org.sosy_lab.cpachecker.core.interfaces.StatisticsProvider;
 import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
@@ -104,13 +102,6 @@ public class PredicateCPARefiner implements ARGBasedRefiner, StatisticsProvider 
 
   @Option(secure=true, description="which sliced prefix should be used for interpolation")
   private List<PrefixPreference> prefixPreference = PrefixSelector.NO_SELECTION;
-
-  @Option(
-    secure = true,
-    description =
-        "use only atoms from generated invariants" + "as predicates, and not the whole invariant"
-  )
-  private boolean atomicInvariants = false;
 
   @Option(secure=true, description="use only the atoms from the interpolants"
                                  + "as predicates, and not the whole interpolant")
@@ -246,9 +237,10 @@ public class PredicateCPARefiner implements ARGBasedRefiner, StatisticsProvider 
   private BlockFormulas createFormulasOnPath(final ARGPath allStatesTrace,
                                                       final List<ARGState> abstractionStatesTrace)
                                                       throws CPAException, InterruptedException {
-    BlockFormulas formulas = (isRefinementSelectionEnabled())
-        ? performRefinementSelection(allStatesTrace, abstractionStatesTrace)
-        : getFormulasForPath(abstractionStatesTrace, allStatesTrace.getFirstState());
+    BlockFormulas formulas =
+        isRefinementSelectionEnabled()
+            ? performRefinementSelection(allStatesTrace, abstractionStatesTrace)
+            : getFormulasForPath(abstractionStatesTrace, allStatesTrace.getFirstState());
 
     // a user would expect "abstractionStatesTrace.size() == formulas.size()+1",
     // however we do not have the very first state in the trace,
@@ -266,8 +258,12 @@ public class PredicateCPARefiner implements ARGBasedRefiner, StatisticsProvider 
 
     try {
       final ImmutableList<CFANode> errorPath =
-          ImmutableList.copyOf(
-              Lists.transform(allStatesTrace.asStatesList(), AbstractStates.EXTRACT_LOCATION));
+              allStatesTrace
+                  .asStatesList()
+                  .stream()
+                  .map(AbstractStates.EXTRACT_LOCATION)
+                  .filter(x -> x != null)
+                  .collect(ImmutableList.toImmutableList());
       final boolean repeatedCounterexample = lastErrorPaths.contains(errorPath);
       lastErrorPaths.add(errorPath);
 
@@ -277,7 +273,7 @@ public class PredicateCPARefiner implements ARGBasedRefiner, StatisticsProvider 
       boolean branchingOccurred = true;
       if (elementsOnPath.size() == allStatesTrace.size()
           && !containsBranchingInPath(elementsOnPath)) {
-        elementsOnPath = Collections.emptySet();
+        elementsOnPath = ImmutableSet.of();
         branchingOccurred = false;
       }
 
@@ -438,7 +434,7 @@ public class PredicateCPARefiner implements ARGBasedRefiner, StatisticsProvider 
       throws CPAException, InterruptedException {
 
     return interpolationManager.buildCounterexampleTrace(
-        formulas, Lists.<AbstractState>newArrayList(abstractionStatesTrace));
+        formulas, new ArrayList<>(abstractionStatesTrace));
   }
 
   private CounterexampleTraceInfo performInvariantsRefinement(
@@ -455,7 +451,7 @@ public class PredicateCPARefiner implements ARGBasedRefiner, StatisticsProvider 
       logger.log(Level.FINEST, "Error trace is spurious, refining the abstraction");
 
       // add invariant precision increment if necessary
-      List<BooleanFormula> precisionIncrement = Lists.newArrayList();
+      List<BooleanFormula> precisionIncrement = new ArrayList<>();
       if (invariantsManager.addToPrecision()) {
         precisionIncrement = addInvariants(abstractionStatesTrace);
       }
@@ -564,7 +560,7 @@ public class PredicateCPARefiner implements ARGBasedRefiner, StatisticsProvider 
   private Set<Loop> getRelevantLoops(final ARGPath allStatesTrace) {
     // in the case we have no loop informaion we cannot find loops
     if (loopFinder == null) {
-      return Collections.emptySet();
+      return ImmutableSet.of();
     }
 
     loopFinder.reset();

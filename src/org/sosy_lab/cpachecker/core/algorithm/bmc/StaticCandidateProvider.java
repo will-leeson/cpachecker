@@ -23,17 +23,21 @@
  */
 package org.sosy_lab.cpachecker.core.algorithm.bmc;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sosy_lab.cpachecker.core.algorithm.bmc.candidateinvariants.CandidateInvariant;
 
 public class StaticCandidateProvider implements CandidateGenerator {
 
@@ -43,15 +47,12 @@ public class StaticCandidateProvider implements CandidateGenerator {
 
   private final Set<CandidateInvariant> allCandidates;
 
-  private final Set<CandidateInvariant> confirmedInvariants = Sets.newLinkedHashSet();
+  private final Set<CandidateInvariant> confirmedInvariants = new LinkedHashSet<>();
 
-  private final Set<CandidateInvariant> refutedInvariants = Sets.newLinkedHashSet();
+  private final Set<CandidateInvariant> refutedInvariants = new LinkedHashSet<>();
 
   private final NavigableSet<CandidateInvariant> candidates =
-      new TreeSet<>(
-          (a, b) -> {
-            return Integer.compare(order.get(a), order.get(b));
-          });
+      new TreeSet<>(Comparator.comparingInt(order::get));
 
   private boolean produced = false;
 
@@ -132,9 +133,7 @@ public class StaticCandidateProvider implements CandidateGenerator {
 
       @Override
       public void remove() {
-        if (candidate == null) {
-          throw new IllegalStateException();
-        }
+        checkState(candidate != null);
         refutedInvariants.add(candidate);
         iterator.remove();
         order.remove(candidate);

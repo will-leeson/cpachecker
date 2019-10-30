@@ -25,12 +25,13 @@ package org.sosy_lab.cpachecker.cpa.value.refiner;
 
 import static com.google.common.base.Verify.verify;
 
+import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.collect.PathCopyingPersistentTreeMap;
 import org.sosy_lab.common.collect.PersistentMap;
 import org.sosy_lab.cpachecker.cpa.arg.ARGState;
@@ -82,7 +83,7 @@ public class ValueAnalysisInterpolant
 
   @Override
   public Set<MemoryLocation> getMemoryLocations() {
-    return isFalse() ? Collections.emptySet() : Collections.unmodifiableSet(assignment.keySet());
+    return isFalse() ? ImmutableSet.of() : Collections.unmodifiableSet(assignment.keySet());
   }
 
   /**

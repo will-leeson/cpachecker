@@ -29,7 +29,7 @@ import static org.sosy_lab.cpachecker.util.AbstractStates.extractStateByType;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import java.io.Serializable;
+
 import org.sosy_lab.common.collect.PathCopyingPersistentTreeMap;
 import org.sosy_lab.common.collect.PersistentMap;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
@@ -38,16 +38,21 @@ import org.sosy_lab.cpachecker.core.interfaces.FormulaReportingState;
 import org.sosy_lab.cpachecker.core.interfaces.Graphable;
 import org.sosy_lab.cpachecker.core.interfaces.NonMergeableAbstractState;
 import org.sosy_lab.cpachecker.core.interfaces.Partitionable;
+import org.sosy_lab.cpachecker.cpa.arg.Splitable;
 import org.sosy_lab.cpachecker.util.AbstractStates;
 import org.sosy_lab.cpachecker.util.predicates.AbstractionFormula;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.PathFormula;
 import org.sosy_lab.cpachecker.util.predicates.smt.FormulaManagerView;
 import org.sosy_lab.java_smt.api.BooleanFormula;
 
+import java.io.Serializable;
+import java.util.Collection;
+
 /**
  * AbstractState for Symbolic Predicate Abstraction CPA
  */
-public abstract class PredicateAbstractState implements AbstractState, Partitionable, Serializable {
+public abstract class PredicateAbstractState
+    implements AbstractState, Partitionable, Serializable, Splitable {
 
   private static final long serialVersionUID = -265763837277453447L;
 
@@ -157,6 +162,33 @@ public abstract class PredicateAbstractState implements AbstractState, Partition
     }
   }
 
+  public static class InfeasibleDummyState extends NonAbstractionState
+      implements NonMergeableAbstractState, Graphable {
+    private static final long serialVersionUID = 4845812617465441779L;
+
+    private InfeasibleDummyState(
+        PathFormula pF,
+        AbstractionFormula pA,
+        PersistentMap<CFANode, Integer> pAbstractionLocations) {
+      super(pF, pA, pAbstractionLocations);
+    }
+
+    @Override
+    public String toString() {
+      return "Dummy location";
+    }
+
+    @Override
+    public String toDOTLabel() {
+      return toString();
+    }
+
+    @Override
+    public boolean shouldBeHighlighted() {
+      return true;
+    }
+  }
+
   public static PredicateAbstractState mkAbstractionState(
       PathFormula pF, AbstractionFormula pA,
       PersistentMap<CFANode, Integer> pAbstractionLocations) {
@@ -174,6 +206,13 @@ public abstract class PredicateAbstractState implements AbstractState, Partition
       AbstractionFormula pA,
       PersistentMap<CFANode, Integer> pAbstractionLocations) {
     return new NonAbstractionState(pF, pA, pAbstractionLocations);
+  }
+
+  static PredicateAbstractState mkInfeasibleDummyState(
+      PathFormula pF,
+      AbstractionFormula pA,
+      PersistentMap<CFANode, Integer> pAbstractionLocations) {
+    return new InfeasibleDummyState(pF, pA, pAbstractionLocations);
   }
 
   /** The path formula for the path from the last abstraction node to this node.
@@ -261,5 +300,15 @@ public abstract class PredicateAbstractState implements AbstractState, Partition
     }
     return new NonAbstractionState(pathFormula, abstractionFormula,
         PathCopyingPersistentTreeMap.<CFANode, Integer>of());
+  }
+
+  @Override
+  public AbstractState forkWithReplacements(Collection<AbstractState> pReplacementStates) {
+    for (AbstractState state : pReplacementStates) {
+      if (state instanceof PredicateAbstractState) {
+        return state;
+      }
+    }
+    return this;
   }
 }

@@ -26,6 +26,7 @@ package org.sosy_lab.cpachecker.util.pixelexport;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.primitives.ImmutableIntArray;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -39,7 +40,6 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.imageio.stream.FileImageOutputStream;
@@ -50,7 +50,6 @@ import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
 import org.sosy_lab.common.configuration.Options;
 import org.sosy_lab.cpachecker.util.Pair;
-import org.sosy_lab.cpachecker.util.pixelexport.GraphLevel.Builder;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
@@ -145,7 +144,7 @@ public abstract class GraphToPixelsWriter<Node> {
 
     worklist.add(Pair.of(0, pRoot));
     int oldDistance = 0;
-    Builder<Node> levelBuilder = getLevelBuilder();
+    GraphLevel.Builder<Node> levelBuilder = getLevelBuilder();
     while (!worklist.isEmpty()) {
       Pair<Integer, Node> current = checkNotNull(worklist.poll()); // FIFO for BFS order
       if (reached.contains(current.getSecond())) {
@@ -228,15 +227,13 @@ public abstract class GraphToPixelsWriter<Node> {
     pCanvas.setColor(COLOR_BACKGROUND);
     pCanvas.fillRect(0, 0, pWidth, pHeight);
 
-    int middle = pWidth / 2;
-    int stateNum;
-    int xPos;
+    final int middle = pWidth / 2;
     int yPos = yPadding;
     for (GraphLevel level : pGraphStructure) {
-      stateNum = level.getWidth();
-      int lineWidth = stateNum * scaling;
+      final int stateNum = level.getWidth();
+      final int lineWidth = stateNum * scaling;
 
-      xPos = middle - lineWidth / 2;
+      final int xPos = middle - lineWidth / 2;
 
       if (strongHighlight) {
         Color levelBackground = level.getBackgroundColor();
@@ -247,11 +244,12 @@ public abstract class GraphToPixelsWriter<Node> {
       pCanvas.setColor(COLOR_NODE);
       pCanvas.fillRect(xPos, yPos, lineWidth, scaling);
 
-      for (Pair<List<Integer>, Color> p : level.getGroups()) {
+      final int currentYPos = yPos;
+      for (Pair<ImmutableIntArray, Color> p : level.getGroups()) {
         pCanvas.setColor(p.getSecondNotNull());
-        for (int idx : p.getFirstNotNull()) {
-          pCanvas.fillRect(xPos + (idx - 1) * scaling, yPos, scaling, scaling);
-        }
+        p.getFirstNotNull()
+            .forEach(
+                idx -> pCanvas.fillRect(xPos + (idx - 1) * scaling, currentYPos, scaling, scaling));
       }
 
       yPos += scaling;

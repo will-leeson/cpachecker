@@ -25,7 +25,6 @@ package org.sosy_lab.cpachecker.cpa.apron;
 
 import apron.ApronException;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -34,12 +33,13 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.FileOption;
@@ -279,7 +279,7 @@ public final class ApronCPA
   }
 
   private Map<Integer, CFANode> createMappingForCFANodes(CFA pCfa) {
-    Map<Integer, CFANode> idToNodeMap = Maps.newHashMap();
+    Map<Integer, CFANode> idToNodeMap = new HashMap<>();
     for (CFANode n : pCfa.getAllNodes()) {
       idToNodeMap.put(n.getNodeNumber(), n);
     }

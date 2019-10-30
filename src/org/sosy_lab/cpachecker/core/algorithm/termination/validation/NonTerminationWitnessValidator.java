@@ -44,8 +44,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.ConfigurationBuilder;
@@ -224,7 +224,8 @@ public class NonTerminationWitnessValidator implements Algorithm, StatisticsProv
                 logger,
                 cfa.getMachineModel(),
                 scope,
-                cfa.getLanguage())
+                cfa.getLanguage(),
+                pShutdownNotifier)
             .get(0);
     terminationAutomatonName = AUTOMATANAMEPREFIX + terminationAutomaton.getName();
 
@@ -322,7 +323,7 @@ public class NonTerminationWitnessValidator implements Algorithm, StatisticsProv
       pReachedSet.add(
           new DummyErrorState(pReachedSet.getFirstState()), SingletonPrecision.getInstance());
       pReachedSet.popFromWaitlist();
-      return AlgorithmStatus.SOUND_AND_PRECISE.withPrecise(false);
+      return AlgorithmStatus.SOUND_AND_IMPRECISE;
     } finally {
       statistics.totalVal.stop();
     }
@@ -649,7 +650,7 @@ public class NonTerminationWitnessValidator implements Algorithm, StatisticsProv
               .filter(
                   (AbstractState state) -> {
                     ARGState argState = (ARGState) state;
-                    return !argState.isCovered() && argState.getChildren().size() == 0;
+                    return !argState.isCovered() && argState.getChildren().isEmpty();
                   })) {
         shutdown.shutdownIfNecessary();
 
@@ -1092,7 +1093,13 @@ public class NonTerminationWitnessValidator implements Algorithm, StatisticsProv
         cfa.getLanguage() == Language.C ? new CProgramScope(cfa, logger) : DummyScope.getInstance();
 
     return AutomatonParser.parseAutomatonFile(
-            automatonSpec, config, logger, cfa.getMachineModel(), scope, cfa.getLanguage())
+            automatonSpec,
+            config,
+            logger,
+            cfa.getMachineModel(),
+            scope,
+            cfa.getLanguage(),
+            shutdown)
         .get(0);
   }
 
@@ -1140,7 +1147,7 @@ public class NonTerminationWitnessValidator implements Algorithm, StatisticsProv
     }
 
     @Override
-    public @Nonnull Set<Property> getViolatedProperties() throws IllegalStateException {
+    public @NonNull Set<Property> getViolatedProperties() throws IllegalStateException {
       return NamedProperty.singleton("termination");
     }
   }

@@ -27,11 +27,13 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import org.sosy_lab.cpachecker.cfa.export.DOTBuilder;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
@@ -39,13 +41,13 @@ import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.cfa.model.FunctionEntryNode;
 import org.sosy_lab.cpachecker.cfa.model.FunctionExitNode;
 import org.sosy_lab.cpachecker.util.AbstractStates;
-import org.sosy_lab.cpachecker.util.Pair;
+import org.sosy_lab.cpachecker.util.BiPredicates;
 
 public class ARGToDotWriter {
 
   private final Appendable sb;
 
-  ARGToDotWriter(Appendable pSb) throws IOException {
+  public ARGToDotWriter(Appendable pSb) throws IOException {
     sb = pSb;
 
     sb.append("digraph ARG {\n");
@@ -55,17 +57,21 @@ public class ARGToDotWriter {
 
   /**
    * Create String with ARG in the DOT format of Graphviz.
+   *
    * @param sb Where to write the ARG into.
    * @param rootState the root element of the ARG
-   * @param successorFunction A function giving all successors of an ARGState. Only states reachable from root by iteratively applying this function will be dumped.
-   * @param displayedElements A predicate for selecting states that should be displayed. States which are only reachable via non-displayed states are ignored, too.
+   * @param successorFunction A function giving all successors of an ARGState. Only states reachable
+   *     from root by iteratively applying this function will be dumped.
+   * @param displayedElements A predicate for selecting states that should be displayed. States
+   *     which are only reachable via non-displayed states are ignored, too.
    * @param highlightEdge Which edges to highlight in the graph?
    */
-  public static void write(Appendable sb,
+  public static void write(
+      Appendable sb,
       final ARGState rootState,
       final Function<? super ARGState, ? extends Iterable<ARGState>> successorFunction,
       final Predicate<? super ARGState> displayedElements,
-      final Predicate<? super Pair<ARGState, ARGState>> highlightEdge)
+      final BiPredicate<ARGState, ARGState> highlightEdge)
       throws IOException {
 
     ARGToDotWriter toDotWriter = new ARGToDotWriter(sb);
@@ -77,21 +83,49 @@ public class ARGToDotWriter {
   }
 
   /**
+   * @param sb Where to write the ARG into
+   * @param states States that should be written
+   * @param label A text to be show in the top left of the graph
+   * @throws IOException Writing to sb failed
+   */
+  public static void write(Appendable sb, final Collection<ARGState> states, String label)
+      throws IOException {
+    ARGToDotWriter toDotWriter = new ARGToDotWriter(sb);
+    for (ARGState state : states) {
+      if (state.isDestroyed()) {
+        continue;
+      }
+      sb.append(determineNode(state));
+      sb.append(determineStateHint(state));
+      for (ARGState child: state.getChildren()) {
+        sb.append(determineEdge(BiPredicates.alwaysFalse(), state, child));
+      }
+    }
+    label = String.format("label=\"%s\";%nlabelloc=top;%nlabeljust=left;%n", label);
+    sb.append(label);
+    toDotWriter.finish();
+  }
+
+  /**
    * Create String with ARG in the DOT format of Graphviz.
+   *
    * @param sb Where to write the ARG into.
    * @param rootStates the root elements of the ARGs
    * @param connections start- and end-points of edges between separate graphs
-   * @param successorFunction A function giving all successors of an ARGState. Only states reachable from root by iteratively applying this function will be dumped.
-   * @param displayedElements A predicate for selecting states that should be displayed. States which are only reachable via non-displayed states are ignored, too.
+   * @param successorFunction A function giving all successors of an ARGState. Only states reachable
+   *     from root by iteratively applying this function will be dumped.
+   * @param displayedElements A predicate for selecting states that should be displayed. States
+   *     which are only reachable via non-displayed states are ignored, too.
    * @param highlightEdge Which edges to highlight in the graph?
    */
-  public static void write(final Appendable sb,
+  public static void write(
+      final Appendable sb,
       final Set<ARGState> rootStates,
       final Multimap<ARGState, ARGState> connections,
       final Function<? super ARGState, ? extends Iterable<ARGState>> successorFunction,
       final Predicate<? super ARGState> displayedElements,
-      final Predicate<? super Pair<ARGState, ARGState>> highlightEdge)
-          throws IOException {
+      final BiPredicate<ARGState, ARGState> highlightEdge)
+      throws IOException {
 
     ARGToDotWriter toDotWriter = new ARGToDotWriter(sb);
     for (ARGState rootState : rootStates) {
@@ -112,17 +146,22 @@ public class ARGToDotWriter {
   }
 
   /**
-   * Create String with ARG in the DOT format of Graphviz.
-   * Only the states and edges are written, no surrounding graph definition.
+   * Create String with ARG in the DOT format of Graphviz. Only the states and edges are written, no
+   * surrounding graph definition.
+   *
    * @param rootState the root element of the ARG
-   * @param successorFunction A function giving all successors of an ARGState. Only states reachable from root by iteratively applying this function will be dumped.
-   * @param displayedElements A predicate for selecting states that should be displayed. States which are only reachable via non-displayed states are ignored, too.
+   * @param successorFunction A function giving all successors of an ARGState. Only states reachable
+   *     from root by iteratively applying this function will be dumped.
+   * @param displayedElements A predicate for selecting states that should be displayed. States
+   *     which are only reachable via non-displayed states are ignored, too.
    * @param highlightEdge Which edges to highlight in the graph?
    */
-  void writeSubgraph(final ARGState rootState,
+  void writeSubgraph(
+      final ARGState rootState,
       final Function<? super ARGState, ? extends Iterable<ARGState>> successorFunction,
       final Predicate<? super ARGState> displayedElements,
-      final Predicate<? super Pair<ARGState, ARGState>> highlightEdge) throws IOException {
+      final BiPredicate<ARGState, ARGState> highlightEdge)
+      throws IOException {
 
     Deque<ARGState> worklist = new ArrayDeque<>();
     Set<ARGState> processed = new HashSet<>();
@@ -159,8 +198,10 @@ public class ARGToDotWriter {
     sb.append(edges);
   }
 
-  private static String determineEdge(final Predicate<? super Pair<ARGState, ARGState>> highlightEdge,
-                                      final ARGState state, final ARGState successorState) {
+  private static String determineEdge(
+      final BiPredicate<ARGState, ARGState> highlightEdge,
+      final ARGState state,
+      final ARGState successorState) {
     final StringBuilder builder = new StringBuilder();
     builder.append(state.getStateId()).append(" -> ").append(successorState.getStateId());
     builder.append(" [");
@@ -174,7 +215,7 @@ public class ARGToDotWriter {
 
         // edge exists, use info from edge
       } else {
-        boolean colored = highlightEdge.apply(Pair.of(state, successorState));
+        boolean colored = highlightEdge.test(state, successorState);
         if (colored) {
           builder.append("color=\"red\" ");
         }
@@ -232,7 +273,7 @@ public class ARGToDotWriter {
     sb.append("}\n");
   }
 
-  void finish() throws IOException {
+  public void finish() throws IOException {
     sb.append("}\n");
   }
 

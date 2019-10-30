@@ -19,8 +19,7 @@
  */
 package org.sosy_lab.cpachecker.core.algorithm.mpv;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -68,17 +67,17 @@ public class MPVTest {
    * In this test 2 specification are violated, the others are satisfied.
    */
   private static final String SIMPLE_TEST =
-      "test/programs/automata/mpv/test_false-unreach-call_simple.c";
+      "test/programs/ldv-automata/mpv/mpv_test_false_simple.c";
 
   /*
    * In this test overall number of violations for specification 'linux_rculock' is undefined.
    */
-  private static final String MEA_TEST = "test/programs/automata/mpv/test_false-unreach-call_mea.c";
+  private static final String MEA_TEST = "test/programs/ldv-automata/mpv/mpv_test_false_mea.c";
 
   /*
    * In this test specification 'linux_rculock' may not be checked successfully.
    */
-  private static final String ITL_TEST = "test/programs/automata/mpv/test_false-unreach-call_itl.c";
+  private static final String ITL_TEST = "test/programs/ldv-automata/mpv/mpv_test_false_itl.c";
 
   /*
    * MPV results are presented in the following format for comparison:
@@ -190,6 +189,7 @@ public class MPVTest {
     // Get property names with their results based on 'printResult'
     ImmutableList.Builder<AbstractSingleProperty> builder = ImmutableList.builder();
     ByteArrayOutputStream outputStreamResults = new ByteArrayOutputStream();
+    @SuppressWarnings("checkstyle:IllegalInstantiation") // ok for results
     PrintStream printStreamResults =
         new PrintStream(outputStreamResults, true, DEFAULT_CHARSET.name());
     result.printResult(printStreamResults);
@@ -209,6 +209,7 @@ public class MPVTest {
 
     // Get additional parameters for properties from statistics
     ByteArrayOutputStream outputStreamStats = new ByteArrayOutputStream();
+    @SuppressWarnings("checkstyle:IllegalInstantiation") // ok for statistics
     PrintStream printStreamStats = new PrintStream(outputStreamStats, true, DEFAULT_CHARSET.name());
     result.printStatistics(printStreamStats);
 
@@ -261,7 +262,7 @@ public class MPVTest {
     // do not compare ideal verdicts UNKNOWN
     for (i = 0; i < idealResults.length; i++) {
       if (idealResults[i][1].equals("UNKNOWN")) {
-        assertTrue(idealResults[i][0].equals(actualResults[i][0]));
+        assertThat(actualResults[i][0]).isEqualTo(idealResults[i][0]);
         for (int j = 0; j < idealResults[i].length; j++) {
           idealResults[i][j] = actualResults[i][j];
         }
@@ -269,7 +270,7 @@ public class MPVTest {
     }
 
     // results matrixes should be the same
-    assertArrayEquals(idealResults, actualResults);
+    assertThat(actualResults).isEqualTo(idealResults);
   }
 
   private void checkResults(
@@ -278,7 +279,7 @@ public class MPVTest {
     actualResults.assertIs(overallExpectedResult);
     List<AbstractSingleProperty> propertiesResults = parseResult(actualResults.getCheckerResult());
     if (overallExpectedResult.equals(Result.NOT_YET_STARTED)) {
-      assertTrue(propertiesResults.size() == 0);
+      assertThat(propertiesResults).isEmpty();
     } else {
       compareResultsMatrixes(idealResults, propertiesResults);
     }

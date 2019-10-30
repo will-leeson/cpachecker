@@ -31,8 +31,8 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.CFACreationUtils;
 import org.sosy_lab.cpachecker.cfa.ast.AAstNode;
 import org.sosy_lab.cpachecker.cfa.ast.FileLocation;
@@ -233,7 +233,8 @@ class FunctionCloner implements CFAVisitor {
       }
 
       case ReturnStatementEdge: {
-        assert end instanceof FunctionExitNode;
+        assert end instanceof FunctionExitNode
+            : "Expected FunctionExitNode: " + end + ", " + end.getClass();
         if (edge instanceof CReturnStatementEdge) {
           newEdge = new CReturnStatementEdge(rawStatement, cloneAst(((CReturnStatementEdge) edge).getRawAST().get()),
                   loc, start, (FunctionExitNode) end);
@@ -289,7 +290,7 @@ class FunctionCloner implements CFAVisitor {
 
   /** clones a node: copies all content and inserts a new functionName */
   @SuppressWarnings("unchecked")
-  private <T extends CFANode> T cloneNode(@Nonnull final T node, final boolean addToMapping) {
+  private <T extends CFANode> T cloneNode(@NonNull final T node, final boolean addToMapping) {
     Preconditions.checkNotNull(node);
 
     if (nodeCache.containsKey(node)) {
@@ -444,7 +445,12 @@ class FunctionCloner implements CFAVisitor {
 
       } else if (ast instanceof CEnumType.CEnumerator) {
         CEnumType.CEnumerator decl = (CEnumType.CEnumerator) ast;
-        return new CEnumType.CEnumerator(loc, decl.getName(), changeQualifiedName(decl.getQualifiedName()), decl.getValue());
+        return new CEnumType.CEnumerator(
+            loc,
+            decl.getName(),
+            changeQualifiedName(decl.getQualifiedName()),
+            decl.getType(),
+            decl.getValue());
       }
 
     } else if (ast instanceof CStatement) {
@@ -623,8 +629,13 @@ class FunctionCloner implements CFAVisitor {
     public CType visit(CEnumType type) {
       List<CEnumType.CEnumerator> l = new ArrayList<>(type.getEnumerators().size());
       for (CEnumType.CEnumerator e : type.getEnumerators()) {
-        CEnumType.CEnumerator enumType = new CEnumType.CEnumerator(e.getFileLocation(), e.getName(),
-                changeQualifiedName(e.getQualifiedName()), (e.hasValue() ? e.getValue() : null));
+        CEnumType.CEnumerator enumType =
+            new CEnumType.CEnumerator(
+                e.getFileLocation(),
+                e.getName(),
+                changeQualifiedName(e.getQualifiedName()),
+                e.getType(),
+                (e.hasValue() ? e.getValue() : null));
         enumType.setEnum(e.getEnum());
         l.add(enumType);
       }

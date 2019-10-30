@@ -32,7 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -44,7 +44,6 @@ import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
 import org.sosy_lab.cpachecker.cpa.arg.ARGState;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.pcc.strategy.SequentialReadStrategy;
-
 
 public abstract class AbstractARGStrategy extends SequentialReadStrategy {
 
@@ -73,8 +72,7 @@ public abstract class AbstractARGStrategy extends SequentialReadStrategy {
   }
 
   private boolean correctReachedSetFormatForProof(UnmodifiableReachedSet pReached) {
-    if (pReached.getFirstState() == null
-        || !(pReached.getFirstState() instanceof ARGState)
+    if (!(pReached.getFirstState() instanceof ARGState)
         || (extractLocation(pReached.getFirstState()) == null)) {
       logger.log(Level.SEVERE, "Proof cannot be generated because checked property not known to be true.");
       return false;

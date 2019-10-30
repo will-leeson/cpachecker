@@ -23,6 +23,8 @@
  */
 package org.sosy_lab.cpachecker.core.algorithm.bmc;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.util.predicates.smt.Solver;
 import org.sosy_lab.java_smt.api.BooleanFormula;
 import org.sosy_lab.java_smt.api.InterpolatingProverEnvironment;
@@ -43,7 +45,7 @@ import org.sosy_lab.java_smt.api.ProverEnvironment;
 import org.sosy_lab.java_smt.api.SolverContext.ProverOptions;
 import org.sosy_lab.java_smt.api.SolverException;
 
-class ProverEnvironmentWithFallback
+public class ProverEnvironmentWithFallback
     implements AutoCloseable, InterpolatingProverEnvironment<Object> {
 
   private final Deque<BooleanFormula> stack = new ArrayDeque<>();
@@ -64,21 +66,18 @@ class ProverEnvironmentWithFallback
 
   public ProverEnvironmentWithFallback(Solver pSolver, ProverOptions... pProverOptions) {
     solver = pSolver;
-    proverOptions = EnumSet.noneOf(ProverOptions.class);
-    proverOptions.addAll(Arrays.asList(pProverOptions));
+    proverOptions = EnumSet.copyOf(Arrays.asList(pProverOptions));
     useInterpolation = proverOptions.contains(ProverOptions.GENERATE_UNSAT_CORE);
   }
 
   private ProverOptions[] getOptions() {
-    return proverOptions.toArray(new ProverOptions[proverOptions.size()]);
+    return proverOptions.toArray(new ProverOptions[0]);
   }
 
   @SuppressWarnings("unchecked")
   private void ensureInitialized() {
     if (interpolatingProverEnvironment == null && proverEnvironment == null) {
-      if (closed) {
-        throw new IllegalStateException("Already closed.");
-      }
+      checkState(!closed, "Already closed.");
       if (useInterpolation) {
         interpolatingProverEnvironment =
             (InterpolatingProverEnvironment<Object>)
@@ -223,9 +222,7 @@ class ProverEnvironmentWithFallback
   public BooleanFormula getInterpolant(Iterable<Object> pAssertionIds)
       throws SolverException, InterruptedException {
     ensureInitialized();
-    if (!supportsInterpolation()) {
-      throw new IllegalStateException("Interpolation has been switched off.");
-    }
+    checkState(supportsInterpolation(), "Interpolation has been switched off.");
     final List<Object> assertionIds;
     if (pAssertionIds instanceof List) {
       assertionIds = (List<Object>) pAssertionIds;
@@ -278,10 +275,13 @@ class ProverEnvironmentWithFallback
   public List<BooleanFormula> getSeqInterpolants(List<? extends Collection<Object>> pArg0)
       throws SolverException, InterruptedException {
     ensureInitialized();
-    if (!supportsInterpolation()) {
-      throw new IllegalStateException("Interpolation has been switched off.");
-    }
+    checkState(supportsInterpolation(), "Interpolation has been switched off.");
     return interpolatingProverEnvironment.getSeqInterpolants(pArg0);
+  }
+
+  @Override
+  public List<BooleanFormula> getSeqInterpolants0(List<Object> formulas) throws SolverException, InterruptedException {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -289,14 +289,17 @@ class ProverEnvironmentWithFallback
       List<? extends Collection<Object>> pArg0, int[] pArg1)
       throws SolverException, InterruptedException {
     ensureInitialized();
-    if (!supportsInterpolation()) {
-      throw new IllegalStateException("Interpolation has been switched off.");
-    }
+    checkState(supportsInterpolation(), "Interpolation has been switched off.");
     return interpolatingProverEnvironment.getTreeInterpolants(pArg0, pArg1);
   }
 
   @Override
-  public BooleanFormula getInterpolant(List<Object> pArg0)
+  public List<BooleanFormula> getTreeInterpolants0(List<Object> formulas, int[] startOfSubTree) throws SolverException, InterruptedException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public BooleanFormula getInterpolant(Collection<Object> pArg0)
       throws SolverException, InterruptedException {
     return getInterpolant((Iterable<Object>) pArg0);
   }

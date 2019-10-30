@@ -26,7 +26,7 @@ package org.sosy_lab.cpachecker.util.predicates.pathformula.pointeraliasing;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.pointeraliasing.Expression.Location.AliasedLocation;
 import org.sosy_lab.cpachecker.util.predicates.pathformula.pointeraliasing.Expression.Location.UnaliasedLocation;
 import org.sosy_lab.java_smt.api.Formula;
@@ -176,6 +176,10 @@ abstract class Expression {
   }
 
   static class Value extends Expression {
+
+    static Value ofValueOrNondet(@Nullable final Formula value) {
+      return value == null ? nondetValue() : ofValue(value);
+    }
 
     static Value ofValue(final Formula value) {
       return new Value(checkNotNull(value));

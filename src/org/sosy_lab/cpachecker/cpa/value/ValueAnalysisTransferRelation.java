@@ -36,7 +36,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
@@ -100,7 +101,6 @@ import org.sosy_lab.cpachecker.cfa.types.c.CBasicType;
 import org.sosy_lab.cpachecker.cfa.types.c.CComplexType.ComplexTypeKind;
 import org.sosy_lab.cpachecker.cfa.types.c.CCompositeType;
 import org.sosy_lab.cpachecker.cfa.types.c.CNumericTypes;
-import org.sosy_lab.cpachecker.cfa.types.c.CPointerType;
 import org.sosy_lab.cpachecker.cfa.types.c.CSimpleType;
 import org.sosy_lab.cpachecker.cfa.types.c.CType;
 import org.sosy_lab.cpachecker.cfa.types.java.JArrayType;
@@ -111,8 +111,8 @@ import org.sosy_lab.cpachecker.cfa.types.java.JType;
 import org.sosy_lab.cpachecker.core.defaults.ForwardingTransferRelation;
 import org.sosy_lab.cpachecker.core.defaults.precision.VariableTrackingPrecision;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
+import org.sosy_lab.cpachecker.core.interfaces.AbstractStateWithAssumptions;
 import org.sosy_lab.cpachecker.core.interfaces.Precision;
-import org.sosy_lab.cpachecker.cpa.automaton.AutomatonState;
 import org.sosy_lab.cpachecker.cpa.constraints.domain.ConstraintsState;
 import org.sosy_lab.cpachecker.cpa.pointer2.PointerState;
 import org.sosy_lab.cpachecker.cpa.pointer2.PointerTransferRelation;
@@ -698,9 +698,7 @@ public class ValueAnalysisTransferRelation
       memoryLocation = MemoryLocation.valueOf(functionName, varName);
     }
 
-    if (addressedVariables.contains(decl.getQualifiedName())
-        && declarationType instanceof CType
-        && ((CType) declarationType).getCanonicalType() instanceof CPointerType) {
+    if (addressedVariables.contains(decl.getQualifiedName()) && declarationType instanceof CType) {
       ValueAnalysisState.addToBlacklist(memoryLocation);
     }
 
@@ -778,7 +776,7 @@ public class ValueAnalysisTransferRelation
   private boolean isMissingCExpressionInformation(ExpressionValueVisitor pEvv,
       ARightHandSide pExp) {
 
-    return pExp instanceof CExpression && (pEvv.hasMissingPointer());
+    return pExp instanceof CExpression && pEvv.hasMissingPointer();
   }
 
   @Override
@@ -1057,22 +1055,21 @@ public class ValueAnalysisTransferRelation
       CCompositeType pLType, CExpression pExp,
       ExpressionValueVisitor pVisitor) throws UnrecognizedCodeException {
 
-    int offset = 0;
+    long offset = 0L;
     for (CCompositeType.CCompositeTypeMemberDeclaration memberType : pLType.getMembers()) {
       MemoryLocation assignedField = createFieldMemoryLocation(pAssignedVar, offset);
-      CExpression owner = null;
 
-      owner = pExp;
+      CExpression owner = pExp;
 
       CExpression fieldReference =
           new CFieldReference(pExp.getFileLocation(), memberType.getType(), memberType.getName(), owner, false);
       handleAssignmentToVariable(pNewElement, assignedField, memberType.getType(), fieldReference, pVisitor);
 
-      offset = offset + machineModel.getSizeof(memberType.getType());
+      offset = offset + machineModel.getSizeof(memberType.getType()).longValueExact();
     }
   }
 
-  private MemoryLocation createFieldMemoryLocation(MemoryLocation pStruct, int pOffset) {
+  private MemoryLocation createFieldMemoryLocation(MemoryLocation pStruct, long pOffset) {
 
     long baseOffset = pStruct.isReference() ? pStruct.getOffset() : 0;
 
@@ -1248,12 +1245,15 @@ public class ValueAnalysisTransferRelation
 
   @Override
   public Collection<? extends AbstractState> strengthen(
-      AbstractState pElement, List<AbstractState> pElements, CFAEdge pCfaEdge, Precision pPrecision)
-    throws CPATransferException {
+      AbstractState pElement,
+      Iterable<AbstractState> pElements,
+      CFAEdge pCfaEdge,
+      Precision pPrecision)
+      throws CPATransferException {
     assert pElement instanceof ValueAnalysisState;
 
-    ArrayList<ValueAnalysisState> toStrengthen = new ArrayList<>();
-    ArrayList<ValueAnalysisState> result = new ArrayList<>();
+    List<ValueAnalysisState> toStrengthen = new ArrayList<>();
+    List<ValueAnalysisState> result = new ArrayList<>();
     toStrengthen.add((ValueAnalysisState) pElement);
     result.add((ValueAnalysisState) pElement);
 
@@ -1271,18 +1271,13 @@ public class ValueAnalysisTransferRelation
         }
         toStrengthen.clear();
         toStrengthen.addAll(result);
-      } else if (ae instanceof AutomatonState) {
+      } else if (ae instanceof AbstractStateWithAssumptions) {
         result.clear();
         for (ValueAnalysisState stateToStrengthen : toStrengthen) {
           super.setInfo(pElement, pPrecision, pCfaEdge);
-          AutomatonState autoState = (AutomatonState) ae;
-          Collection<ValueAnalysisState> ret =
-              strengthenAutomatonAssume(autoState, stateToStrengthen, pCfaEdge);
-          if (ret == null) {
-            result.add(stateToStrengthen);
-          } else {
-            result.addAll(ret);
-          }
+          AbstractStateWithAssumptions stateWithAssumptions = (AbstractStateWithAssumptions) ae;
+          result.addAll(
+              strengthenWithAssumptions(stateWithAssumptions, stateToStrengthen, pCfaEdge));
         }
         toStrengthen.clear();
         toStrengthen.addAll(result);
@@ -1530,11 +1525,15 @@ public class ValueAnalysisTransferRelation
     return newState;
   }
 
-  private Collection<ValueAnalysisState> strengthenAutomatonAssume(AutomatonState pAutomatonState, ValueAnalysisState pState, CFAEdge pCfaEdge) throws CPATransferException {
+  private @NonNull Collection<ValueAnalysisState> strengthenWithAssumptions(
+      AbstractStateWithAssumptions pStateWithAssumptions,
+      ValueAnalysisState pState,
+      CFAEdge pCfaEdge)
+      throws CPATransferException {
 
     ValueAnalysisState newState = pState;
 
-    for (AExpression assumption : pAutomatonState.getAssumptions()) {
+    for (AExpression assumption : pStateWithAssumptions.getAssumptions()) {
       newState = handleAssumption(assumption, true);
 
       if (newState == null) {
@@ -1545,7 +1544,7 @@ public class ValueAnalysisTransferRelation
     }
 
     if (newState == null) {
-      return Collections.emptyList();
+      return ImmutableList.of();
     } else {
       return Collections.singleton(newState);
     }

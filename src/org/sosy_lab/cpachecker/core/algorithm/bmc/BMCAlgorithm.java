@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.FileOption;
@@ -60,6 +60,8 @@ import org.sosy_lab.cpachecker.core.AnalysisDirection;
 import org.sosy_lab.cpachecker.core.CPAcheckerResult.Result;
 import org.sosy_lab.cpachecker.core.Specification;
 import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
+import org.sosy_lab.cpachecker.core.algorithm.bmc.candidateinvariants.CandidateInvariant;
+import org.sosy_lab.cpachecker.core.algorithm.bmc.candidateinvariants.TargetLocationCandidateInvariant;
 import org.sosy_lab.cpachecker.core.algorithm.invariants.ExpressionTreeSupplier;
 import org.sosy_lab.cpachecker.core.algorithm.invariants.KInductionInvariantGenerator;
 import org.sosy_lab.cpachecker.core.counterexample.CounterexampleInfo;
@@ -80,6 +82,7 @@ import org.sosy_lab.cpachecker.cpa.predicate.PredicateCPA;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.util.AbstractStates;
+import org.sosy_lab.cpachecker.util.BiPredicates;
 import org.sosy_lab.cpachecker.util.CPAs;
 import org.sosy_lab.cpachecker.util.expressions.ExpressionTree;
 import org.sosy_lab.cpachecker.util.expressions.ExpressionTrees;
@@ -133,7 +136,7 @@ public class BMCAlgorithm extends AbstractBMCAlgorithm implements Algorithm {
       CFA pCFA,
       final Specification specification,
       AggregatedReachedSets pAggregatedReachedSets)
-      throws InvalidConfigurationException, CPAException {
+      throws InvalidConfigurationException, CPAException, InterruptedException {
     super(
         pAlgorithm,
         pCPA,
@@ -152,6 +155,7 @@ public class BMCAlgorithm extends AbstractBMCAlgorithm implements Algorithm {
     config = pConfig;
     cfa = pCFA;
 
+    @SuppressWarnings("resource")
     PredicateCPA predCpa = CPAs.retrieveCPAOrFail(cpa, PredicateCPA.class, BMCAlgorithm.class);
     solver = predCpa.getSolver();
     fmgr = solver.getFormulaManager();
@@ -346,6 +350,11 @@ public class BMCAlgorithm extends AbstractBMCAlgorithm implements Algorithm {
           @Override
           public void printStatistics(
               PrintStream pOut, Result pResult, UnmodifiableReachedSet pReached) {
+            // apparently there is nothing to do here.
+          }
+
+          @Override
+          public void writeOutputFiles(Result pResult, UnmodifiableReachedSet pReached) {
             if (pResult == Result.FALSE) {
               return;
             }
@@ -376,7 +385,7 @@ public class BMCAlgorithm extends AbstractBMCAlgorithm implements Algorithm {
                     w,
                     rootState,
                     Predicates.alwaysTrue(),
-                    Predicates.alwaysTrue(),
+                    BiPredicates.alwaysTrue(),
                     new InvariantProvider() {
 
                       @Override

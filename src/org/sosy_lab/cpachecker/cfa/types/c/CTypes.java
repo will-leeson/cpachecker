@@ -23,11 +23,13 @@
  */
 package org.sosy_lab.cpachecker.cfa.types.c;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Equivalence;
 import java.util.Iterator;
 import java.util.List;
 import java.util.OptionalInt;
-import javax.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.types.c.CComplexType.ComplexTypeKind;
 import org.sosy_lab.cpachecker.exceptions.NoException;
@@ -57,7 +59,7 @@ public final class CTypes {
     return (type instanceof CEnumType)
         // C11 § 6.7.2.1 (10) "A bit-field is interpreted as having a signed or unsigned integer type"
         || (type instanceof CBitFieldType)
-        || (type instanceof CSimpleType && !(((CSimpleType) type).isComplex()));
+        || (type instanceof CSimpleType && !((CSimpleType) type).isComplex());
   }
 
   /**
@@ -460,9 +462,7 @@ public final class CTypes {
 
     @Override
     public CFunctionType visit(CFunctionType t) {
-      if (constValue) {
-        throw new IllegalArgumentException("Cannot create const function type, this is undefined");
-      }
+      checkArgument(!constValue, "Cannot create const function type, this is undefined");
       return t;
     }
 
@@ -532,9 +532,7 @@ public final class CTypes {
 
     @Override
     public CFunctionType visit(CFunctionType t) {
-      if (volatileValue) {
-        throw new IllegalArgumentException("Cannot create const function type, this is undefined");
-      }
+      checkArgument(!volatileValue, "Cannot create const function type, this is undefined");
       return t;
     }
 
