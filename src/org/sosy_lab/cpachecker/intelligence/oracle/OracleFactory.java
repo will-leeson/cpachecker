@@ -63,6 +63,7 @@ public class OracleFactory {
       revLabel.put("pesco19--04-kInduction.properties", "KI");
       //revLabel.put("pesco19--recursion.properties", "BAM");
       revLabel.put("pesco19--bmc.properties", "BMC");
+      revLabel.put("pesco20--kInduction-90.properties", "KI90");
 
       labelToPath = new HashMap<>();
 
