@@ -9,10 +9,8 @@ import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.blocks.Block;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.datadep.BlockDef;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.datadep.BlockUse;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.datadep.IUseDefEvent;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.datadep.UseDef;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.SCCUtil;
+import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.datadep.*;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
@@ -98,13 +96,14 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
     }
 
     private void priorUse(BlockGraph blockGraph, BlockUse use, Queue<IUseDefEvent> events){
-
         for(GEdge e : blockGraph.getIngoing(use.getBlock())){
-            events.add(new BlockUse(
-                    use.getUsePos(),
-                    use.getVariable(),
-                    e.getSource().getId()
-            ));
+            if(!use.getVariable().contains("::") || use.getVariable().contains(e.getSource().getOption(OptionKeys.PARENT_FUNC))) {
+                events.add(new BlockUse(
+                        use.getUsePos(),
+                        use.getVariable(),
+                        e.getSource().getId()
+                ));
+            }
         }
 
     }
@@ -240,6 +239,8 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
                 }
             }
 
+
+
             if(pred.isEmpty()){
                 GNode n = graph.getNode(use.getUsePos());
                 if(n != null)
@@ -247,7 +248,7 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
                 continue;
             }
 
-            if(pred.size() == 1){
+            if(mPred.size() == 1){
                 useQueue.add(new BlockUse(use.getUsePos(), use.getVariable(), pred.iterator().next()));
                 continue;
             }
@@ -264,61 +265,31 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
 
         } while (!useQueue.isEmpty());
 
-        //Phi Search
-        Multimap<String, String> phiRes = HashMultimap.create();
-
-        for(String k : phis.keySet()){
-
-            Set<String> seen = new HashSet<>();
-            Queue<String> search = new ArrayDeque<>();
-            search.add(k);
-
-            while (!search.isEmpty()){
-                String curr = search.poll();
-
-                if(shutdownNotifier != null)
-                    shutdownNotifier.shutdownIfNecessary();
-
-                if(seen.contains(curr))
-                    continue;
-                seen.add(curr);
-
-                if(phiRes.containsKey(curr)){
-                    phiRes.putAll(k, phiRes.get(curr));
-                    continue;
-                }else{
-                    for(String pre : phis.get(curr)){
-                        if(pre.contains("phi_")){
-                            search.add(pre);
-                        }else{
-                            phiRes.put(k, pre);
-                        }
-                    }
-                }
-
-            }
-
-        }
-
+        PhiSearch search = new PhiSearch(phis, shutdownNotifier);
 
         //Draw dependencies
 
 
-        while (!useDefQueue.isEmpty()){
+        while (!useDefQueue.isEmpty()) {
             UseDef useDef = useDefQueue.poll();
 
-            if(useDef.getDefPos().startsWith("phi_")){
+            if(shutdownNotifier != null)
+                shutdownNotifier.shutdownIfNecessary();
 
-                for(String s : phiRes.get(useDef.getDefPos())){
+            if (useDef.getDefPos().startsWith("phi_")) {
+
+                for (String s : search.resolve(useDef.getDefPos())) {
                     useDefQueue.add(new UseDef(useDef.getUsePos(), useDef.getVariable(), s));
                 }
-            }else{
+            } else {
                 graph.addDDEdge(useDef.getDefPos(), useDef.getUsePos());
             }
 
         }
 
     }
+
+
 
 
 }
