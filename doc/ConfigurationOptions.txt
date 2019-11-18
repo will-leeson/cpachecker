@@ -3156,6 +3156,10 @@ heuristicSelection.recursionConfig = no default value
 # enable the Forced Covering optimization
 impact.useForcedCovering = true
 
+# Switch to an accelerated prediction model. Use with caution: The pretrained
+# model might not support the accelerated model.
+intelligentRestartAlgorithm.accelerated = false
+
 # wether to start next algorithm independently from the previous result
 intelligentRestartAlgorithm.alwaysRestart = false
 

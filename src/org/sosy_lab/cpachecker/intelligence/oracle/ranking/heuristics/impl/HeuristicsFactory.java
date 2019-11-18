@@ -40,6 +40,10 @@ public class HeuristicsFactory {
       return new Skip2EndHeuristic();
     }
 
+    if(name.equals("KIskip2end")){
+      return new KISkip2EndHeuristic();
+    }
+
     return null;
   }
 

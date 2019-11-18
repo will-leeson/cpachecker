@@ -27,6 +27,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Iterables;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import org.junit.Test;
 import org.sosy_lab.cpachecker.cfa.types.MachineModel;
@@ -50,7 +52,7 @@ public class SMGSingleLinkedListFinderTest {
     SMGEdgeHasValue root = TestHelpers.createGlobalList(smg, 5, 128, 64, "pointer");
 
     SMGSingleLinkedListFinder finder = new SMGSingleLinkedListFinder();
-    Set<SMGAbstractionCandidate> candidates = finder.traverse(smg, null);
+    Set<SMGAbstractionCandidate> candidates = finder.traverse(smg, null, new HashSet<>());
     assertThat(!candidates.isEmpty()).isTrue();
     SMGAbstractionCandidate candidate = getBestCandidate(candidates);
     assertThat(candidate).isInstanceOf(SMGSingleLinkedListCandidateSequence.class);
@@ -81,7 +83,7 @@ public class SMGSingleLinkedListFinderTest {
     TestHelpers.createGlobalList(smg, 2, 128, 64, "pointer");
 
     SMGSingleLinkedListFinder finder = new SMGSingleLinkedListFinder(2,2,2);
-    Set<SMGAbstractionCandidate> candidates = finder.traverse(smg, null);
+    Set<SMGAbstractionCandidate> candidates = finder.traverse(smg, null, new HashSet<>());
     assertThat(candidates).hasSize(1);
   }
 
@@ -155,7 +157,7 @@ public class SMGSingleLinkedListFinderTest {
     smg.addHasValueEdge(headConnection);
 
     SMGSingleLinkedListFinder finder = new SMGSingleLinkedListFinder();
-    Set<SMGAbstractionCandidate> candidates = finder.traverse(smg, null);
+    Set<SMGAbstractionCandidate> candidates = finder.traverse(smg, null, new HashSet<>());
     assertThat(!candidates.isEmpty()).isTrue();
 
     for (SMGAbstractionCandidate candidate : candidates) {
