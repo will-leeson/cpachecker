@@ -76,6 +76,11 @@ public class FunctionCallListener extends AEdgeListener {
       graph.addNode(idS);
       graph.addCFGEdge(id, idS);
 
+      //Summary edge
+      String idN = "N"+call.getSummaryEdge().getSuccessor().getNodeNumber();
+      graph.addNode(idN);
+      graph.addCFGEdge(id, idN);
+
       GNode node = graph.getNode(id);
       node.setOption(OptionKeys.FUNC_CALL, call.getSuccessor().getFunctionName());
       node.setOption(OptionKeys.ARGS, call.getArguments());

@@ -15,9 +15,9 @@ public class PointerListener2 implements IEdgeListener {
     private PEGraph graph;
     private ShutdownNotifier notifier;
 
-    public PointerListener2(PEGraph pGraph, ShutdownNotifier pNotifier) {
-        this.graph = pGraph;
-        this.notifier = pNotifier;
+    public PointerListener2(PEGraph graph, ShutdownNotifier notifier) {
+        this.graph = graph;
+        this.notifier = notifier;
     }
 
     private boolean isPointer(CType type){
@@ -98,24 +98,15 @@ public class PointerListener2 implements IEdgeListener {
 
     private void handleAssign(String name, CExpression rightHand){
 
-        try{
-            String target = handleExpr(rightHand);
-            addNode(target);
-            graph.addAssignEdge(getId(target), name);
-        }catch (UnsupportedOperationException pE){
-            System.out.println("Unsupported: "+pE.getMessage());
-        }
+        String target = handleExpr(rightHand);
+        addNode(target);
+        graph.addAssignEdge(getId(target), name);
     }
 
     private void addNode(String name){
 
         graph.addNode(getId(name), name);
         String pre = name;
-
-        if(pre.isEmpty()){
-            System.out.println(pre);
-        }
-
         while(pre.charAt(0) == '*'){
             String n = pre.substring(1);
             graph.addNode(getId(n), n);
