@@ -111,6 +111,7 @@ public class AccWLFeatureModel implements IWLFeatureModel {
       Map<String, Integer> count = new HashMap<>();
 
       for(String n: graph.nodes()){
+
         String label = graph.getNode(n).getLabel();
 
         if(pShutdownNotifier != null)
