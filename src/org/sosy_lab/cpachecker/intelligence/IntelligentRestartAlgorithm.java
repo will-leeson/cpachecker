@@ -307,7 +307,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     }
 
     SampleRegistry sampleRegistry = new SampleRegistry(
-        registry, 1, 5, backend, accelerated
+        registry, 2, 5, backend, accelerated
     );
 
 

@@ -99,6 +99,10 @@ public class StructureGraph {
       return addEdge(new GEdge(id, nodes.get(source), nodes.get(target)));
     }
 
+    public boolean isEmpty() {
+        return this.nodes.isEmpty();
+    }
+
     public <T> void setGlobalOption(Key<T> key, T option){
       globalOptions.put(key, option);
     }
