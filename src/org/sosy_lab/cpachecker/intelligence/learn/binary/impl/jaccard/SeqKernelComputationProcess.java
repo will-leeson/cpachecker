@@ -69,6 +69,10 @@ public class SeqKernelComputationProcess {
 
   }
 
+  private double sigmoid(double pred){
+    return 1 / (1 + Math.exp(-pred));
+  }
+
   private double single(KernelCoef coef) throws InterruptedException {
     double pred = 0.0;
 
@@ -103,7 +107,7 @@ public class SeqKernelComputationProcess {
     pred += coef.getIntercept();
 
 
-    return pred>=0?1:0;
+    return sigmoid(pred);
   }
 
 

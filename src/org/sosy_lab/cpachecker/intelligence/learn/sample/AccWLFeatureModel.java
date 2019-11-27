@@ -155,7 +155,8 @@ public class AccWLFeatureModel implements IWLFeatureModel
         Collections.sort(neighbours);
         neighbours.add(0, source);
         final String text = String.join("_", neighbours);
-        return this.hash(text);
+        String h = hash(text);
+        return h;
     }
 
     private String loadLabel(final GNode node, final Map<String, String> lookup) {
