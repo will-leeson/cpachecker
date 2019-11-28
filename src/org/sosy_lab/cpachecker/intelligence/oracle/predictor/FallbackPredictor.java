@@ -23,14 +23,16 @@
  */
 package org.sosy_lab.cpachecker.intelligence.oracle.predictor;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.sosy_lab.common.configuration.Configuration;
-import org.sosy_lab.common.configuration.InvalidConfigurationException;
-import org.sosy_lab.common.configuration.Option;
-import org.sosy_lab.common.configuration.Options;
+
+import org.sosy_lab.common.configuration.*;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
+import org.sosy_lab.cpachecker.intelligence.util.PathFinder;
 
 @Options(prefix="fallbackPredictor")
 public class FallbackPredictor implements IOracleLabelPredictor {
@@ -50,6 +52,16 @@ public class FallbackPredictor implements IOracleLabelPredictor {
 
   @Override
   public List<String> ranking() {
+
+    List<String> out = new ArrayList<>();
+
+    for(String c : components) {
+      Path path = PathFinder.find("config/%s", c);
+      if (path != null && Files.exists(path)) {
+        out.add(path.toString());
+      }
+    }
+
     return components;
   }
 
