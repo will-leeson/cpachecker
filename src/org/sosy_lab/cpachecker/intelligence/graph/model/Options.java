@@ -28,7 +28,7 @@ import java.util.Map;
 
 public class Options {
 
-  private final Map<String, Object> map = new HashMap<>();
+  private Map<String, Object> map = new HashMap<>();
 
   public <T> T put(Key<T> key, T value){
     return (T) map.put(key.getName(), value);
@@ -38,6 +38,11 @@ public class Options {
     return (T) map.get(key.getName());
   }
 
+  public Options copy(){
+    Options opt = new Options();
+    opt.map = new HashMap<>(map);
+    return opt;
+  }
 
   public static class Key<T> {
 

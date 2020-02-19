@@ -65,6 +65,11 @@ public class GNode {
     return getOption(key) != null;
   }
 
+  public void copyFrom(GNode other){
+    this.label = other.getLabel();
+    this.typedOptions = other.typedOptions.copy();
+  }
+
   @Override
   public boolean equals(Object pO) {
     if (this == pO) {

@@ -23,6 +23,8 @@ fi
 if [ $result -ne 0 ]; then
   echo "Failed to execute Java VM, return code was $result and output was"
   echo "$java_version"
+
+
   echo "Please make sure you are able to execute Java processes by running \"$JAVA\"."
   exit 1
 fi
