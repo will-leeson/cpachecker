@@ -1067,7 +1067,7 @@ public abstract class AbstractExpressionValueVisitor
               Number number = parameter.asNumericValue().getNumber();
               Optional<Boolean> isNegative = isNegative(number);
               if (isNegative.isPresent()) {
-                return new NumericValue(isNegative.get() ? 1 : 0);
+                return new NumericValue(isNegative.orElseThrow() ? 1 : 0);
               }
             }
           }
@@ -1083,7 +1083,7 @@ public abstract class AbstractExpressionValueVisitor
               Optional<Boolean> sourceNegative = isNegative(sourceNumber);
               Optional<Boolean> targetNegative = isNegative(targetNumber);
               if (sourceNegative.isPresent() && targetNegative.isPresent()) {
-                if (sourceNegative.get() == targetNegative.get()) {
+                if (sourceNegative.orElseThrow().equals(targetNegative.orElseThrow())) {
                   return new NumericValue(targetNumber);
                 }
                 return target.asNumericValue().negate();
@@ -1804,7 +1804,8 @@ public abstract class AbstractExpressionValueVisitor
       }
 
       if (pLeftType != JBasicType.LONG && pRightType != JBasicType.LONG) {
-        numResult = (int) numResult;
+        int intNumResult = (int) numResult;
+        numResult = intNumResult;
       }
 
       return new NumericValue(numResult);
@@ -2445,6 +2446,7 @@ public abstract class AbstractExpressionValueVisitor
 
       case FLOAT:
       case DOUBLE:
+      case FLOAT128:
         {
           // TODO: look more closely at the INT/CHAR cases, especially at the loggedEdges stuff
           // TODO: check for overflow(source larger than the highest number we can store in target
@@ -2465,7 +2467,9 @@ public abstract class AbstractExpressionValueVisitor
             // 64 bit means Java double
             result = new NumericValue(numericValue.doubleValue());
 
-          } else if (size == machineModel.getSizeofLongDouble() * bitPerByte) {
+        } else if (size == machineModel.getSizeofFloat128() * 8) {
+          result = new NumericValue(numericValue.bigDecimalValue());
+        } else if (size == machineModel.getSizeofLongDouble() * bitPerByte) {
 
             if (numericValue.bigDecimalValue().doubleValue() == numericValue.doubleValue()) {
               result = new NumericValue(numericValue.doubleValue());

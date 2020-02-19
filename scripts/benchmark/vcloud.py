@@ -135,6 +135,8 @@ def execute_benchmark(benchmark, output_handler):
             cmdLine.extend(["--master", benchmark.config.cloudMaster])
         if benchmark.config.zipResultFiles:
             cmdLine.extend(["--zip-result-files", str(benchmark.config.zipResultFiles)])
+        if benchmark.config.cgroupAccess:
+            cmdLine.extend(["--cgroupAccess", str(benchmark.config.cgroupAccess)])
         if benchmark.config.debug:
             cmdLine.extend(["--print-new-files", "true"])
 
@@ -383,7 +385,9 @@ def handleCloudResults(benchmark, output_handler, start_time, end_time):
             ):
                 shutil.move(vcloudFilesDirectory, benchexecFilesDirectory)
 
-        output_handler.output_after_run_set(runSet, walltime=usedWallTime, end_time=end_time)
+        output_handler.output_after_run_set(
+            runSet, walltime=usedWallTime, end_time=end_time
+        )
 
     output_handler.output_after_benchmark(STOPPED_BY_INTERRUPT)
 
