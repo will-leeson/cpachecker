@@ -171,14 +171,10 @@ public class JExpressionTransformer extends ExpressionTransformer
   @Override
   public SymbolicExpression visit(JBooleanLiteralExpression pJBooleanLiteralExpression)
       throws UnrecognizedCodeException {
-    final boolean value = pJBooleanLiteralExpression.getValue();
+    final Value value = BooleanValue.valueOf(pJBooleanLiteralExpression.getBoolean());
     final Type booleanType = pJBooleanLiteralExpression.getExpressionType();
 
-    return SymbolicValueFactory.getInstance().asConstant(createBooleanValue(value), booleanType);
-  }
-
-  private Value createBooleanValue(boolean pValue) {
-    return BooleanValue.valueOf(pValue);
+    return SymbolicValueFactory.getInstance().asConstant(value, booleanType);
   }
 
   @Override

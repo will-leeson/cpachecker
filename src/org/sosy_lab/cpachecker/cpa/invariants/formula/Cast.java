@@ -11,7 +11,7 @@ package org.sosy_lab.cpachecker.cpa.invariants.formula;
 import java.util.Objects;
 import org.sosy_lab.cpachecker.cpa.invariants.TypeInfo;
 
-public class Cast<ConstantType> extends AbstractFormula<ConstantType> {
+class Cast<ConstantType> extends AbstractFormula<ConstantType> {
 
   private final NumeralFormula<ConstantType> casted;
 

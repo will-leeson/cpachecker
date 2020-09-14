@@ -11,8 +11,7 @@ package org.sosy_lab.cpachecker.cpa.invariants;
 import com.ibm.icu.math.BigDecimal;
 import java.math.BigInteger;
 
-
-public class CompoundFloatingPointIntervalManager implements CompoundIntervalManager {
+class CompoundFloatingPointIntervalManager implements CompoundIntervalManager {
 
   private final FloatingPointTypeInfo typeInfo;
 
