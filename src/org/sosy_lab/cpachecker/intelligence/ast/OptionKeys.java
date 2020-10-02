@@ -26,6 +26,7 @@ package org.sosy_lab.cpachecker.intelligence.ast;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.checkerframework.checker.units.qual.K;
 import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
 import org.sosy_lab.cpachecker.cfa.ast.c.CExpression;
 import org.sosy_lab.cpachecker.cfa.ast.c.CStatement;
@@ -49,6 +50,7 @@ public class OptionKeys {
   public static final Options.Key<CExpression> CEXPR = new Key<>("expression");
   public static final Options.Key<CDeclaration> CDECL = new Key<>("declaration");
   public static final Options.Key<String> FUNC_CALL = new Key<>("function_call");
+  public static final Options.Key<String> FUNC_NAME = new Key<>("function_name");
   public static final Options.Key<String> PARENT_FUNC = new Key<>("global.parent");
   public static final Options.Key<List<CExpression>> ARGS = new Key<>("function_args");
   public static final Options.Key<CStatement> CSTATEMENT = new Key<>("statement");
@@ -63,4 +65,6 @@ public class OptionKeys {
   public static final Options.Key<Boolean> RECURSION = new Key<>("global.recursion");
   public static final Options.Key<Boolean> CONCURRENCY = new Key<>("global.concurrency");
   public static final Options.Key<Boolean> POINTER = new Key<>("global.pointer");
+
+  public static final Options.Key<Boolean> PROCESSED = new Key<>("processed");
 }

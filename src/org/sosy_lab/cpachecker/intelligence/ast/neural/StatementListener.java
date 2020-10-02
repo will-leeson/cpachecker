@@ -44,6 +44,20 @@ public class StatementListener extends AEdgeListener {
     super(-1, pGraph, pShutdownNotifier);
   }
 
+  public static String extractLabel(CFAEdge pCFAEdge){
+    if(pCFAEdge instanceof CStatementEdge){
+      CStatementEdge cfaEdge = (CStatementEdge)pCFAEdge;
+      CStatement statement = cfaEdge.getStatement();
+
+      try {
+        return statement.accept(new CStatementStumpVisitor());
+      } catch (CPATransferException pE) {
+        return null;
+      }
+    }
+    return null;
+  }
+
   @Override
   public void listen(CFAEdge edge) {
     if(edge instanceof CStatementEdge){
@@ -89,7 +103,9 @@ public class StatementListener extends AEdgeListener {
         node.setOption(OptionKeys.AST, ast);
         node.setOption(OptionKeys.AST_ROOT, astId);
 
-      } catch (CPATransferException pE) {}
+      } catch (CPATransferException pE) {
+        return;
+      }
 
 
     }

@@ -56,7 +56,7 @@ public class CallGraph extends StructureGraph {
     ));
   }
 
-  private class CallEdge extends GEdge {
+  private static class CallEdge extends GEdge {
 
     public CallEdge(GNode pSource, GNode pSink) {
       super("call", pSource, pSink);

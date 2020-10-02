@@ -26,7 +26,6 @@ package org.sosy_lab.cpachecker.intelligence;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.FluentIterable.from;
-import static org.sosy_lab.cpachecker.util.AbstractStates.IS_TARGET_STATE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -63,7 +62,6 @@ import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.core.CPAcheckerResult.Result;
 import org.sosy_lab.cpachecker.core.CoreComponentsFactory;
-import org.sosy_lab.cpachecker.core.Specification;
 import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
 import org.sosy_lab.cpachecker.core.algorithm.ParallelAlgorithm.ReachedSetUpdateListener;
 import org.sosy_lab.cpachecker.core.algorithm.ParallelAlgorithm.ReachedSetUpdater;
@@ -79,6 +77,7 @@ import org.sosy_lab.cpachecker.core.reachedset.ForwardingReachedSet;
 import org.sosy_lab.cpachecker.core.reachedset.HistoryForwardingReachedSet;
 import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
 import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
+import org.sosy_lab.cpachecker.core.specification.Specification;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.exceptions.CounterexampleAnalysisFailed;
 import org.sosy_lab.cpachecker.exceptions.RefinementFailedException;
@@ -395,7 +394,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
 
         if(onlyPrediction)return AlgorithmStatus.UNSOUND_AND_PRECISE.withPrecise(false);
 
-        failWithUnknown = (current.annotation().isPresent()) && current.annotation().get().equals("shutdownAfter");
+        failWithUnknown = current.annotation().isPresent() && current.annotation().get().equals("shutdownAfter");
 
         Path singleConfigFileName = current.value();
 
@@ -484,7 +483,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
                 "Analysis %d terminated but did not finish: There are still states to be processed.",
                 stats.noOfAlgorithmsUsed);
 
-          } else if (!(from(currentReached).anyMatch(IS_TARGET_STATE) && !status.isPrecise())) {
+          } else if (!(from(currentReached).anyMatch(AbstractStates::isTargetState) && !status.isPrecise())) {
 
             if (!(alwaysRestart && configFilesIterator.hasNext())) {
               // sound analysis and completely finished, terminate
@@ -530,12 +529,12 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
         singleShutdownManager.requestShutdown("Analysis terminated"); // shutdown any remaining components
         stats.totalTime.stop();
 
-        if(failWithUnknown){
-          this.predictionShutdown.requestShutdown("Analyis terminated");
-          logger.log(Level.INFO, "Shutdown after shutdownAfter condition.");
-          return AlgorithmStatus.UNSOUND_AND_PRECISE.withPrecise(false);
-        }
+      }
 
+      if(failWithUnknown){
+        this.predictionShutdown.requestShutdown("Analyis terminated");
+        logger.log(Level.INFO, "Shutdown after shutdownAfter condition.");
+        return AlgorithmStatus.UNSOUND_AND_PRECISE.withPrecise(false);
       }
 
       shutdownNotifier.shutdownIfNecessary();

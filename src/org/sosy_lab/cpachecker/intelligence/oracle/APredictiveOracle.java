@@ -66,7 +66,7 @@ public abstract class APredictiveOracle implements IConfigOracle {
   private int pos = 0;
 
 
-  public APredictiveOracle(
+  protected APredictiveOracle(
       LogManager pLogger,
       Configuration config,
       ShutdownNotifier pShutdownNotifier,
@@ -130,7 +130,7 @@ public abstract class APredictiveOracle implements IConfigOracle {
       for (AnnotatedValue<Path> l : list) {
         boolean knownPath = false;
         for (AnnotatedValue<Path> labelled : labelToPath.values()) {
-          knownPath |= (l.equals(labelled));
+          knownPath |= l.equals(labelled);
         }
         if (!knownPath) unknown.add(l);
       }

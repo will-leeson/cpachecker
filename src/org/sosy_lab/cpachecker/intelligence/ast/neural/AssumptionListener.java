@@ -45,11 +45,14 @@ public class AssumptionListener extends AEdgeListener {
     super(-1, pGraph, pShutdownNotifier);
   }
 
-  public static ASTNodeLabel extractControlLabel(CFAEdge pCFAEdge) {
+  public static String extractLabel(CFAEdge pCFAEdge) {
+
+    if(!(pCFAEdge instanceof CAssumeEdge)) return null;
+
     if(pCFAEdge.getPredecessor().isLoopStart()) {
-      return ASTNodeLabel.LOOP_CONDITION;
+      return ASTNodeLabel.LOOP_CONDITION.name();
     }
-    return ASTNodeLabel.BRANCH_CONDITION;
+    return ASTNodeLabel.BRANCH_CONDITION.name();
   }
 
   @Override
@@ -57,7 +60,7 @@ public class AssumptionListener extends AEdgeListener {
     if(edge instanceof CAssumeEdge){
       CAssumeEdge assume = (CAssumeEdge)edge;
 
-      String label = extractControlLabel(assume).name();
+      String label = extractLabel(assume);
       String id = "N"+assume.getPredecessor().getNodeNumber();
       String idS = "N"+assume.getSuccessor().getNodeNumber();
       graph.addNode(id, label);
@@ -89,6 +92,7 @@ public class AssumptionListener extends AEdgeListener {
           sourceNode.setOption(OptionKeys.AST, ast);
           sourceNode.setOption(OptionKeys.AST_ROOT, root);
         } catch (CPATransferException pE) {
+          return;
         }
 
       }

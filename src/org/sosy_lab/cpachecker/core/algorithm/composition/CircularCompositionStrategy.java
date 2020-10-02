@@ -50,7 +50,7 @@ public class CircularCompositionStrategy extends AlgorithmCompositionStrategy
   protected void initializeAlgorithmContexts(List<AnnotatedValue<Path>> pConfigFiles) {
     super.initializeAlgorithmContexts(pConfigFiles);
     algorithmContextCycle = Iterables.cycle(algorithmContexts).iterator();
-    inCycleCount = 1;
+    inCycleCount = 0;
     noOfRounds = 0;
   }
 

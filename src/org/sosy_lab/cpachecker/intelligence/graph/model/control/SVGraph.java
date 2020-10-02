@@ -29,9 +29,6 @@ import org.sosy_lab.cpachecker.intelligence.graph.model.StructureGraph;
 
 public class SVGraph extends StructureGraph {
 
-  public enum EdgeType{
-    CFG, CD, DD, S
-  }
 
   public boolean addCFGEdge(String source, String target){
     return addEdge(new CFGEdge(super.getNode(source), super.getNode(target)));
@@ -53,27 +50,7 @@ public class SVGraph extends StructureGraph {
     return addEdge(new DummyEdge(super.getNode(source), super.getNode(target)));
   }
 
-  private String stringId(EdgeType pEdgeType){
-    String id = "";
-    switch (pEdgeType){
-      case CFG:
-        id = "cfg";
-        break;
-      case CD:
-        id = "cd";
-        break;
-      case DD:
-        id = "dd";
-        break;
-      case S:
-        id = "s";
-        break;
-    }
-
-    return id;
-  }
-
-
+  @Override
   public String toDot(){
     return super.toDot(
         n -> n.getId().startsWith("N"),

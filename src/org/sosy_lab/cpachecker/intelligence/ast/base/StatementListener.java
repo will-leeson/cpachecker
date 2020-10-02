@@ -87,6 +87,7 @@ public class StatementListener extends AEdgeListener {
             statement.accept(new CAssignVariablesCollector(edge.getPredecessor())));
 
       } catch (CPATransferException pE) {
+        return;
       }
 
 

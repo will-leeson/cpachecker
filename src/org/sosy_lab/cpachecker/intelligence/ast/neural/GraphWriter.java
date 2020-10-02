@@ -141,6 +141,7 @@ public class GraphWriter {
               try {
                 writer.write(x+(f == nodes.size()-1?"":", "));
               } catch (IOException pE) {
+                return;
               }
             });
 
@@ -158,6 +159,7 @@ public class GraphWriter {
               try {
                 writer.write(x + (f == nodes.size() - 1 ? "" : ", "));
               } catch (IOException pE) {
+                return;
               }
             });
 
@@ -176,6 +178,7 @@ public class GraphWriter {
               try {
                 writer.write(x + (f == edges.size() - 1 ? "" : ", "));
               } catch (IOException pE) {
+                return;
               }
             });
       }
@@ -294,6 +297,7 @@ public class GraphWriter {
               try {
                 writer.write(x+(f == size-1?"":", "));
               } catch (IOException pE) {
+                return;
               }
             });
 

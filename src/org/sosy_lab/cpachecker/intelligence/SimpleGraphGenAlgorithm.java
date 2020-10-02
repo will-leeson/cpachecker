@@ -115,7 +115,7 @@ public class SimpleGraphGenAlgorithm implements Algorithm {
     Path out = Paths.get(output);
     Path parent = out.getParent();
 
-    if(parent != null && !Files.exists(parent) || !Files.isDirectory(parent)){
+    if((parent != null && !Files.exists(parent)) || !Files.isDirectory(parent)){
       Files.createDirectory(parent);
     }
 
@@ -129,7 +129,7 @@ public class SimpleGraphGenAlgorithm implements Algorithm {
     Path out = Paths.get(nodePosition);
     Path parent = out.getParent();
 
-    if(parent != null && !Files.exists(parent) || !Files.isDirectory(parent)){
+    if((parent != null && !Files.exists(parent)) || !Files.isDirectory(parent)){
       Files.createDirectory(parent);
     }
 

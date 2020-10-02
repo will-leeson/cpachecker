@@ -117,7 +117,7 @@ public class GraphGenAlgorithm implements Algorithm {
     analyser.applyCD();
 
     System.out.println("Time for CD: "+stopwatch.elapsed());
-    stopwatch = stopwatch.reset();
+    stopwatch.stop();
 
     graph = analyser.getGraph();
 

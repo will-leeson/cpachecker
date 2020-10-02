@@ -106,6 +106,7 @@ public class DeclarationListener extends AEdgeListener {
         }
 
       } catch (CPATransferException pE) {
+        return;
       }
 
 

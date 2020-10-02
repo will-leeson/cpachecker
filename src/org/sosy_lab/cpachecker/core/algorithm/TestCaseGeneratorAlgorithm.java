@@ -13,6 +13,8 @@ import static com.google.common.collect.FluentIterable.from;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -56,7 +58,7 @@ import org.sosy_lab.cpachecker.util.error.DummyErrorState;
 import org.sosy_lab.cpachecker.util.testcase.TestCaseExporter;
 
 @Options(prefix = "testcase")
-public class TestCaseGeneratorAlgorithm implements ProgressReportingAlgorithm, StatisticsProvider {
+public class TestCaseGeneratorAlgorithm implements TargetReportingAlgorithm, StatisticsProvider {
 
   public enum ProgressComputation {
     ABSOLUTE,
@@ -84,7 +86,7 @@ public class TestCaseGeneratorAlgorithm implements ProgressReportingAlgorithm, S
   private final Set<CFAEdge> testTargets;
   private final SpecificationProperty specProp;
   private final TestCaseExporter exporter;
-  private double progress = 0;
+  private Set<CFAEdge> progressedTargets;
 
   public TestCaseGeneratorAlgorithm(
       final Algorithm pAlgorithm,
@@ -107,6 +109,7 @@ public class TestCaseGeneratorAlgorithm implements ProgressReportingAlgorithm, S
         CPAs.retrieveCPAOrFail(pCpa, TestTargetCPA.class, TestCaseGeneratorAlgorithm.class);
     testTargets =
         ((TestTargetTransferRelation) testTargetCpa.getTransferRelation()).getTestTargets();
+    progressedTargets = Collections.<CFAEdge>emptySet();
     exporter = new TestCaseExporter(pCfa, logger, pConfig);
 
     if (pSpec.getProperties().size() == 1) {
@@ -124,7 +127,7 @@ public class TestCaseGeneratorAlgorithm implements ProgressReportingAlgorithm, S
   public AlgorithmStatus run(final ReachedSet pReached)
       throws CPAException, InterruptedException, CPAEnabledAnalysisPropertyViolationException {
     int uncoveredGoalsAtStart = testTargets.size();
-    progress = 0;
+    progressedTargets = new HashSet<>();
     // clean up ARG
     if (pReached.getWaitlist().size() > 1
         || !pReached.getWaitlist().contains(pReached.getFirstState())) {
@@ -214,12 +217,12 @@ public class TestCaseGeneratorAlgorithm implements ProgressReportingAlgorithm, S
 
                   logger.log(Level.FINE, "Removing test target: " + targetEdge.toString());
                   testTargets.remove(targetEdge);
+                  progressedTargets.add(targetEdge);
 
                   if (shouldReportCoveredErrorCallAsError()) {
                     addErrorStateWithViolatedProperty(pReached);
                     shouldReturnFalse = true;
                   }
-                  progress++;
                 } else {
                   if (ignoreTargetState) {
                     TestTargetState targetState =
@@ -310,7 +313,14 @@ public class TestCaseGeneratorAlgorithm implements ProgressReportingAlgorithm, S
   }
 
   @Override
+  public Set<CFAEdge> getProgressedTargets(){
+    return Collections.unmodifiableSet(progressedTargets);
+  }
+
+  @Override
   public double getProgress() {
+    double progress = progressedTargets.size();
+
     switch (progressType) {
       case ABSOLUTE:
         return progress;

@@ -34,10 +34,15 @@ public abstract class AlgorithmCompositionStrategy {
     com.google.common.collect.ImmutableList.Builder<AlgorithmContext> contextBuilder =
         ImmutableList.<AlgorithmContext>builder();
 
+    int pos = 0;
     for (AnnotatedValue<Path> configFile : pConfigFiles) {
-      contextBuilder.add(new AlgorithmContext(configFile));
+      contextBuilder.add(this.createContext(pos++, configFile));
     }
     algorithmContexts = contextBuilder.build();
+  }
+
+  protected AlgorithmContext createContext(int pAlgorithmID, AnnotatedValue<Path> configFile){
+    return new AlgorithmContext(configFile);
   }
 
   public abstract boolean hasNextAlgorithm();

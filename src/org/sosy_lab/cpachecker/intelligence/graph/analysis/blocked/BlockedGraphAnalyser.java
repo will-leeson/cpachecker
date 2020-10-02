@@ -253,7 +253,7 @@ public class BlockedGraphAnalyser extends GraphAnalyser {
                 continue;
             }
 
-            String id = "phi_"+(phiIndex++);
+            String id = "phi_"+phiIndex++;
             phis.put(id, new HashSet<>());
             events.add(new BlockDef(id, use.getVariable(), use.getBlock()));
             useDefQueue.add(new UseDef(use.getUsePos(), use.getVariable(), id));

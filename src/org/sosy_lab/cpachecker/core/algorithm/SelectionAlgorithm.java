@@ -247,6 +247,10 @@ public class SelectionAlgorithm extends NestingAlgorithm {
   @FileOption(FileOption.Type.OPTIONAL_INPUT_FILE)
   private Path arrayConfig;
 
+  @Option(secure = true, description = "Configuration for programs containing variable aliasing.")
+  @FileOption(FileOption.Type.OPTIONAL_INPUT_FILE)
+  private Path aliasConfig;
+
   @Option(
       secure = true,
       description =
@@ -427,6 +431,8 @@ public class SelectionAlgorithm extends NestingAlgorithm {
         && complexLoopConfig != null) {
       // Run complex loop config
       chosenConfig = complexLoopConfig;
+    } else if(stats.requiresAliasHandling && aliasConfig != null){
+      chosenConfig = aliasConfig;
     } else {
       // Run standard loop config
       chosenConfig = loopConfig;

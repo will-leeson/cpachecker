@@ -237,7 +237,7 @@ public class GraphAnalyser {
 
       int difference = size - diff.size();
 
-      discComp.add(graph.getNode(minNode).getLabel()+"-"+(difference));
+      discComp.add(graph.getNode(minNode).getLabel()+"-"+difference);
 
       if(forward)
         graph.addDummyEdge(start, minNode);

@@ -57,6 +57,7 @@ import org.sosy_lab.cpachecker.core.CPAcheckerResult.Result;
 import org.sosy_lab.cpachecker.core.CoreComponentsFactory;
 import org.sosy_lab.cpachecker.core.algorithm.Algorithm;
 import org.sosy_lab.cpachecker.core.algorithm.ProgressReportingAlgorithm;
+import org.sosy_lab.cpachecker.core.algorithm.TargetReportingAlgorithm;
 import org.sosy_lab.cpachecker.core.defaults.precision.ConfigurablePrecision;
 import org.sosy_lab.cpachecker.core.defaults.precision.VariableTrackingPrecision;
 import org.sosy_lab.cpachecker.core.interfaces.AbstractState;
@@ -84,6 +85,7 @@ import org.sosy_lab.cpachecker.util.AbstractStates;
 import org.sosy_lab.cpachecker.util.CPAs;
 import org.sosy_lab.cpachecker.util.Pair;
 import org.sosy_lab.cpachecker.util.Precisions;
+import org.sosy_lab.cpachecker.util.globalinfo.GlobalInfo;
 import org.sosy_lab.cpachecker.util.predicates.AbstractionPredicate;
 import org.sosy_lab.cpachecker.util.predicates.smt.FormulaManagerView;
 import org.sosy_lab.cpachecker.util.resources.ProcessCpuTimeLimit;
@@ -442,6 +444,12 @@ public class CompositionAlgorithm implements Algorithm, StatisticsProvider {
               if (currentRun.getFirst() instanceof ProgressReportingAlgorithm) {
                 currentContext.setProgress(
                     ((ProgressReportingAlgorithm) currentRun.getFirst()).getProgress());
+
+                if(currentRun.getFirst() instanceof TargetReportingAlgorithm){
+                  currentContext.setProgressedEdges(
+                        ((TargetReportingAlgorithm) currentRun.getFirst()).getProgressedTargets()
+                  );
+                }
               }
 
               CPAs.closeIfPossible(currentRun.getFirst(), logger);
@@ -611,6 +619,8 @@ public class CompositionAlgorithm implements Algorithm, StatisticsProvider {
                   pCurrentContext.getConfig()));
         }
       }
+
+      GlobalInfo.getInstance().setUpInfoFromCPA(cpa);
 
       // always create algorithm with new "local" shutdown manager
       Algorithm algorithm =
