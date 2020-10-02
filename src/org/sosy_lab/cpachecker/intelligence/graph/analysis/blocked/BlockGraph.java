@@ -15,7 +15,7 @@ public class BlockGraph extends StructureGraph {
     public boolean addEdge(String source, String target){
 
         return super.addEdge(
-                new CFGEdge("conn_"+(conn_id++), super.getNode(source), super.getNode(target))
+                new CFGEdge("conn_"+conn_id++, super.getNode(source), super.getNode(target))
         );
 
     }

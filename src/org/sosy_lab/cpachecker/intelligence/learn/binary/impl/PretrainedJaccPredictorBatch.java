@@ -75,6 +75,7 @@ public class PretrainedJaccPredictorBatch implements IPredictorBatch {
 
   private class PredictionProcess extends RecursiveTask<double[][]> {
 
+    private static final long serialVersionUID = 42L;
     private Iterable<IProgramSample> entities;
 
     public PredictionProcess(Iterable<IProgramSample> pEntities) {

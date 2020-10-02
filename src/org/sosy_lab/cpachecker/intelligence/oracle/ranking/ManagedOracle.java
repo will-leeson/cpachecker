@@ -71,9 +71,6 @@ public class ManagedOracle implements IConfigOracle {
           description = "Heuristics to apply on output ranking.")
   private List<String> heuristics = new ArrayList<>();
 
-  @Option(secure = true,
-          description = "forcibly kill execution if new prediction arrives.")
-  private boolean kill = false;
 
   private LogManager logger;
   private RankManager manager;
@@ -136,7 +133,7 @@ public class ManagedOracle implements IConfigOracle {
       for (AnnotatedValue<Path> l : list) {
         boolean knownPath = false;
         for (AnnotatedValue<Path> labelled : labelToPath.values()) {
-          knownPath |= (l.equals(labelled));
+          knownPath |= l.equals(labelled);
         }
         if (!knownPath) unknown.add(l);
       }

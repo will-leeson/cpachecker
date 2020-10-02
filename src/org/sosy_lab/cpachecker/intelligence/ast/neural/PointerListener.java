@@ -19,9 +19,9 @@ public class PointerListener implements IEdgeListener {
     private PEGraph graph;
     private ShutdownNotifier notifier;
 
-    public PointerListener(PEGraph graph, ShutdownNotifier notifier) {
-        this.graph = graph;
-        this.notifier = notifier;
+    public PointerListener(PEGraph pGraph, ShutdownNotifier pNotifier) {
+        this.graph = pGraph;
+        this.notifier = pNotifier;
     }
 
     private List<PointerUse> handleAssign(CType leftType, String leftName, CExpression right){
@@ -117,6 +117,12 @@ public class PointerListener implements IEdgeListener {
         PointerUse def = null;
         for(PointerUse use : pointer){
 
+            try{
+                notifier.shutdownIfNecessary();
+            } catch (InterruptedException pE) {
+                return;
+            }
+
             String maxOp = use.pointerOp;
             String op = "";
 
@@ -160,20 +166,20 @@ public class PointerListener implements IEdgeListener {
         }
     }
 
-    private class PointerUse {
+    private static class PointerUse {
 
         private String pointerOp;
         private String varName;
         private boolean def = false;
 
-        public PointerUse(String pointerOp, String varName) {
-            this.pointerOp = pointerOp;
-            this.varName = varName;
+        public PointerUse(String pPointerOp, String pVarName) {
+            this.pointerOp = pPointerOp;
+            this.varName = pVarName;
         }
 
-        public PointerUse(String pointerOp, String varName, boolean isDef) {
-            this.pointerOp = pointerOp;
-            this.varName = varName;
+        public PointerUse(String pPointerOp, String pVarName, boolean isDef) {
+            this.pointerOp = pPointerOp;
+            this.varName = pVarName;
             this.def = isDef;
         }
 

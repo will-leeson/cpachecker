@@ -100,7 +100,7 @@ public class PredictiveOracle implements IConfigOracle {
       for (AnnotatedValue<Path> l : list) {
         boolean knownPath = false;
         for (AnnotatedValue<Path> labelled : labelToPath.values()) {
-          knownPath |= (l.equals(labelled));
+          knownPath |= l.equals(labelled);
         }
         if (!knownPath) unknown.add(l);
       }

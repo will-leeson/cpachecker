@@ -26,6 +26,7 @@ import org.sosy_lab.cpachecker.core.algorithm.AssumptionCollectorAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.BDDCPARestrictionAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.CEGARAlgorithm.CEGARAlgorithmFactory;
 import org.sosy_lab.cpachecker.core.algorithm.CPAAlgorithm;
+import org.sosy_lab.cpachecker.core.algorithm.CounterexampleLearningAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.CounterexampleStoreAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.CustomInstructionRequirementsExtractingAlgorithm;
 import org.sosy_lab.cpachecker.core.algorithm.ExceptionHandlingAlgorithm;
@@ -272,26 +273,14 @@ public class CoreComponentsFactory {
       description = "collect undefined functions")
   private boolean useUndefinedFunctionCollector = false;
 
-  @Option(
-      secure = true,
-      name = "extractRequirements.customInstruction",
-      description =
-          "do analysis and then extract pre- and post conditions for custom instruction from"
-              + " analysis result")
+  @Option(secure=true, name="extractRequirements.customInstruction", description="do analysis and then extract pre- and post conditions for custom instruction from analysis result")
   private boolean useCustomInstructionRequirementExtraction = false;
 
-  @Option(
-      secure = true,
-      name = "algorithm.useParallelBAM",
-      description = "run the parallel BAM algortihm.")
+  @Option(secure = true, name = "algorithm.useParallelBAM", description = "run the parallel BAM algortihm.")
   private boolean useParallelBAM = false;
 
-  @Option(
-      secure = true,
-      name = "unknownIfUnrestrictedProgram",
-      description =
-          "stop the analysis with the result unknown if the program does not satisfies certain"
-              + " restrictions.")
+  @Option(secure=true, name="unknownIfUnrestrictedProgram",
+      description="stop the analysis with the result unknown if the program does not satisfies certain restrictions.")
   private boolean unknownIfUnrestrictedProgram = false;
 
   @Option(
@@ -305,6 +294,12 @@ public class CoreComponentsFactory {
       name = "algorithm.CBMC",
       description = "use CBMC as an external tool from CPAchecker")
   boolean runCBMCasExternalTool = false;
+
+  @Option(
+      secure = true,
+      name = "algorithm.CEXLearning",
+      description = "use found counterexample to extract statistics which can help the selection of verifier.")
+  boolean learnFromCounterexample = false;
 
   @Option(
       secure = true,
@@ -362,7 +357,6 @@ public class CoreComponentsFactory {
     if (checkCounterexamplesWithBDDCPARestriction) {
       checkCounterexamples = true;
     }
-
   }
 
   private boolean analysisNeedsShutdownManager() {
@@ -541,6 +535,12 @@ public class CoreComponentsFactory {
         algorithm = new BDDCPARestrictionAlgorithm(algorithm, cpa, config, logger);
       }
 
+      if(learnFromCounterexample){
+        algorithm = new CounterexampleLearningAlgorithm(
+            algorithm, cfa, config, cpa, logger, shutdownNotifier, specification
+        );
+      }
+
       if (useTestCaseGeneratorAlgorithm) {
         algorithm =
             new TestCaseGeneratorAlgorithm(
@@ -574,6 +574,7 @@ public class CoreComponentsFactory {
             new ResultCheckAlgorithm(
                 algorithm, cpa, cfa, config, logger, shutdownNotifier, specification);
       }
+
       if (useCustomInstructionRequirementExtraction) {
         algorithm = new CustomInstructionRequirementsExtractingAlgorithm(algorithm, cpa, config, logger, shutdownNotifier, cfa);
       }

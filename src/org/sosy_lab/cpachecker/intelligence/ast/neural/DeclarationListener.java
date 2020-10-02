@@ -48,16 +48,29 @@ public class DeclarationListener extends AEdgeListener {
     super(-1, pGraph, pShutdownNotifier);
   }
 
+  public static String extractLabel(CFAEdge cfaEdge) {
+    if (cfaEdge instanceof CDeclarationEdge) {
+      CDeclarationEdge declEdge = (CDeclarationEdge) cfaEdge;
+      CDeclaration decl = declEdge.getDeclaration();
+
+      String label = ASTNodeLabel.DECL.name();
+
+      if (decl.isGlobal()) {
+        label = label + "_" + ASTNodeLabel.GLOBAL.name();
+      }
+
+      return label;
+    }
+    return null;
+  }
+
   @Override
   public void listen(CFAEdge edge) {
     if (edge instanceof CDeclarationEdge) {
       CDeclarationEdge declEdge = (CDeclarationEdge) edge;
       CDeclaration decl = declEdge.getDeclaration();
 
-      String label = ASTNodeLabel.DECL.name();
-      if (decl.isGlobal()) {
-        label = label + "_" + ASTNodeLabel.GLOBAL.name();
-      }
+      String label = extractLabel(edge);
 
       String id = "N" + declEdge.getPredecessor().getNodeNumber();
       String idS = "N" + declEdge.getSuccessor().getNodeNumber();
@@ -104,6 +117,7 @@ public class DeclarationListener extends AEdgeListener {
         sourceNode.setOption(OptionKeys.AST_ROOT, root);
 
       } catch (CPATransferException pE) {
+        return;
       }
 
 

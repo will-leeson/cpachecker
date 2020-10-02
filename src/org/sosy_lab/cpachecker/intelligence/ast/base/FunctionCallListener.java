@@ -100,6 +100,7 @@ public class FunctionCallListener extends AEdgeListener {
               String tree = arg.accept(new CExpressionASTVisitor(graph, depth - 2 ));
               graph.addSEdge(tree, tId);
             } catch (CPATransferException pE) {
+              return;
             }
           }
         }

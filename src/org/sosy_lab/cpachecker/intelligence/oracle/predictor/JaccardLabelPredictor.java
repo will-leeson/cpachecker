@@ -100,6 +100,8 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
       ResourceLimitChecker checker = ResourceLimitChecker.fromConfiguration(configuration, logger, ownManager);
       checker.start();
     } catch (InvalidConfigurationException pE) {
+      logger.log(Level.WARNING, pE, "Cannot create configuration for timeout.", pE);
+      return;
     }
 
   }

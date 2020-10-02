@@ -37,19 +37,19 @@ public class SVGraphProcessor {
 
   protected List<IEdgeListener> listeners(SVGraph pGraph, ShutdownNotifier pShutdownNotifier){
 
-    return new ArrayList<IEdgeListener>(){{
-      add(new ParentListener(-1, pGraph, pShutdownNotifier));
-      add(new RPOListener(pGraph, pShutdownNotifier));
-      add(new PosListener(pGraph, pShutdownNotifier));
-      add(new InitExitListener(pGraph, pShutdownNotifier));
-      add(new AssumptionListener(pGraph, pShutdownNotifier));
-      add(new BlankEdgeListener(pGraph, pShutdownNotifier));
-      add(new DeclarationListener(pGraph, pShutdownNotifier));
-      add(new FunctionCallListener(pGraph, pShutdownNotifier));
-      add(new ReturnFunctionListener(pGraph, pShutdownNotifier));
-      add(new ReturnStatementListener(pGraph, pShutdownNotifier));
-      add(new StatementListener(pGraph, pShutdownNotifier));
-    }};
+    return List.of(
+      new ParentListener(-1, pGraph, pShutdownNotifier),
+      new RPOListener(pGraph, pShutdownNotifier),
+      new PosListener(pGraph, pShutdownNotifier),
+      new InitExitListener(pGraph, pShutdownNotifier),
+      new AssumptionListener(pGraph, pShutdownNotifier),
+      new BlankEdgeListener(pGraph, pShutdownNotifier),
+      new DeclarationListener(pGraph, pShutdownNotifier),
+      new FunctionCallListener(pGraph, pShutdownNotifier),
+      new ReturnFunctionListener(pGraph, pShutdownNotifier),
+      new ReturnStatementListener(pGraph, pShutdownNotifier),
+      new StatementListener(pGraph, pShutdownNotifier)
+    );
   }
 
 

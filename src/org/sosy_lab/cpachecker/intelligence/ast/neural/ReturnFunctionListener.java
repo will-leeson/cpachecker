@@ -25,6 +25,7 @@ package org.sosy_lab.cpachecker.intelligence.ast.neural;
 
 import java.util.HashSet;
 import org.sosy_lab.common.ShutdownNotifier;
+import org.sosy_lab.common.configuration.Option;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionReturnEdge;
@@ -42,10 +43,16 @@ public class ReturnFunctionListener extends AEdgeListener {
     super(-1, pGraph, pShutdownNotifier);
   }
 
+  public static String extractLabel(CFAEdge pCFAEdge){
+    if(!(pCFAEdge instanceof CFunctionReturnEdge)) return null;
+
+    return ASTNodeLabel.FUNCTION_EXIT.name();
+  }
+
   @Override
   public void listen(CFAEdge edge) {
     if(edge instanceof CFunctionReturnEdge) {
-      String label = ASTNodeLabel.FUNCTION_EXIT.name();
+      String label = extractLabel(edge);
       String id = "N"+edge.getPredecessor().getNodeNumber();
       String idS = "N"+edge.getSuccessor().getNodeNumber();
       graph.addNode(id, label);
@@ -56,6 +63,8 @@ public class ReturnFunctionListener extends AEdgeListener {
       if(!prev.containsOption(OptionKeys.VARS)){
         prev.setOption(OptionKeys.VARS, new HashSet<>());
       }
+
+      prev.setOption(OptionKeys.FUNC_NAME, ((CFunctionReturnEdge) edge).getFunctionEntry().getFunctionName());
 
       CFANode pre = edge.getPredecessor();
       for(int i = 0; i < pre.getNumEnteringEdges(); i++){

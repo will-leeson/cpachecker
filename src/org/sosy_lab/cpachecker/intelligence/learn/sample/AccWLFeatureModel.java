@@ -50,7 +50,6 @@ import ove.crypto.digest.Blake2b;
 
 public class AccWLFeatureModel implements IWLFeatureModel
 {
-    private static Map<String, String> relabelLabel;
     private CFA cfa;
     private int astDepth;
     private SVGraph graph;
@@ -58,35 +57,6 @@ public class AccWLFeatureModel implements IWLFeatureModel
     private Map<String, Map<String, String>> relabel;
     private int iteration;
 
-    private static Map<String, String> relabelLabel() {
-        if (AccWLFeatureModel.relabelLabel == null) {
-            final Map<String, String> map = new HashMap<String, String>();
-            map.put("UNSIGNED_INT", "INT");
-            map.put("LONG_UNSIGNED_INT", "LONG");
-            map.put("LONG_INT", "LONG");
-            map.put("LONGLONG_UNSIGNED_INT", "LONG");
-            map.put("LONGLONG_INT", "LONG");
-            map.put("LONG_UNSIGNED_LONG", "LONG");
-            map.put("LONG_LONG", "LONG");
-            map.put("UNSIGNED_CHAR", "CHAR");
-            map.put("VOLATILE_LONG_LONG", "VOLATILE_LONG");
-            map.put("VOLATILE_LONG_UNSIGNED_INT", "VOLATILE_LONG");
-            map.put("VOLATILE_LONG_INT", "VOLATILE_LONG");
-            map.put("VOLATILE_LONG_UNSIGNED_LONG", "VOLATILE_LONG");
-            map.put("VOLATILE_UNSIGNED_INT", "VOLATILE_INT");
-            map.put("CONST_UNSIGNED_INT", "CONST_INT");
-            map.put("CONST_LONG_LONG", "CONST_LONG");
-            map.put("CONST_LONG_UNSIGNED_LONG", "CONST_LONG");
-            map.put("CONST_LONGLONG_UNSIGNED_LONGLONG", "CONST_LONG");
-            map.put("CONST_LONGLONG_LONGLONG", "CONST_LONG");
-            map.put("CONST_UNSIGNED_CHAR", "CONST_CHAR");
-            map.put("INT_LITERAL_SMALL", "INT_LITERAL");
-            map.put("INT_LITERAL_MEDIUM", "INT_LITERAL");
-            map.put("INT_LITERAL_LARGE", "INT_LITERAL");
-            AccWLFeatureModel.relabelLabel = (Map<String, String>)ImmutableMap.copyOf((Map)map);
-        }
-        return AccWLFeatureModel.relabelLabel;
-    }
 
     public AccWLFeatureModel(final CFA pCFA, final int pAstDepth) {
         this.relabel = new HashMap<String, Map<String, String>>();
@@ -249,7 +219,6 @@ public class AccWLFeatureModel implements IWLFeatureModel
                 AliasAnalyser aliasAnalyser = new AliasAnalyser(this.graph.getGlobalOption(OptionKeys.POINTER_GRAPH), pShutdownNotifier);
                 aliases = aliasAnalyser.getAliases();
                 this.graph.setGlobalOption(OptionKeys.POINTER_GRAPH, null);
-                aliasAnalyser = null;
             }
             localAnalyser.applyDD(aliases);
             localAnalyser.disconnectFunctionsViaDependencies();
@@ -277,8 +246,5 @@ public class AccWLFeatureModel implements IWLFeatureModel
         return count;
     }
 
-    static {
-        AccWLFeatureModel.relabelLabel = null;
-    }
 }
 

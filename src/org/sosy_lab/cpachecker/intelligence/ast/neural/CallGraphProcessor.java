@@ -39,16 +39,16 @@ public class CallGraphProcessor {
 
   private List<IEdgeListener> listeners(SVGraph pGraph, ShutdownNotifier pShutdownNotifier){
 
-    return new ArrayList<IEdgeListener>(){{
-        add(new InitExitListener(pGraph, pShutdownNotifier));
-        add(new AssumptionListener(pGraph, pShutdownNotifier));
-        add(new BlankEdgeListener(pGraph, pShutdownNotifier));
-        add(new DeclarationListener(pGraph, pShutdownNotifier));
-        add(new FunctionCallListener(pGraph, pShutdownNotifier));
-        add(new ReturnFunctionListener(pGraph, pShutdownNotifier));
-        add(new ReturnStatementListener(pGraph, pShutdownNotifier));
-        add(new StatementListener(pGraph, pShutdownNotifier));
-    }};
+    return List.of(
+        new InitExitListener(pGraph, pShutdownNotifier),
+        new AssumptionListener(pGraph, pShutdownNotifier),
+        new BlankEdgeListener(pGraph, pShutdownNotifier),
+        new DeclarationListener(pGraph, pShutdownNotifier),
+        new FunctionCallListener(pGraph, pShutdownNotifier),
+        new ReturnFunctionListener(pGraph, pShutdownNotifier),
+        new ReturnStatementListener(pGraph, pShutdownNotifier),
+        new StatementListener(pGraph, pShutdownNotifier)
+    );
   }
 
 

@@ -26,6 +26,7 @@ package org.sosy_lab.cpachecker.intelligence.ast.neural;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.ast.c.CAssignment;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
+import org.sosy_lab.cpachecker.cfa.model.c.CFunctionReturnEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CReturnStatementEdge;
 import org.sosy_lab.cpachecker.exceptions.CPATransferException;
 import org.sosy_lab.cpachecker.intelligence.ast.AEdgeListener;
@@ -42,6 +43,12 @@ public class ReturnStatementListener extends AEdgeListener {
       SVGraph pGraph,
       ShutdownNotifier pShutdownNotifier) {
     super(-1, pGraph, pShutdownNotifier);
+  }
+
+  public static String extractLabel(CFAEdge pCFAEdge){
+    if(!(pCFAEdge instanceof CReturnStatementEdge)) return null;
+
+    return ASTNodeLabel.RETURN.name();
   }
 
   @Override
@@ -67,6 +74,7 @@ public class ReturnStatementListener extends AEdgeListener {
           node.setOption(OptionKeys.DECL_VARS,
               statement.accept(new CAssignVariablesCollector(edge.getPredecessor())));
         } catch (CPATransferException pE) {
+          return;
         }
 
 

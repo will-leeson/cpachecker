@@ -11,8 +11,11 @@ package org.sosy_lab.cpachecker.core.algorithm.composition;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownNotifier;
@@ -23,8 +26,13 @@ import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.common.time.TimeSpan;
 import org.sosy_lab.common.time.Timer;
+import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
+import org.sosy_lab.cpachecker.core.algorithm.TestCaseGeneratorAlgorithm;
 import org.sosy_lab.cpachecker.core.interfaces.ConfigurableProgramAnalysis;
 import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
+import org.sosy_lab.cpachecker.cpa.testtargets.TestTargetCPA;
+import org.sosy_lab.cpachecker.cpa.testtargets.TestTargetTransferRelation;
+import org.sosy_lab.cpachecker.util.CPAs;
 
 public class AlgorithmContext {
 
@@ -49,6 +57,8 @@ public class AlgorithmContext {
   private @Nullable ConfigurableProgramAnalysis cpa;
   private @Nullable Configuration config;
   private ReachedSet reached;
+  private Set<CFAEdge> progressedEdges;
+  private @Nullable Set<CFAEdge> testTargets;
   private double progress = -1.0;
 
   public AlgorithmContext(final AnnotatedValue<Path> pConfigFile) {
@@ -56,6 +66,7 @@ public class AlgorithmContext {
     timer = new Timer();
     timeLimit = extractLimitFromAnnotation(pConfigFile.annotation());
     mode = extractModeFromAnnotation(pConfigFile.annotation());
+    progressedEdges = Collections.<CFAEdge>emptySet();
   }
 
   private int extractLimitFromAnnotation(final Optional<String> annotation) {
@@ -132,6 +143,7 @@ public class AlgorithmContext {
 
   public void resetProgress() {
     progress = -1.0;
+    progressedEdges = Collections.<CFAEdge>emptySet();
   }
 
   public void adaptTimeLimit(final int newTimeLimit) {
@@ -197,6 +209,38 @@ public class AlgorithmContext {
 
   public void setReachedSet(final ReachedSet pReached) {
     reached = pReached;
+  }
+
+  public Set<CFAEdge> getProgressedEdges() {
+    return progressedEdges;
+  }
+
+  public void setProgressedEdges(Set<CFAEdge> pProgressedEdges) {
+    progressedEdges = pProgressedEdges;
+  }
+
+  private boolean tryRetrieveTestTargets() throws InvalidConfigurationException {
+
+    if(Objects.isNull(cpa)) return false;
+
+    TestTargetCPA testTargetCpa =
+        CPAs.retrieveCPAOrFail(cpa, TestTargetCPA.class, TestCaseGeneratorAlgorithm.class);
+    testTargets =
+        ((TestTargetTransferRelation) testTargetCpa.getTransferRelation()).getTestTargets();
+
+    return true;
+  }
+
+  public Optional<Set<CFAEdge>> tryOrGetTestTargets(){
+    if(Objects.isNull(testTargets)){
+      try {
+        if(!tryRetrieveTestTargets()) return Optional.empty();
+      } catch (InvalidConfigurationException pE) {
+        return Optional.empty();
+      }
+    }
+
+    return Optional.of(testTargets);
   }
 
   public @Nullable ConfigurableProgramAnalysis getCPA() {

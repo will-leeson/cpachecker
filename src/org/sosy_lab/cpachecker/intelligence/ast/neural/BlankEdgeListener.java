@@ -45,25 +45,28 @@ public class BlankEdgeListener extends AEdgeListener {
     super(-1, pGraph, pShutdownNotifier);
   }
 
+  public static String extractLabel(CFAEdge cfaEdge) {
+    if(!(cfaEdge instanceof BlankEdge)) return  null;
+
+    if(cfaEdge.getDescription() == "while" || cfaEdge.getDescription() == "for" || cfaEdge.getDescription() == "do")
+      return ASTNodeLabel.LOOP_ENTRY.name();
+    else if(cfaEdge.getDescription() == "Function start dummy edge")
+      return ASTNodeLabel.FUNCTION_START.name();
+    else if(cfaEdge.getDescription() == "skip")
+      return ASTNodeLabel.SKIP.name();
+    else if(cfaEdge.getDescription().startsWith("Goto"))
+      return ASTNodeLabel.GOTO.name();
+    else if(cfaEdge.getDescription().startsWith("Label"))
+      return ASTNodeLabel.LABEL.name();
+    else
+      return ASTNodeLabel.BLANK.name();
+  }
+
   @Override
   public void listen(CFAEdge cfaEdge) {
     if(cfaEdge instanceof BlankEdge){
 
-      String label = "";
-
-      if(cfaEdge.getDescription() == "while" || cfaEdge.getDescription() == "for" || cfaEdge.getDescription() == "do")
-        label = ASTNodeLabel.LOOP_ENTRY.name();
-      else if(cfaEdge.getDescription() == "Function start dummy edge")
-        label = ASTNodeLabel.FUNCTION_START.name();
-      else if(cfaEdge.getDescription() == "skip")
-        label = ASTNodeLabel.SKIP.name();
-      else if(cfaEdge.getDescription().startsWith("Goto"))
-        label = ASTNodeLabel.GOTO.name();
-      else if(cfaEdge.getDescription().startsWith("Label"))
-        label = ASTNodeLabel.LABEL.name();
-      else
-        label = ASTNodeLabel.BLANK.name();
-
+      String label = extractLabel(cfaEdge);
 
       String id = "N"+cfaEdge.getPredecessor().getNodeNumber();
       String idS = "N"+cfaEdge.getSuccessor().getNodeNumber();
@@ -85,6 +88,7 @@ public class BlankEdgeListener extends AEdgeListener {
         }
 
         graph.getNode(id).setOption(OptionKeys.DECL_VARS, vars);
+        graph.getNode(id).setOption(OptionKeys.FUNC_NAME, entryNode.getFunctionName());
 
 
       }

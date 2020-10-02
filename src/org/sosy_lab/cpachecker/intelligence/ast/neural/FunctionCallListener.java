@@ -53,21 +53,31 @@ public class FunctionCallListener extends AEdgeListener {
     super(-1, pGraph, pShutdownNotifier);
   }
 
-  @Override
-  public void listen(CFAEdge edge) {
-    if(edge instanceof CFunctionCallEdge){
-      CFunctionCallEdge call = (CFunctionCallEdge)edge;
-
-      List<CExpression> arguments = call.getArguments();
+  public static String extractLabel(CFAEdge pCFAEdge){
+    if(pCFAEdge instanceof CFunctionCallEdge) {
+      CFunctionCallEdge call = (CFunctionCallEdge) pCFAEdge;
       String callFunctionName = call.getDescription();
 
       Optional<ASTNodeLabel> specialLabel = ASTCollectorUtils.getSpecialLabel(callFunctionName);
       String label = ASTNodeLabel.FUNC_CALL.name();
 
 
-      if(specialLabel.isPresent())
+      if (specialLabel.isPresent())
         label = label + "_" + specialLabel.get();
 
+      return label;
+
+    }
+    return null;
+  }
+
+  @Override
+  public void listen(CFAEdge edge) {
+    if(edge instanceof CFunctionCallEdge){
+      CFunctionCallEdge call = (CFunctionCallEdge)edge;
+
+      List<CExpression> arguments = call.getArguments();
+      String label = extractLabel(edge);
 
       String id = "N"+edge.getPredecessor().getNodeNumber();
       String idS = "N"+edge.getSuccessor().getNodeNumber();
@@ -114,6 +124,7 @@ public class FunctionCallListener extends AEdgeListener {
         try {
           node.getOption(OptionKeys.DECL_VARS).addAll(assign.accept(new CAssignVariablesCollector(edge.getPredecessor())));
         } catch (CPATransferException pE) {
+          return;
         }
 
       }
@@ -139,6 +150,7 @@ public class FunctionCallListener extends AEdgeListener {
             String tree = arg.accept(new CExpressionASTVisitor(ast, Integer.MAX_VALUE));
             ast.addSEdge(tree, tId);
           } catch (CPATransferException pE) {
+            return;
           }
         }
         node.setOption(OptionKeys.AST_ROOT, tId);
