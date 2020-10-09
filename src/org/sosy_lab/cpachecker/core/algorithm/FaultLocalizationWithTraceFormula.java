@@ -182,11 +182,9 @@ public class FaultLocalizationWithTraceFormula
   @Override
   public AlgorithmStatus run(ReachedSet reachedSet) throws CPAException, InterruptedException {
 
+    AlgorithmStatus status = algorithm.run(reachedSet);
     totalTime.start();
-    AlgorithmStatus status;
     try {
-      // Find error labels
-      status = algorithm.run(reachedSet);
       FluentIterable<CounterexampleInfo> counterExamples =
           Optionals.presentInstances(
               from(reachedSet)
@@ -253,7 +251,7 @@ public class FaultLocalizationWithTraceFormula
           break;
         }
         case ERRINV: {
-          tf = disableFSTF ? new TraceFormula.FlowSensitiveTrace(context, options, edgeList) : new TraceFormula.DefaultTrace(context, options, edgeList);
+          tf = disableFSTF ? new TraceFormula.DefaultTrace(context, options, edgeList) : new TraceFormula.FlowSensitiveTrace(context, options, edgeList);
           ranking = FaultRankingUtils.concatHeuristics(
               new EdgeTypeScoring(),
               new CallHierarchyScoring(edgeList, tf.getPostConditionOffset()));
