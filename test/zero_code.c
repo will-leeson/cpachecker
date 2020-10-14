@@ -1,4 +1,5 @@
 extern void __VERIFIER_error() __attribute__ ((__noreturn__));
+
 int main(){
 
  int inp = 10;
@@ -17,3 +18,4 @@ int main(){
 
  return 0;
 }
+

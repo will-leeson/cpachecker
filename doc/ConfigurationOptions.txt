@@ -161,6 +161,9 @@ solver.z3.usePhantomReferences = false
 # Refiner that SlicingDelegatingRefiner should delegate to
 SlicingDelegatingRefiner.refiner = no default value
 
+# file path to label-path mapping
+abstractPredictiveOracle.labelPath = no default value
+
 # maximum number of condition adjustments (-1 for infinite)
 adjustableconditions.adjustmentLimit = -1
 
@@ -182,6 +185,10 @@ analysis.algorithm.CBMC = false
 # You need to specify a refiner with the cegar.refiner option.
 # Currently all refiner require the use of the ARGCPA.
 analysis.algorithm.CEGAR = false
+
+# use found counterexample to extract statistics which can help the selection
+# of verifier.
+analysis.algorithm.CEXLearning = false
 
 # use McMillan's interpolation-based model checking algorithm, works only
 # with PredicateCPA and large-block encoding
@@ -364,6 +371,7 @@ analysis.replacedFunctionsWithParameters = {"pthread_create"}
 
 # restart the analysis using a different configuration after unknown result
 analysis.restartAfterUnknown = false
+analysis.restartIntelligentAfterUnknown = false
 
 # Use heuristics to select the analysis
 analysis.selectAnalysisHeuristically = false
@@ -709,6 +717,28 @@ cegar.refiner = no default value
 # whether or not to use refinement selection to decide which domain to refine
 cegar.useRefinementSelection = false
 
+# Whether to infer counterexample features via static analysis
+cex.learning.cexAnalysis = false
+
+# Whether we register the counterexample statistic globally.
+cex.learning.global = false
+
+# path to load initial statistics from
+cex.learning.initialPath = no default value
+
+# the learning ID is used to recognize an analysis
+cex.learning.learningID = "NULL"
+
+# Size for a ngram statistic. If set to 1, only edges are counted
+cex.learning.ngramSize = 1
+
+# Whether to count the exact number of edges or only the occurrence in
+# counterexample.
+cex.learning.setBased = true
+
+# path to store learning results
+cex.learning.storeStatePath = no default value
+
 # Add custom labels to the CFA
 cfa.addLabels = false
 
@@ -859,6 +889,22 @@ compositionAlgorithm.condition.file = "AssumptionAutomaton.txt"
 # round.If no (correct) limit is given a default limit is used.
 compositionAlgorithm.configFiles = no default value
 
+# Global keys to load statistics from.
+compositionAlgorithm.control.globalKeys = new ArrayList<>()
+
+# Set the maximum error path limit to be considered during learning.
+compositionAlgorithm.control.maxPathLength = 512
+
+# Set the maximum number of samples drawn from the open tasks.
+compositionAlgorithm.control.sampleSize = 10
+
+# The maximum time given per algorithm. (Default: 100)
+compositionAlgorithm.dynamic.maxTimePerAlgorithm = 100
+
+# Timescales for algorithm configuration (Options: UNIFORM_20, EXP_20).
+compositionAlgorithm.dynamic.timescale = UNIFORM_20
+  enum:     [UNIFORM_20, EXP_20]
+
 # Whether or not to create an initial condition, that excludes no paths,
 # before first analysis is run.Required when first analysis uses condition
 # from conditional model checking
@@ -871,6 +917,9 @@ compositionAlgorithm.intermediateStatistics = NONE
 
 # Enable when composition algorithm is used to check a specification
 compositionAlgorithm.propertyChecked = true
+
+# ZMQ address
+compositionAlgorithm.remote.socketAddress = no default value
 
 # Qualified name for class which implements strategy that decides how to
 # compose given analyses
@@ -3296,6 +3345,9 @@ enabledanalysis.allowLazyRefinement = false
 enabledanalysis.enablerCPA = PREDICATE
   enum:     [APRON, INTERVAL, OCTAGON, PREDICATE, VALUE]
 
+# Configurations to fallback to
+fallbackPredictor.components = new ArrayList<>()
+
 # Ranking algorithm to use for fault localization
 faultLocalization.by_coverage.type = TARANTULA
   enum:     [TARANTULA, DSTAR, OCHIAI]
@@ -3310,6 +3362,12 @@ faultLocalization.by_traceformula.maxsat.ban = ""
 faultLocalization.by_traceformula.type = UNSAT
   enum:     [UNSAT, MAXSAT, MAXORG, ERRINV]
 
+# depth of AST tree
+graphGen.astDepth = 5
+
+# output path for Graph
+graphGen.output = "output/graph.dfs"
+
 # Configuration for programs containing more than @Option adressedRatio
 # addressed vars.
 heuristicSelection.addressedConfig = no default value
@@ -3317,6 +3375,9 @@ heuristicSelection.addressedConfig = no default value
 # Ratio of addressed vars. Values bigger than the passed value lead to
 # @option addressedConfig.
 heuristicSelection.addressedRatio = 0
+
+# Configuration for programs containing variable aliasing.
+heuristicSelection.aliasConfig = no default value
 
 # Configuration for programs containing arrays.
 heuristicSelection.arrayConfig = no default value
@@ -3360,6 +3421,41 @@ imc.removeUnreachableStopStates = false
 # enable the Forced Covering optimization
 impact.useForcedCovering = true
 
+# Switch to an accelerated prediction model. Use with caution: The pretrained
+# model might not support the accelerated model.
+intelligentRestartAlgorithm.accelerated = false
+
+# wether to start next algorithm independently from the previous result
+intelligentRestartAlgorithm.alwaysRestart = false
+
+# combine (partial) ARGs obtained by restarts of the analysis after an
+# unknown result with a different configuration
+intelligentRestartAlgorithm.combineARGsAfterRestart = false
+
+# List of files with configurations to use. A filename can be suffixed with
+# :if-interrupted, :if-failed, and :if-terminated which means that this
+# configuration will only be used if the previous configuration ended with a
+# matching condition. What also can be added is :use-reached then the reached
+# set of the preceding analysis is taken and provided to the next analysis.
+intelligentRestartAlgorithm.configFiles = no default value
+
+# path to file containing instances of the training set
+intelligentRestartAlgorithm.instancePath = no default value
+
+# DEBUG OPTION: Only predict a ranking without executing the tools
+intelligentRestartAlgorithm.onlyPrediction = false
+
+# Oracle to use
+intelligentRestartAlgorithm.oracle = "default"
+
+# print the statistics of each component of the restart algorithm directly
+# after the components computation is finished
+intelligentRestartAlgorithm.printIntermediateStatistics = true
+
+# let each component of the restart algorithm write output files and not only
+# the last one that is excuted
+intelligentRestartAlgorithm.writeIntermediateOutputFiles = false
+
 # Configuration file for the K-Induction algorithm for checking candidates on
 # invariance.
 invariantChecker.kInductionConfig = "config/bmc-invgen.properties"
@@ -3381,6 +3477,12 @@ invariantGeneration.kInduction.invariantsAutomatonFile = no default value
 # For correctness-witness validation: Shut down if a candidate invariant is
 # found to be incorrect.
 invariantGeneration.kInduction.terminateOnCounterexample = false
+
+# pretrained parameter of jaccard SVM
+jaccardPredictor.pretrained = no default value
+
+# timeout for prediction
+jaccardPredictor.timeout = -1
 
 # Specify the class code path to search for java class or interface
 # definitions
@@ -3429,6 +3531,9 @@ limits.time.cpu::required = -1ns
 # for infinite)
 limits.time.wall = -1ns
 
+# pretrained parameter of jaccard SVM
+linearPredictor.pretrained = no default value
+
 # By changing this option one can adjust the way how live variables are
 # created. Function-wise means that each function is handled separately,
 # global means that the whole cfa is used for the computation.
@@ -3450,6 +3555,21 @@ locmapper.dumpTokenizedProgramToFile = no default value
 
 # all used options are printed
 log.usedOptions.export = false
+
+# Backup predictor. Sort list after prediction speed.
+managedOracle.backup = new ArrayList<>()
+
+# Base predictor for oracle. Predictor should be fast.
+managedOracle.base = "linear"
+
+# Heuristics to apply on output ranking.
+managedOracle.heuristics = new ArrayList<>()
+
+# file path to label-path mapping
+managedOracle.labelPath = no default value
+
+# Staged predictor. Sort list after precision level and prediction speed.
+managedOracle.staged = new ArrayList<>()
 
 # When checking for memory cleanup properties, use this configuration file
 # instead of the current one.
@@ -3529,6 +3649,15 @@ mpv.partitionOperator = no default value
 # - AUTOMATON: each automaton represent a single property.
 mpv.propertySeparator = FILE
   enum:     [FILE, AUTOMATON]
+
+# export node postitions
+neuralGraphGen.nodePosition = no default value
+
+# output path for Graph
+neuralGraphGen.output = "output/graph.dfs"
+
+# file path to label-path mapping
+oracle.labelPath = no default value
 
 # When checking for the overflow property, use this configuration file
 # instead of the current one.
@@ -3944,6 +4073,12 @@ restartAlgorithm.printIntermediateStatistics = true
 # the last one that is excuted
 restartAlgorithm.writeIntermediateOutputFiles = false
 
+# export node postitions
+simpleGraphGen.nodePosition = no default value
+
+# output path for Graph
+simpleGraphGen.output = "output/graph.dfs"
+
 # path to condition file
 slicing.conditionFile = "output/AssumptionAutomaton.txt"
 
@@ -3996,6 +4131,9 @@ solver.solver = MATHSAT5
 # comma-separated list of files with specifications that should be checked
 # (see config/specification/ for examples)
 specification = []
+
+# Number of analysis allowed to run till stage 2
+stagedOracle.prerun = -1
 
 # export abstract states as formula, e.g. for re-using them as
 # PredicatePrecision.

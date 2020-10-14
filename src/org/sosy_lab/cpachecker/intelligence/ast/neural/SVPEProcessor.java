@@ -1,5 +1,6 @@
 package org.sosy_lab.cpachecker.intelligence.ast.neural;
 
+import java.util.ArrayList;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.ast.CFAIterator;
@@ -13,8 +14,10 @@ import java.util.List;
 
 public class SVPEProcessor extends SVGraphProcessor {
 
-    protected void attachPointerListener(PEGraph pPointerGraph, ShutdownNotifier pShutdownNotifier, List<IEdgeListener> listeners){
-        listeners.add(new PointerListener2(pPointerGraph, pShutdownNotifier));
+    protected List<IEdgeListener> attachPointerListener(PEGraph pPointerGraph, ShutdownNotifier pShutdownNotifier, List<IEdgeListener> listeners){
+        List<IEdgeListener> copyList = new ArrayList<>(listeners);
+        copyList.add(new PointerListener2(pPointerGraph, pShutdownNotifier));
+        return copyList;
     }
 
     @Override
@@ -26,7 +29,7 @@ public class SVPEProcessor extends SVGraphProcessor {
         functionBody.setGlobalOption(OptionKeys.INVOKED_FUNCS, new HashSet<>());
         functionBody.setGlobalOption(OptionKeys.POINTER_GRAPH, pe);
         List<IEdgeListener> listeners = listeners(functionBody, pShutdownNotifier);
-        this.attachPointerListener(pe, pShutdownNotifier, listeners);
+        listeners = this.attachPointerListener(pe, pShutdownNotifier, listeners);
         CFAIterator it = new CFAIterator(listeners, pShutdownNotifier);
 
         it.iterate(pCFA);

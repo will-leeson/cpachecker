@@ -74,6 +74,7 @@ public class RPCLearner implements IRankLearner {
           voting.put(l2, voting.get(l2) + (1.0 - pred));
         }
 
+
         rankings.add(voting.entrySet().stream()
                             .sorted(Collections.reverseOrder(
                                 Map.Entry.comparingByValue()

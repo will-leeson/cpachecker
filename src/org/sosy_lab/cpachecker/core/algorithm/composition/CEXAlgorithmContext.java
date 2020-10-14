@@ -24,7 +24,7 @@ public class CEXAlgorithmContext extends AlgorithmContext {
     this.globalKey = Optional.ofNullable(pGlobalKey);
   }
 
-  public CounterexampleStatistics getCEXStatistics() {
+  public Optional<CounterexampleStatistics> getCEXStatistics() {
 
     if(statistics == null && globalKey.isPresent()){
       String key = globalKey.get();
@@ -37,7 +37,7 @@ public class CEXAlgorithmContext extends AlgorithmContext {
 
     }
 
-    return statistics;
+    return Optional.ofNullable(statistics);
   }
 
   public void setCEXStatistics(CounterexampleStatistics pStatistics) {

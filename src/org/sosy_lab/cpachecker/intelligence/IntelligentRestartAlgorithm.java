@@ -392,9 +392,10 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
       try {
         AnnotatedValue<Path> current = configFilesIterator.next();
 
-        if(onlyPrediction)return AlgorithmStatus.UNSOUND_AND_PRECISE.withPrecise(false);
+        if(onlyPrediction) return AlgorithmStatus.UNSOUND_AND_PRECISE.withPrecise(false);
 
-        failWithUnknown = current.annotation().isPresent() && current.annotation().get().equals("shutdownAfter");
+        failWithUnknown = current.annotation().isPresent()
+                          && current.annotation().get().equals("shutdownAfter");
 
         Path singleConfigFileName = current.value();
 

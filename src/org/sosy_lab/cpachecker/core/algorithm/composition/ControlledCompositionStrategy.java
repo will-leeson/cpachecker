@@ -8,6 +8,7 @@
 
 package org.sosy_lab.cpachecker.core.algorithm.composition;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -162,6 +163,50 @@ public class ControlledCompositionStrategy extends AlgorithmCompositionStrategy
     return Math.log(DoubleStream.of(logits).map(x -> Math.exp(x - xs)).sum()) + xs;
   }
 
+  private double[] computeBackupPrior() {
+    double[] algorithmPrior = new double[algorithmContexts.size()];
+
+    for(int id = 0; id < algorithmPrior.length; id++){
+      algorithmPrior[id] = 1.0 / algorithmPrior.length;
+    }
+
+    return algorithmPrior;
+  }
+
+  private double[] computeEstimatedPrior() {
+
+    double priorNorm = 0.0;
+    double[] algorithmPrior = new double[algorithmContexts.size()];
+
+    for(int id = 0; id < algorithmContexts.size(); id++){
+
+      AlgorithmContext context = algorithmContexts.get(id);
+
+      if(context instanceof CEXAlgorithmContext){
+        Optional<CounterexampleStatistics> statisticOpt = ((CEXAlgorithmContext) context).getCEXStatistics();
+
+        if(statisticOpt.isPresent()){
+
+          CounterexampleStatistics statistic = statisticOpt.get();
+          algorithmPrior[id] = statistic.getNumSeenPaths();
+        }
+
+      }
+      priorNorm += algorithmPrior[id];
+    }
+
+    if(priorNorm == 0){
+      return computeBackupPrior();
+    }
+
+    for(int id = 0; id < algorithmPrior.length; id++){
+      algorithmPrior[id] = algorithmPrior[id] / priorNorm;
+    }
+
+    return algorithmPrior;
+
+  }
+
   private double[] computePrior(){
 
     double priorNorm = 0.0;
@@ -175,10 +220,7 @@ public class ControlledCompositionStrategy extends AlgorithmCompositionStrategy
     }
 
     if(priorNorm == 0){
-      for(int id = 0; id < algorithmPrior.length; id++){
-        algorithmPrior[id] = 1.0 / algorithmPrior.length;
-      }
-      priorNorm = 1.0;
+      return computeEstimatedPrior();
     }
 
     for(int id = 0; id < algorithmPrior.length; id++){
@@ -279,8 +321,13 @@ public class ControlledCompositionStrategy extends AlgorithmCompositionStrategy
 
       AlgorithmContext context = algorithmContexts.get(id);
 
-      if(context instanceof CEXAlgorithmContext)
-        statistics.add(((CEXAlgorithmContext) context).getCEXStatistics());
+      if(context instanceof CEXAlgorithmContext) {
+        Optional<CounterexampleStatistics> statistic = ((CEXAlgorithmContext) context).getCEXStatistics();
+
+        Preconditions.checkState(statistic.isPresent(), "Cannot load counterexample statistic");
+
+        statistics.add(statistic.get());
+      }
 
       Optional<Set<CFAEdge>> optionalTestTargets = algorithmContexts.get(id).tryOrGetTestTargets();
       if(optionalTestTargets.isPresent())
