@@ -23,7 +23,9 @@
  */
 package org.sosy_lab.cpachecker.intelligence.learn;
 
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +51,7 @@ public class RPCLearner implements IRankLearner {
       double[][] prediction = batch.predict(pSample).get();
 
       if(prediction.length < 1)
-        return new ArrayList<>();
+        return Collections.emptyList();
 
       List<List<String>> rankings = new ArrayList<>();
 
@@ -83,14 +85,12 @@ public class RPCLearner implements IRankLearner {
 
       }
 
-      return rankings;
+      return ImmutableList.copyOf(rankings);
 
     } catch (InterruptedException pE) {
-      System.out.println(pE.getMessage());
+      return Collections.emptyList();
     } catch (ExecutionException pE) {
-      pE.printStackTrace();
+      return Collections.emptyList();
     }
-
-    return new ArrayList<>();
   }
 }
