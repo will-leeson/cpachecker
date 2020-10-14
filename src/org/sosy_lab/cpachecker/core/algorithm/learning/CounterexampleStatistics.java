@@ -57,6 +57,10 @@ public class CounterexampleStatistics {
     this.analyser = null;
   }
 
+  public int getNumSeenPaths(){
+    return numSeenPaths;
+  }
+
   public String getAlgorithmID() {
     return algorithmID;
   }

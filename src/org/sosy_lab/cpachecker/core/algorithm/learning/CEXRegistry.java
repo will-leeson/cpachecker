@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentMap;
 public class CEXRegistry {
 
   private static ConcurrentMap<String, CounterexampleStatistics> registry = new MapMaker()
-                                                                                .weakValues()
                                                                                 .makeMap();
 
   public static void register(String key, CounterexampleStatistics pCounterexampleStatistics){

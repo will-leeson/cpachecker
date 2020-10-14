@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.AnnotatedValue;
 import org.sosy_lab.common.configuration.Configuration;
@@ -51,10 +52,60 @@ public class OracleFactory {
         return instance;
     }
 
+    private static String mapConfigHeuristically(AnnotatedValue<Path> pConfig){
+
+      Map<String, String> keyWords = Map.of(
+          "valueAnalysis", "VA-NoCegar",
+          "valueAnalysis-itp", "VA-Cegar",
+          "predicateAnalysis", "PA",
+          "kInduction", "KI",
+          "bmc", "BMC"
+      );
+
+      String fileName = pConfig.value().getFileName().toString();
+      String longestMatch = "";
+      String matchedName = "UNKNOWN";
+
+      for(Entry<String, String> e : keyWords.entrySet()){
+        if(fileName.contains(e.getKey()) && e.getKey().length() > longestMatch.length()){
+          longestMatch = e.getKey();
+          matchedName = e.getValue();
+        }
+      }
+
+      int timelimit;
+      String timeLimitStr = fileName.substring(
+          fileName.indexOf(longestMatch) + longestMatch.length() + 1
+      );
+      timeLimitStr = timeLimitStr.replace(".properties", "");
+
+      try{
+        timelimit = Integer.parseInt(timeLimitStr);
+      } catch (NumberFormatException e){
+        timelimit = -1;
+      }
+
+      if(timelimit > 0){
+        matchedName = matchedName+timelimit;
+      }
+
+      return matchedName;
+    }
+
+
     public static Map<String, AnnotatedValue<Path>> initLabelToPath(List<AnnotatedValue<Path>> list){
       //TODO: Support loading
 
-      Map<String, AnnotatedValue<Path>> labelToPath;
+      Map<String, AnnotatedValue<Path>> labelToPath = new HashMap<>();
+
+      for(AnnotatedValue<Path> config : list){
+        String key = mapConfigHeuristically(config);
+
+        if(!key.equalsIgnoreCase("UNKNOWN"))
+          labelToPath.put(
+              mapConfigHeuristically(config), config
+          );
+      }
 
       Map<String, String> revLabel = new HashMap<>();
       revLabel.put("pesco19--01-valueAnalysis.properties", "VA-NoCegar");
@@ -64,8 +115,6 @@ public class OracleFactory {
       //revLabel.put("pesco19--recursion.properties", "BAM");
       revLabel.put("pesco19--bmc.properties", "BMC");
       revLabel.put("pesco20--kInduction-90.properties", "KI90");
-
-      labelToPath = new HashMap<>();
 
       for(AnnotatedValue<Path> p: list){
 

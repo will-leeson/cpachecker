@@ -77,6 +77,7 @@ import org.sosy_lab.cpachecker.cpa.bam.BAMCPA;
 import org.sosy_lab.cpachecker.cpa.bam.BAMCounterexampleCheckAlgorithm;
 import org.sosy_lab.cpachecker.cpa.location.LocationCPA;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
+import org.sosy_lab.cpachecker.intelligence.IntelligentRestartAlgorithm;
 
 /**
  * Factory class for the three core components of CPAchecker:
@@ -166,6 +167,10 @@ public class CoreComponentsFactory {
   @Option(secure=true, name="restartAfterUnknown",
       description="restart the analysis using a different configuration after unknown result")
   private boolean useRestartingAlgorithm = false;
+
+  @Option(secure=true, name="restartIntelligentAfterUnknown",
+      description="restart the analysis using a different configuration after unknown result")
+  private boolean useIntelligentRestartingAlgorithm = false;
 
   @Option(
     secure = true,
@@ -367,6 +372,7 @@ public class CoreComponentsFactory {
         && !useProofCheckAlgorithm
         && !useProofCheckAlgorithmWithStoredConfig
         && !useRestartingAlgorithm
+        && !useIntelligentRestartingAlgorithm
         && !useImpactAlgorithm
         && !runCBMCasExternalTool
         && (useBMC || useIMC);
@@ -414,6 +420,9 @@ public class CoreComponentsFactory {
     } else if (useRestartingAlgorithm) {
       logger.log(Level.INFO, "Using Restarting Algorithm");
       algorithm = RestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
+    } else if (useIntelligentRestartingAlgorithm){
+      logger.log(Level.INFO, "Using Intelligent Restarting Algorithm");
+      algorithm = IntelligentRestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
     } else if (useCompositionAlgorithm) {
       logger.log(Level.INFO, "Using Composition Algorithm");
       algorithm = new CompositionAlgorithm(config, logger, shutdownNotifier, specification, cfa);
@@ -624,6 +633,7 @@ public class CoreComponentsFactory {
 
     if (useCompositionAlgorithm
         || useRestartingAlgorithm
+        || useIntelligentRestartingAlgorithm
         || useHeuristicSelectionAlgorithm
         || useParallelAlgorithm
         || asConditionalVerifier) {
@@ -648,6 +658,7 @@ public class CoreComponentsFactory {
 
     if (useCompositionAlgorithm
         || useRestartingAlgorithm
+        || useIntelligentRestartingAlgorithm
         || useHeuristicSelectionAlgorithm
         || useParallelAlgorithm
         || useProofCheckAlgorithmWithStoredConfig
