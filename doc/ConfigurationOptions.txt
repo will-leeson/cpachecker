@@ -4264,6 +4264,9 @@ testHarnessExport.useModel = true
 # zip all exported test cases into a single file
 testcase.compress = false
 
+# Do not output values for variables that are not initialized when declared
+testcase.excludeInitialization = false
+
 # export test harness to file as code
 testcase.file = no default value
 
@@ -4272,6 +4275,9 @@ testcase.generate.parallel = false
 
 # display all test targets and non-covered test targets in statistics
 testcase.inStats = false
+
+# Only convert literal value and do not add suffix, e.g., for unsigned, etc.
+testcase.plainLiteralValue = false
 
 # defines how progress is computed
 testcase.progress = RELATIVE_TOTAL
