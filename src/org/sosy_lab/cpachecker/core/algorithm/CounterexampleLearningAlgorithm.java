@@ -190,8 +190,9 @@ public class CounterexampleLearningAlgorithm implements Algorithm, StatisticsPro
     if(initialStatisticPath != null){
       try{
         counterexampleStatistics.loadFromFile(initialStatisticPath);
+        logger.log(Level.INFO, String.format("Loaded counterexample statistics from %s.", initialStatisticPath.toString()));
       } catch(IOException e){
-        logger.log(Level.INFO, String.format("Cannot load path %s. Does it exists?", initialStatisticPath.toString()), e);
+        logger.log(Level.WARNING, String.format("Cannot load path %s. Does it exists?", initialStatisticPath.toString()), e);
       }
     }
   }
@@ -200,24 +201,13 @@ public class CounterexampleLearningAlgorithm implements Algorithm, StatisticsPro
   public AlgorithmStatus run(final ReachedSet pReached)
       throws CPAException, InterruptedException, CPAEnabledAnalysisPropertyViolationException {
 
-    // boolean ignoreTargetState = false;
     AlgorithmStatus status = AlgorithmStatus.UNSOUND_AND_IMPRECISE;
 
     try{
       status = algorithm.run(pReached);
     } catch (CPAException e) {
-      // precaution always set precision to false, thus last target state not handled in case of
-      // exception
       status = status.withPrecise(false);
-      logger.logUserException(Level.WARNING, e, "Analysis not completed.");
-      if (e instanceof CounterexampleAnalysisFailed
-          || e instanceof RefinementFailedException
-          || e instanceof InfeasibleCounterexampleException) {
-
-     //   ignoreTargetState = true;
-      } else {
-        throw e;
-      }
+      throw e;
     } catch (InterruptedException e1) {
       // may be thrown only be counterexample check, if not will be thrown again in finally
       // block due to respective shutdown notifier call)
@@ -272,7 +262,7 @@ public class CounterexampleLearningAlgorithm implements Algorithm, StatisticsPro
         try{
           counterexampleStatistics.saveToFile(storeStatePath);
         } catch(IOException e){
-          logger.log(Level.INFO, String.format("Cannot store statistics to path %s.", storeStatePath.toString()), e);
+          logger.log(Level.WARNING, String.format("Cannot store statistics to path %s.", storeStatePath.toString()), e);
         }
       }
 
