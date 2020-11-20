@@ -2624,6 +2624,11 @@ cpa.predicate.useArraysForHeap = true
 # used in bitwise operations, and add axioms like (0 & n = 0)
 cpa.predicate.useBitwiseAxioms = false
 
+# Use SMT byte array for encoding heap memory instead of uninterpreted
+# function. This is more close to c heap implementation but may be to
+# expensive.
+cpa.predicate.useByteArrayForHeap = false
+
 # Use an optimisation for constraint generation
 cpa.predicate.useConstraintOptimization = true
 
@@ -3331,7 +3336,7 @@ cwriter.withLoops.loopDetectionStrategy = ALL_LOOPS
 # closer to the static program slicing based on control-flow graphs (CFGs),
 # where branching is represented by a single assumption (with true- and
 # false-edges)
-dependencegraph.controldeps.considerInverseAssumption = false
+dependencegraph.controldeps.considerInverseAssumption = true
 
 # Whether to consider control dependencies.
 dependencegraph.controldeps.use = true
