@@ -778,9 +778,6 @@ cfa.checkNullPointers = false
 # pointer dereferences or to have separate nodes for each dereference
 cfa.checkNullPointers.singleTargetPerFunction = true
 
-# Whether to create dependence graph for the CFA of the program
-cfa.createDependenceGraph = false
-
 # When a function pointer array element is written with a variable as index,
 # create a series of if-else edges with explicit indizes instead.
 cfa.expandFunctionPointerArrayAssignments = false
@@ -1245,7 +1242,8 @@ cpa.arg.export.code.blockAtFunctionEnd = KEEPBLOCK
 
 # How to deal with target states during code generation
 cpa.arg.export.code.handleTargetStates = NONE
-  enum:     [NONE, RUNTIMEVERIFICATION, ASSERTFALSE, FRAMACPRAGMA, VERIFIERERROR]
+  enum:     [NONE, RUNTIMEVERIFICATION, ASSERTFALSE, FRAMACPRAGMA, VERIFIERERROR,
+             REACHASMEMSAFETY, REACHASOVERFLOW, REACHASTERMINATION]
 
 # write include directives
 cpa.arg.export.code.header = true
