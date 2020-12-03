@@ -248,6 +248,13 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
   )
   private boolean accelerated = false;
 
+
+  @Option(
+      secure = true,
+      description = "Iteration bound for WL iterations"
+  )
+  private int iterationBound = 2;
+
   private final LogManager logger;
   private final ShutdownNotifier shutdownNotifier;
   private final ShutdownManager predictionShutdown;
@@ -306,7 +313,7 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
     }
 
     SampleRegistry sampleRegistry = new SampleRegistry(
-        registry, 2, 5, backend, accelerated
+        registry, iterationBound, 5, backend, accelerated
     );
 
 

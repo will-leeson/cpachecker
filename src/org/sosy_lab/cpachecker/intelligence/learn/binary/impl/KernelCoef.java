@@ -31,6 +31,9 @@ public class KernelCoef {
   private double intercept;
   private Map<String, Double> y;
 
+  private double probFactor = 0.0;
+  private double probBias = 0.0;
+
   public Map<String, Double> getCoef() {
     return coef;
   }
@@ -42,5 +45,15 @@ public class KernelCoef {
   public Map<String, Double> getY() {
     return y;
   }
+
+
+  public double getProbFactor() {
+    return probFactor;
+  }
+
+  public double getProbBias() {
+    return probBias;
+  }
+
 
 }

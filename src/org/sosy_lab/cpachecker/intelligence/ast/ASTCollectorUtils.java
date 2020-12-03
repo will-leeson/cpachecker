@@ -36,6 +36,7 @@ public final class ASTCollectorUtils {
     Builder<String, ASTNodeLabel> builder = ImmutableMap.builder();
     builder.put("pthread_create", ASTNodeLabel.PTHREAD);
     builder.put("pthread_exit", ASTNodeLabel.PTHREAD);
+    builder.put("reach_error", ASTNodeLabel.VERIFIER_ERROR);
     builder.put("__VERIFIER_error", ASTNodeLabel.VERIFIER_ERROR);
     builder.put("__VERIFIER_assert", ASTNodeLabel.VERIFIER_ASSERT);
     builder.put("__VERIFIER_assume", ASTNodeLabel.VERIFIER_ASSUME);

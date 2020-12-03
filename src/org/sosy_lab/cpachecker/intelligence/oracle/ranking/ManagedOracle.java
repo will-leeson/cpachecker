@@ -78,7 +78,9 @@ public class ManagedOracle implements IConfigOracle {
   private Map<String, AnnotatedValue<Path>> labelToPath;
   private List<AnnotatedValue<Path>> unknown = new ArrayList<>();
 
-  private PeekingIterator<AnnotatedValue<Path>> unknownIterator;
+  private PeekingIterator<AnnotatedValue<Path>> interceptIterator;
+
+  private AnnotatedValue<Path> peekedBuffer = null;
 
   public ManagedOracle(Configuration config, PackedPredictorFactory pFactory) throws InvalidConfigurationException {
 
@@ -137,7 +139,6 @@ public class ManagedOracle implements IConfigOracle {
         }
         if (!knownPath) unknown.add(l);
       }
-      unknown.add(translate("unknown"));
     }
 
   }
@@ -150,6 +151,12 @@ public class ManagedOracle implements IConfigOracle {
       return annotatedValue;
     }
 
+    if(label.equals("intercept-unknown")){
+        label = "skip";
+        interceptIterator = Iterators.peekingIterator(unknown.iterator());
+        manager.next();
+    }
+
     if(label.equalsIgnoreCase("skip")){
       Path p = Paths.get("SKIP");
       AnnotatedValue<Path> annotatedValue = AnnotatedValue.create(p);
@@ -160,9 +167,9 @@ public class ManagedOracle implements IConfigOracle {
       return labelToPath.get(label);
     }
 
-    Path path = PathFinder.find("config/%s", label);
+    Path path = PathFinder.find("%s", label);
     if(path != null && Files.exists(path)){
-      Path p = Paths.get("config/"+label);
+      Path p = Paths.get(label);
       AnnotatedValue<Path> annotatedValue = AnnotatedValue.create(p);
       return annotatedValue;
     }
@@ -187,8 +194,6 @@ public class ManagedOracle implements IConfigOracle {
     return false;
   }
 
-
-
   @Override
   public void precomputeOracle(Consumer<IConfigOracle> callback) {
     manager.peek();
@@ -197,33 +202,42 @@ public class ManagedOracle implements IConfigOracle {
 
   @Override
   public AnnotatedValue<Path> peek() {
-    if(hasNext()){
-      if(unknownIterator != null){
-        return unknownIterator.peek();
-      }else{
-        return translate(manager.peek());
-      }
+
+    if(peekedBuffer == null){
+      peekedBuffer = this.next();
     }
-    throw new NoSuchElementException();
+
+    return peekedBuffer;
   }
 
   @Override
   public boolean hasNext() {
 
-    if(shiftUntilFound())return true;
+    if(peekedBuffer != null) return true;
 
-    if(unknownIterator == null){
-      unknownIterator = Iterators.peekingIterator(unknown.iterator());
+    if(interceptIterator != null){
+      if(interceptIterator.hasNext()){
+        return true;
+      } else {
+        interceptIterator = null;
+      }
     }
 
-    return unknownIterator.hasNext();
+    return shiftUntilFound();
   }
 
   @Override
   public AnnotatedValue<Path> next() {
+
+    if(peekedBuffer != null){
+      AnnotatedValue<Path> tmp = peekedBuffer;
+      peekedBuffer = null;
+      return tmp;
+    }
+
     if(hasNext()){
-      if(unknownIterator != null){
-        return unknownIterator.next();
+      if(interceptIterator != null){
+        return interceptIterator.next();
       }else{
         return translate(manager.next());
       }

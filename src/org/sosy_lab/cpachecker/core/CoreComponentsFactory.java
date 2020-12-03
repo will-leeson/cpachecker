@@ -79,6 +79,7 @@ import org.sosy_lab.cpachecker.cpa.bam.BAMCounterexampleCheckAlgorithm;
 import org.sosy_lab.cpachecker.cpa.location.LocationCPA;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.intelligence.IntelligentRestartAlgorithm;
+import org.sosy_lab.cpachecker.intelligence.NeuralGraphGenAlgorithm;
 
 /**
  * Factory class for the three core components of CPAchecker:
@@ -310,6 +311,13 @@ public class CoreComponentsFactory {
 
   @Option(
       secure = true,
+      name="algorithm.NeuralGraphGen",
+      description = "generate a abstract graph representation of a given program"
+  )
+  boolean runNeuralGraphGen = false;
+
+  @Option(
+      secure = true,
       name = "algorithm.faultLocalization.by_coverage",
       description = "for found property violation, perform fault localization with coverage")
   private boolean useFaultLocalizationWithCoverage = false;
@@ -466,7 +474,15 @@ public class CoreComponentsFactory {
           shutdownNotifier,
           specification,
           cfa);
-    } else {
+    } else if (runNeuralGraphGen){
+      algorithm = new NeuralGraphGenAlgorithm(
+          logger,
+          config,
+          shutdownNotifier,
+          cfa
+      );
+    }
+    else {
       algorithm = CPAAlgorithm.create(cpa, logger, config, shutdownNotifier);
 
       if (constructResidualProgram) {

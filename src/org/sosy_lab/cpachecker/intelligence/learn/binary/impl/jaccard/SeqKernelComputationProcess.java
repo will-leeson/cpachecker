@@ -106,6 +106,9 @@ public class SeqKernelComputationProcess {
 
     pred += coef.getIntercept();
 
+    if(coef.getProbFactor() > 0.0){
+       pred = pred * coef.getProbFactor() + coef.getProbBias();
+    }
 
     return sigmoid(pred);
   }

@@ -64,10 +64,6 @@ public class ProtoSample implements IProgramSample {
 
     samples.add(pSample.getIteration(), Pair.of(registry, pSample));
 
-    //for(Label label: pSample.getLabelsList()){
-      //labels.put(label.getTool(), new ProgramLabel(label.getSolve() > 0, label.getTime()));
-    //}
-
   }
 
   private void parse(FeatureRegistry registry, Sample pSample){

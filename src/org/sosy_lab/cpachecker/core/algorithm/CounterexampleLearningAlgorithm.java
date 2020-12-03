@@ -43,15 +43,11 @@ import org.sosy_lab.cpachecker.core.interfaces.ConfigurableProgramAnalysis;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 import org.sosy_lab.cpachecker.core.reachedset.ReachedSet;
 import org.sosy_lab.cpachecker.core.interfaces.StatisticsProvider;
-import org.sosy_lab.cpachecker.core.specification.Property.CommonCoverageType;
 import org.sosy_lab.cpachecker.core.specification.Specification;
-import org.sosy_lab.cpachecker.core.specification.SpecificationProperty;
 import org.sosy_lab.cpachecker.cpa.arg.ARGCPA;
 import org.sosy_lab.cpachecker.cpa.arg.ARGState;
 import org.sosy_lab.cpachecker.cpa.arg.ARGUtils;
 import org.sosy_lab.cpachecker.cpa.arg.path.ARGPath;
-import org.sosy_lab.cpachecker.cpa.testtargets.TestTargetCPA;
-import org.sosy_lab.cpachecker.cpa.testtargets.TestTargetTransferRelation;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.exceptions.CounterexampleAnalysisFailed;
@@ -123,7 +119,6 @@ public class CounterexampleLearningAlgorithm implements Algorithm, StatisticsPro
   private final ConfigurableProgramAnalysis cpa;
   private final LogManager logger;
   private final ShutdownNotifier shutdownNotifier;
-  private final SpecificationProperty specProp;
 
   private CounterexampleStatistics counterexampleStatistics;
 
@@ -163,16 +158,6 @@ public class CounterexampleLearningAlgorithm implements Algorithm, StatisticsPro
       }
     }
 
-
-    if (pSpec.getProperties().size() == 1) {
-      specProp = pSpec.getProperties().iterator().next();
-      Preconditions.checkArgument(
-          specProp.getProperty() instanceof CommonCoverageType,
-          "Property %s not supported for test generation",
-          specProp.getProperty());
-    } else {
-      specProp = null;
-    }
   }
 
   private void buildCounterexampleStatistics(){

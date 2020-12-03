@@ -137,9 +137,9 @@ public class CStatementStumpVisitor implements CStatementVisitor<String, CPATran
               throws CPATransferException{
             String label = "";
             BigInteger value = pIastIntegerLiteralExpression.getValue();
-            if(value.compareTo(new BigInteger("256")) == -1)
+            if(value.compareTo(new BigInteger("256")) < 0)
               label = ASTNodeLabel.INT_LITERAL_SMALL.name();
-            else if(value.compareTo(new BigInteger("1024")) == -1)
+            else if(value.compareTo(new BigInteger("1024")) < 0)
               label = ASTNodeLabel.INT_LITERAL_MEDIUM.name();
             else
               label = ASTNodeLabel.INT_LITERAL_LARGE.name();

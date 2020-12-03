@@ -23,11 +23,6 @@
  */
 package org.sosy_lab.cpachecker.intelligence.learn.sample;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
-import com.google.common.primitives.Bytes;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -35,10 +30,8 @@ import java.util.*;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.cpachecker.cfa.CFA;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.ast.neural.SVPEProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.NativeGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.blocked.BlockedGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.pointer.AliasAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;

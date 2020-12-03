@@ -52,6 +52,7 @@ public interface Property {
     COVERAGE_STATEMENT("COVER EDGES(@BASICBLOCKENTRY)"),
 
     COVERAGE_ERROR("COVER EDGES(@CALL(__VERIFIER_error))"),
+
     ;
 
     private final String representation;

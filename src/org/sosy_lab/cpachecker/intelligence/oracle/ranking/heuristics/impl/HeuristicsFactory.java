@@ -44,6 +44,10 @@ public class HeuristicsFactory {
       return new KISkip2EndHeuristic();
     }
 
+    if(name.equals("interceptUnknown")){
+      return new InterceptHeuristic();
+    }
+
     return null;
   }
 

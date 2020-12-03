@@ -26,6 +26,7 @@ package org.sosy_lab.cpachecker.intelligence.learn.sample.backend.proto;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -62,7 +63,7 @@ public class ProtoBackend implements ISampleBackend {
     try {
       parseSamples(loadProto());
     } catch (IOException pE) {
-      pE.printStackTrace();
+      backendStore = Collections.emptyMap();
     }
   }
 
@@ -101,23 +102,6 @@ public class ProtoBackend implements ISampleBackend {
         backendStore.get(id).addSerial(registry, sample);
       }
     }
-
-    /*backendStore = pSamples.getBunches(0).getSamplesList().parallelStream().map(
-        sample -> {
-          ProtoSample protoSample = new ProtoSample();
-          protoSample.addSerial(registry, sample);
-          return protoSample;
-        }
-    ).collect(Collectors.toMap(
-        ProtoSample::getID,
-        Function.identity()
-    ));
-
-    for(int i = 1; i < pSamples.getBunchesCount(); i++){
-      pSamples.getBunches(i).getSamplesList().parallelStream().forEach(
-          sample -> backendStore.get(sample.getId()).addSerial(registry, sample)
-      );
-    }*/
 
   }
 

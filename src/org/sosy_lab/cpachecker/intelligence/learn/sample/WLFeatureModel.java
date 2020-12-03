@@ -41,7 +41,6 @@ import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.NativeGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 public class WLFeatureModel implements IWLFeatureModel {
@@ -133,7 +132,7 @@ public class WLFeatureModel implements IWLFeatureModel {
         throws InterruptedException {
       if(analyser == null) {
         SVGraph g = getGraph(pShutdownNotifier);
-        analyser = new NativeGraphAnalyser(cfa, g, pShutdownNotifier, null);
+        analyser = new GraphAnalyser(g, pShutdownNotifier, null);
       }
       return analyser;
     }

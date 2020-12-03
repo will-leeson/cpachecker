@@ -48,12 +48,10 @@ import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationExc
 import org.sosy_lab.cpachecker.exceptions.CPAException;
 import org.sosy_lab.cpachecker.intelligence.ast.base.CFAProcessor;
 import org.sosy_lab.cpachecker.intelligence.ast.OptionKeys;
-import org.sosy_lab.cpachecker.intelligence.ast.neural.SVGraphProcessor;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.CDEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GEdge;
 import org.sosy_lab.cpachecker.intelligence.graph.model.GNode;
 import org.sosy_lab.cpachecker.intelligence.graph.analysis.GraphAnalyser;
-import org.sosy_lab.cpachecker.intelligence.graph.analysis.NativeGraphAnalyser;
 import org.sosy_lab.cpachecker.intelligence.graph.model.control.SVGraph;
 
 @Options(prefix = "graphGen")
@@ -96,7 +94,7 @@ public class GraphGenAlgorithm implements Algorithm {
     System.out.println("Time for CFA: "+stopwatch.elapsed());
     stopwatch.reset();
 
-    GraphAnalyser analyser = new NativeGraphAnalyser(cfa, graph, notifier, logger);
+    GraphAnalyser analyser = new GraphAnalyser(graph, notifier, logger);
 
     logger.log(Level.INFO, "Add Dummy edges");
     analyser.pruneBlank();

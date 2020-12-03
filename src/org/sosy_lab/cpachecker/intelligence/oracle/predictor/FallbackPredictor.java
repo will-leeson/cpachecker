@@ -39,7 +39,8 @@ public class FallbackPredictor implements IOracleLabelPredictor {
 
   @Option(secure = true,
           description = "Configurations to fallback to")
-  private List<String> components = new ArrayList<>();
+  @FileOption(FileOption.Type.OPTIONAL_INPUT_FILE)
+  private List<AnnotatedValue<Path>> components = new ArrayList<>();
 
   public FallbackPredictor(Configuration pConfiguration) throws InvalidConfigurationException {
     pConfiguration.inject(this);
@@ -55,14 +56,14 @@ public class FallbackPredictor implements IOracleLabelPredictor {
 
     List<String> out = new ArrayList<>();
 
-    for(String c : components) {
-      Path path = PathFinder.find("config/%s", c);
+    for(AnnotatedValue<Path> c : components) {
+      Path path = PathFinder.find("%s", c.value().toString());
       if (path != null && Files.exists(path)) {
         out.add(path.toString());
       }
     }
 
-    return components;
+    return out;
   }
 
   @Override

@@ -59,7 +59,8 @@ public class OracleFactory {
           "valueAnalysis-itp", "VA-Cegar",
           "predicateAnalysis", "PA",
           "kInduction", "KI",
-          "bmc", "BMC"
+          "bmc", "BMC",
+          "symEx", "SymEx"
       );
 
       String fileName = pConfig.value().getFileName().toString();
