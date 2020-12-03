@@ -211,6 +211,9 @@ analysis.algorithm.faultLocalization.by_coverage = false
 # formulas
 analysis.algorithm.faultLocalization.by_traceformula = false
 
+# Use fault localization with distance metrics
+analysis.algorithm.faultlocalization.by_distance = false
+
 # Use McMillan's Impact algorithm for lazy interpolation
 analysis.algorithm.impact = false
 
@@ -1026,9 +1029,6 @@ counterexample.export.compressWitness = true
 # export counterexample core as text file
 counterexample.export.core = "Counterexample.%d.core.txt"
 
-# export counterexample to file as Dot/Graphviz automaton
-counterexample.export.dot = "Counterexample.%d.dot"
-
 # export counterexample to file, if one is found
 counterexample.export.enabled = true
 
@@ -1080,10 +1080,10 @@ counterexample.export.filters = no default value
 # is found
 counterexample.export.formula = "Counterexample.%d.smt2"
 
-# export counterexample as graph
+# export counterexample as Dot/Graphviz visualization
 counterexample.export.graph = "Counterexample.%d.dot"
 
-# export counterexample to file as GraphML automaton
+# export counterexample witness as GraphML automaton
 counterexample.export.graphml = "Counterexample.%d.graphml"
 
 # export test harness to file as code
@@ -1106,6 +1106,9 @@ counterexample.export.report = "Counterexample.%d.html"
 
 # export counterexample as source file
 counterexample.export.source = "Counterexample.%d.c"
+
+# export counterexample witness as Dot/Graphviz visualization
+counterexample.export.witnessGraph = "Counterexample.%d.witness.dot"
 
 # If continueAfterInfeasibleError is true, remove the error state that is
 # proven to be unreachable before continuing. Set this to false if
@@ -4457,6 +4460,9 @@ witness.useInvariantsAsAssumptions = true
 # When validating a correctness witness, use this configuration file instead
 # of the current one.
 witness.validation.correctness.config = no default value
+
+# Use correctness witness as invariants specification automaton (ISA).
+witness.validation.correctness.isa = false
 
 # The witness to validate.
 witness.validation.file = no default value
