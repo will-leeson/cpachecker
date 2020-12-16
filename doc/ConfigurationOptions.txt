@@ -185,6 +185,10 @@ analysis.algorithm.CBMC = false
 # Currently all refiner require the use of the ARGCPA.
 analysis.algorithm.CEGAR = false
 
+# use found counterexample to extract statistics which can help the selection
+# of verifier.
+analysis.algorithm.CEXLearning = false
+
 # use McMillan's interpolation-based model checking algorithm, works only
 # with PredicateCPA and large-block encoding
 analysis.algorithm.IMC = false

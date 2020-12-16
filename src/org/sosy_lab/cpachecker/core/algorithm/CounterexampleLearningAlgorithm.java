@@ -10,13 +10,10 @@ package org.sosy_lab.cpachecker.core.algorithm;
 
 import static com.google.common.collect.FluentIterable.from;
 
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
@@ -50,12 +47,8 @@ import org.sosy_lab.cpachecker.cpa.arg.ARGUtils;
 import org.sosy_lab.cpachecker.cpa.arg.path.ARGPath;
 import org.sosy_lab.cpachecker.exceptions.CPAEnabledAnalysisPropertyViolationException;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
-import org.sosy_lab.cpachecker.exceptions.CounterexampleAnalysisFailed;
-import org.sosy_lab.cpachecker.exceptions.InfeasibleCounterexampleException;
-import org.sosy_lab.cpachecker.exceptions.RefinementFailedException;
 import org.sosy_lab.cpachecker.util.AbstractStates;
 import org.sosy_lab.cpachecker.util.CPAs;
-import org.sosy_lab.cpachecker.util.testcase.TestCaseExporter;
 
 @Options(prefix="cex.learning")
 public class CounterexampleLearningAlgorithm implements Algorithm, StatisticsProvider {
@@ -119,6 +112,7 @@ public class CounterexampleLearningAlgorithm implements Algorithm, StatisticsPro
   private final ConfigurableProgramAnalysis cpa;
   private final LogManager logger;
   private final ShutdownNotifier shutdownNotifier;
+
 
   private CounterexampleStatistics counterexampleStatistics;
 
@@ -193,6 +187,7 @@ public class CounterexampleLearningAlgorithm implements Algorithm, StatisticsPro
     } catch (CPAException e) {
       status = status.withPrecise(false);
       throw e;
+
     } catch (InterruptedException e1) {
       // may be thrown only be counterexample check, if not will be thrown again in finally
       // block due to respective shutdown notifier call)
