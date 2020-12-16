@@ -138,7 +138,7 @@ public class OracleFactory {
     public IConfigOracle create(String oracle, LogManager logger, Configuration config,
                                 ShutdownNotifier pShutdownNotifier,
                                 List<AnnotatedValue<Path>> configPaths,
-                                SampleRegistry pSampleRegistry, CFA pCFA)
+                                SampleRegistry pSampleRegistry, CFA pCFA, String program)
         throws InvalidConfigurationException {
 
       if(oracle.equalsIgnoreCase("managed")){
@@ -146,8 +146,7 @@ public class OracleFactory {
         PackedPredictorFactory factory = new PackedPredictorFactory(
             logger, config, pShutdownNotifier, configPaths, pSampleRegistry, pCFA, PredictorFactory.getInstance()
         );
-
-        return new ManagedOracle(config, factory);
+        return new ManagedOracle(config, factory, program);
 
       }
 

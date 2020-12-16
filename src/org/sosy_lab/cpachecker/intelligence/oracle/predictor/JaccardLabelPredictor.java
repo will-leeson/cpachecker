@@ -112,7 +112,7 @@ public class JaccardLabelPredictor implements IOracleLabelPredictor {
   }
 
   @Override
-  public List<String> ranking() {
+  public List<String> ranking(String program) {
     enableTimeout();
     statistics.reset();
     logger.log(Level.INFO, "Start precise ranking... This can take some time.");

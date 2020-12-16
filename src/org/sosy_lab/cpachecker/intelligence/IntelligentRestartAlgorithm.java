@@ -278,7 +278,8 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
       LogManager pLogger,
       ShutdownNotifier pShutdownNotifier,
       Specification pSpecification,
-      CFA pCfa)
+      CFA pCfa,
+      String program)
       throws InvalidConfigurationException {
     config.inject(this);
 
@@ -316,13 +317,13 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
         registry, iterationBound, 5, backend, accelerated
     );
 
-
     this.oracleImpl = OracleFactory.getInstance().create(
         this.oracle, logger, config,
         this.predictionShutdown.getNotifier(),
         this.configFiles,
         sampleRegistry,
-        this.cfa
+        this.cfa,
+        program
     );
     this.oracleImpl.collectStatistics(stats.subStats);
 
@@ -340,10 +341,11 @@ public class IntelligentRestartAlgorithm implements Algorithm, StatisticsProvide
       LogManager pLogger,
       ShutdownNotifier pShutdownNotifier,
       Specification pSpecification,
-      CFA pCfa)
+      CFA pCfa,
+      String program)
       throws InvalidConfigurationException {
     IntelligentRestartAlgorithm algorithm =
-        new IntelligentRestartAlgorithm(pConfig, pLogger, pShutdownNotifier, pSpecification, pCfa);
+        new IntelligentRestartAlgorithm(pConfig, pLogger, pShutdownNotifier, pSpecification, pCfa, program);
     if (algorithm.useARGCombiningAlgorithm) {
       return new PartialARGsCombiner(algorithm, pConfig, pLogger, pShutdownNotifier);
     }

@@ -52,7 +52,7 @@ public class FallbackPredictor implements IOracleLabelPredictor {
   }
 
   @Override
-  public List<String> ranking() {
+  public List<String> ranking(String program) {
 
     List<String> out = new ArrayList<>();
 

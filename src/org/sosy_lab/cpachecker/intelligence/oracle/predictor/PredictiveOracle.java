@@ -129,7 +129,7 @@ public class PredictiveOracle implements IConfigOracle {
     labelRanking = new ArrayList<>();
     stats.setOrder(labelRanking);
 
-    labelRanking = predictor.ranking();
+    labelRanking = predictor.ranking("");
 
     if(labelRanking == null){
       logger.log(Level.WARNING, "Oracle stopped as prediction is empty");

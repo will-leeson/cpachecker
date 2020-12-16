@@ -82,21 +82,20 @@ public class ManagedOracle implements IConfigOracle {
 
   private AnnotatedValue<Path> peekedBuffer = null;
 
-  public ManagedOracle(Configuration config, PackedPredictorFactory pFactory) throws InvalidConfigurationException {
+  public ManagedOracle(Configuration config, PackedPredictorFactory pFactory, String program) throws InvalidConfigurationException {
 
     config.inject(this);
     logger = pFactory.getLogger();
     initLabelToPath(pFactory.getConfigPaths());
-    manager = buildManager(pFactory);
+    manager = buildManager(pFactory, program);
 
   }
 
 
-  private RankManager buildManager(PackedPredictorFactory pFactory)
+  private RankManager buildManager(PackedPredictorFactory pFactory, String program)
       throws InvalidConfigurationException {
-
     IRankingProvider baseProvider = new PredictorProviderWrapper(pFactory.getLogger(),
-        pFactory.create(base)
+        pFactory.create(base), program
     );
 
     RankManager m = new RankManager(baseProvider);
@@ -104,14 +103,14 @@ public class ManagedOracle implements IConfigOracle {
     int i = 1;
     for(String stage: staged){
       IRankingProvider stagedProvider = new PredictorProviderWrapper(
-          pFactory.getLogger(), pFactory.create(stage)
+          pFactory.getLogger(), pFactory.create(stage), program
       );
       m.registerProvider(i++, stagedProvider);
     }
 
     for(String stage: backup){
       IRankingProvider stagedProvider = new PredictorProviderWrapper(
-          pFactory.getLogger(), pFactory.create(stage)
+          pFactory.getLogger(), pFactory.create(stage), program
       );
       m.registerProvider(0, stagedProvider);
     }

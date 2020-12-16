@@ -32,7 +32,7 @@ public interface IOracleLabelPredictor {
 
   public String getName();
 
-  public List<String> ranking();
+  public List<String> ranking(String program);
 
   public void collectStatistics(Collection<Statistics> statsCollection);
 

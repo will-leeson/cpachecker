@@ -12,6 +12,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.FluentIterable.from;
 import static org.sosy_lab.common.ShutdownNotifier.interruptCurrentThreadOnShutdown;
 
+import java.util.*;
 import com.google.common.base.Joiner;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.ImmutableList;
@@ -363,7 +364,7 @@ public class CPAchecker {
 
         GlobalInfo.getInstance().setUpInfoFromCPA(cpa);
 
-        algorithm = factory.createAlgorithm(cpa, cfa, specification);
+        algorithm = factory.createAlgorithm(cpa, cfa, specification, Arrays.toString(programDenotation.toArray()));
 
         if (algorithm instanceof MPVAlgorithm && !stopAfterError) {
           // sanity check

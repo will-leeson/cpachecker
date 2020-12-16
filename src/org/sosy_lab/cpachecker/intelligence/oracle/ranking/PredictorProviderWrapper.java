@@ -41,14 +41,16 @@ public class PredictorProviderWrapper implements IRankingProvider {
 
   public PredictorProviderWrapper(
       LogManager pLogger,
-      IOracleLabelPredictor pPredictor) {
+      IOracleLabelPredictor pPredictor, String aProgram) {
     logger = pLogger;
     predictor = pPredictor;
+    program = aProgram;
   }
 
   private IOracleLabelPredictor predictor;
   private List<String> predictorResult;
   private Iterator<String> iterator;
+  private String program;
 
 
   @Override
@@ -81,7 +83,7 @@ public class PredictorProviderWrapper implements IRankingProvider {
     status = ProviderStatus.PROCESSING;
 
     try{
-      predictorResult = predictor.ranking();
+      predictorResult = predictor.ranking(program);
     }catch (Exception e){
       logger.log(Level.WARNING, "Failed to predict a ranking ( "+predictor.getName()+" )", e);
     }

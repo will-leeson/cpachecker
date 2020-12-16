@@ -395,7 +395,8 @@ public class CoreComponentsFactory {
   }
 
   public Algorithm createAlgorithm(
-      final ConfigurableProgramAnalysis cpa, final CFA cfa, final Specification specification)
+      final ConfigurableProgramAnalysis cpa, final CFA cfa, final Specification specification,
+      String program)
       throws InvalidConfigurationException, CPAException, InterruptedException {
     logger.log(Level.FINE, "Creating algorithms");
 
@@ -438,7 +439,270 @@ public class CoreComponentsFactory {
       algorithm = RestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
     } else if (useIntelligentRestartingAlgorithm){
       logger.log(Level.INFO, "Using Intelligent Restarting Algorithm");
-      algorithm = IntelligentRestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
+      algorithm = IntelligentRestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa, program);
+    } else if (useCompositionAlgorithm) {
+      logger.log(Level.INFO, "Using Composition Algorithm");
+      algorithm = new CompositionAlgorithm(config, logger, shutdownNotifier, specification, cfa);
+
+    } else if (useImpactAlgorithm) {
+      algorithm = new ImpactAlgorithm(config, logger, shutdownNotifier, cpa, cfa);
+
+    } else if (runCBMCasExternalTool) {
+      if (cfa.getFileNames().size() > 1) {
+        throw new InvalidConfigurationException(
+            "Cannot use CBMC as analysis with more than one input file");
+      }
+      algorithm = new ExternalCBMCAlgorithm(cfa.getFileNames().get(0), config, logger);
+
+    } else if (useParallelAlgorithm) {
+      algorithm =
+          new ParallelAlgorithm(
+              config,
+              logger,
+              shutdownNotifier,
+              specification,
+              cfa,
+              aggregatedReachedSets);
+
+    } else if (useMPIProcessAlgorithm) {
+      algorithm = new MPIPortfolioAlgorithm(config, logger, shutdownNotifier, specification);
+
+    } else if (useFaultLocalizationWithDistanceMetrics) {
+      algorithm = new
+          Explainer(
+          config,
+          logger,
+          shutdownNotifier,
+          specification,
+          cfa);
+    } else if (runNeuralGraphGen){
+      algorithm = new NeuralGraphGenAlgorithm(
+          logger,
+          config,
+          shutdownNotifier,
+          cfa
+      );
+    }
+    else {
+      algorithm = CPAAlgorithm.create(cpa, logger, config, shutdownNotifier);
+
+      if (constructResidualProgram) {
+        algorithm = new ResidualProgramConstructionAlgorithm(cfa, config, logger, shutdownNotifier,
+            specification, cpa, algorithm);
+      }
+
+      if (constructProgramSlice) {
+        logger.log(
+            Level.INFO,
+            "Constructing program slice. (Sub-)analysis will stop after this"
+                + " and ignore other algorithms in this configuration.");
+        algorithm = new SlicingAlgorithm(logger, shutdownNotifier, config, cfa, specification);
+      }
+
+      if (useParallelBAM) {
+        algorithm = new ParallelBAMAlgorithm(cpa, config, logger, shutdownNotifier);
+      }
+
+      if (useAnalysisWithEnablerCPAAlgorithm) {
+        algorithm = new AnalysisWithRefinableEnablerCPAAlgorithm(algorithm, cpa, cfa, logger, config, shutdownNotifier);
+      }
+
+      if (useCEGAR) {
+        algorithm =
+            new CEGARAlgorithmFactory(algorithm, cpa, logger, config, shutdownNotifier)
+                .newInstance();
+      }
+
+      if (usePDR) {
+        algorithm =
+            new PdrAlgorithm(
+                algorithm,
+                cpa,
+                config,
+                logger,
+                reachedSetFactory,
+                shutdownNotifier,
+                cfa,
+                specification,
+                aggregatedReachedSets);
+      }
+
+      if (useBMC) {
+        verifyNotNull(shutdownManager);
+        algorithm =
+            new BMCAlgorithm(
+                algorithm,
+                cpa,
+                config,
+                logger,
+                reachedSetFactory,
+                shutdownManager,
+                cfa,
+                specification,
+                aggregatedReachedSets);
+      }
+
+      if (useIMC) {
+        verifyNotNull(shutdownManager);
+        algorithm =
+            new IMCAlgorithm(
+                algorithm,
+                cpa,
+                config,
+                logger,
+                reachedSetFactory,
+                shutdownManager,
+                cfa,
+                specification,
+                aggregatedReachedSets);
+      }
+
+      if (checkCounterexamples) {
+        if (cpa instanceof BAMCPA) {
+          algorithm =
+              new BAMCounterexampleCheckAlgorithm(
+                  algorithm, cpa, config, logger, shutdownNotifier, specification, cfa);
+        } else {
+          algorithm =
+              new CounterexampleCheckAlgorithm(
+                  algorithm, cpa, config, specification, logger, shutdownNotifier, cfa);
+        }
+      }
+
+      algorithm =
+          ExceptionHandlingAlgorithm.create(
+              config, algorithm, cpa, logger, shutdownNotifier, checkCounterexamples, useCEGAR);
+
+      if (checkCounterexamplesWithBDDCPARestriction) {
+        algorithm = new BDDCPARestrictionAlgorithm(algorithm, cpa, config, logger);
+      }
+
+      if(learnFromCounterexample){
+        algorithm = new CounterexampleLearningAlgorithm(
+            algorithm, cfa, config, cpa, logger, shutdownNotifier, specification
+        );
+      }
+
+      if (useTestCaseGeneratorAlgorithm) {
+        algorithm =
+            new TestCaseGeneratorAlgorithm(
+                algorithm, cfa, config, cpa, logger, shutdownNotifier, specification);
+      }
+
+      if (collectAssumptions) {
+        algorithm =
+            new AssumptionCollectorAlgorithm(algorithm, cpa, config, logger, cfa, shutdownNotifier);
+      }
+
+      if (useAdjustableConditions) {
+        algorithm = new RestartWithConditionsAlgorithm(algorithm, cpa, config, logger);
+      }
+
+      if (splitProgram) {
+        algorithm = new ProgramSplitAlgorithm(algorithm, cpa, config, logger, shutdownNotifier);
+      }
+
+      if (usePropertyCheckingAlgorithm) {
+        if (!(cpa instanceof PropertyCheckerCPA)) {
+          throw new InvalidConfigurationException(
+              "Property checking algorithm requires CPAWithPropertyChecker as Top CPA");
+        }
+        algorithm =
+            new AlgorithmWithPropertyCheck(algorithm, logger, (PropertyCheckerCPA) cpa);
+      }
+
+      if (useResultCheckAlgorithm) {
+        algorithm =
+            new ResultCheckAlgorithm(
+                algorithm, cpa, cfa, config, logger, shutdownNotifier, specification);
+      }
+
+      if (useCustomInstructionRequirementExtraction) {
+        algorithm = new CustomInstructionRequirementsExtractingAlgorithm(algorithm, cpa, config, logger, shutdownNotifier, cfa);
+      }
+
+      if (unexploredPathsAsProgram) {
+        algorithm = new ResidualProgramConstructionAfterAnalysisAlgorithm(cfa, algorithm, config, logger, shutdownNotifier, specification);
+      }
+
+      if (unknownIfUnrestrictedProgram) {
+        algorithm = new RestrictedProgramDomainAlgorithm(algorithm, cfa);
+      }
+
+      if (useTerminationAlgorithm) {
+        algorithm =
+            new TerminationAlgorithm(
+                config,
+                logger,
+                shutdownNotifier,
+                cfa,
+                reachedSetFactory,
+                aggregatedReachedSetManager,
+                algorithm,
+                cpa);
+      }
+
+      if (cpa instanceof ARGCPA && forceCexStore) {
+        algorithm = new CounterexampleStoreAlgorithm(algorithm, cpa, config, logger, cfa.getMachineModel());
+      }
+
+      if (useMPV) {
+        algorithm = new MPVAlgorithm(cpa, config, logger, shutdownNotifier, specification, cfa);
+      }
+
+      if (useFaultLocalizationWithCoverage) {
+        algorithm = new FaultLocalizationWithCoverage(algorithm, shutdownNotifier, logger, config);
+      }
+      if(useFaultLocalizationWithTraceFormulas) {
+        algorithm = new FaultLocalizationWithTraceFormula(algorithm, config, logger, cfa, shutdownNotifier);
+      }
+    }
+
+    return algorithm;
+  }
+
+  public Algorithm createAlgorithm(
+      final ConfigurableProgramAnalysis cpa, final CFA cfa, final Specification specification)
+      throws InvalidConfigurationException, CPAException, InterruptedException {
+    logger.log(Level.FINE, "Creating algorithms");
+
+    if (disableAnalysis) {
+      return NoopAlgorithm.INSTANCE;
+    }
+
+    Algorithm algorithm;
+
+    if (useUndefinedFunctionCollector) {
+      logger.log(Level.INFO, "Using undefined function collector");
+      algorithm = new UndefinedFunctionCollectorAlgorithm(config, logger, shutdownNotifier, cfa);
+    } else if (useNonTerminationWitnessValidation) {
+      logger.log(Level.INFO, "Using validator for violation witnesses for termination");
+      algorithm =
+          new NonTerminationWitnessValidator(
+              cfa, config, logger, shutdownNotifier, specification.getSpecificationAutomata());
+    } else if(useProofCheckAlgorithmWithStoredConfig) {
+      logger.log(Level.INFO, "Using Proof Check Algorithm");
+      algorithm =
+          new ConfigReadingProofCheckAlgorithm(config, logger, shutdownNotifier, cfa, specification);
+    } else if (useProofCheckAlgorithm || useProofCheckWithARGCMCStrategy) {
+      logger.log(Level.INFO, "Using Proof Check Algorithm");
+      algorithm =
+          new ProofCheckAlgorithm(cpa, config, logger, shutdownNotifier, cfa, specification);
+
+    } else if (useProofCheckAndExtractCIRequirementsAlgorithm) {
+      logger.log(Level.INFO, "Using Proof Check Algorithm");
+      algorithm =
+          new ProofCheckAndExtractCIRequirementsAlgorithm(cpa, config, logger, shutdownNotifier,
+              cfa, specification);
+    } else if (asConditionalVerifier) {
+      logger.log(Level.INFO, "Using Conditional Verifier");
+      algorithm = new ConditionalVerifierAlgorithm(config, logger, shutdownNotifier, specification, cfa);
+    } else if (useHeuristicSelectionAlgorithm) {
+      logger.log(Level.INFO, "Using heuristics to select analysis");
+      algorithm = new SelectionAlgorithm(cfa, shutdownNotifier, config, specification, logger);
+    } else if (useRestartingAlgorithm) {
+      logger.log(Level.INFO, "Using Restarting Algorithm");
+      algorithm = RestartAlgorithm.create(config, logger, shutdownNotifier, specification, cfa);
     } else if (useCompositionAlgorithm) {
       logger.log(Level.INFO, "Using Composition Algorithm");
       algorithm = new CompositionAlgorithm(config, logger, shutdownNotifier, specification, cfa);
@@ -670,6 +934,7 @@ public class CoreComponentsFactory {
         || useParallelAlgorithm
         || asConditionalVerifier
         || useFaultLocalizationWithDistanceMetrics) {
+
       // this algorithm needs an indirection so that it can change
       // the actual reached set instance on the fly
       if (memorizeReachedAfterRestart) {
