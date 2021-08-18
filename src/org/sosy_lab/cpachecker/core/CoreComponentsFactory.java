@@ -78,6 +78,7 @@ import org.sosy_lab.cpachecker.cpa.bam.BAMCPA;
 import org.sosy_lab.cpachecker.cpa.bam.BAMCounterexampleCheckAlgorithm;
 import org.sosy_lab.cpachecker.cpa.location.LocationCPA;
 import org.sosy_lab.cpachecker.exceptions.CPAException;
+import org.sosy_lab.cpachecker.intelligence.GraphGenAlgorithm;
 import org.sosy_lab.cpachecker.intelligence.IntelligentRestartAlgorithm;
 import org.sosy_lab.cpachecker.intelligence.NeuralGraphGenAlgorithm;
 
@@ -318,6 +319,13 @@ public class CoreComponentsFactory {
 
   @Option(
       secure = true,
+      name="algorithm.PDGGraphGen",
+      description = "generate a abstract graph representation of a given program"
+  )
+  boolean runPDGGraphGen = false;
+
+  @Option(
+      secure = true,
       name = "algorithm.faultLocalization.by_coverage",
       description = "for found property violation, perform fault localization with coverage")
   private boolean useFaultLocalizationWithCoverage = false;
@@ -481,8 +489,13 @@ public class CoreComponentsFactory {
           shutdownNotifier,
           cfa
       );
-    }
-    else {
+    } else if(runPDGGraphGen){
+      algorithm = new GraphGenAlgorithm(
+          logger,
+          config, 
+          shutdownNotifier, 
+          cfa);
+    } else {
       algorithm = CPAAlgorithm.create(cpa, logger, config, shutdownNotifier);
 
       if (constructResidualProgram) {

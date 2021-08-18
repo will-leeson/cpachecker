@@ -236,7 +236,7 @@ public class NeuralGraphGenAlgorithm implements Algorithm, StatisticsProvider {
   private void exportGraph(SVGraph pGraph) throws IOException {
     Path parent = outputPath.getParent();
 
-    if((parent != null && !Files.exists(parent)) || !Files.isDirectory(parent)){
+    if((parent != null && !Files.exists(parent)) ){
       Files.createDirectory(parent);
     }
 
