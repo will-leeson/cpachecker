@@ -8,6 +8,33 @@ SPDX-FileCopyrightText: 2007-2020 Dirk Beyer <https://www.sosy-lab.org>
 SPDX-License-Identifier: Apache-2.0
 -->
 
+Graves - Graph-based Verifier Selector 
+======================================
+Graves is an algorithm selection tool which uses graph representations of programs to decide the order in which to run a variety of verification algorithms. Using state of the art graph neural network techniques, Graves predicts the optimal ordering of several CPAChecker configurations.
+
+Dependencies
+------------
+Beyond the normal dependencies of CPAChecker, Graves requires both [PyTorch](https://pytorch.org/get-started/locally/) and [PyTorch-Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html). Both of these libraries have CPU only installs, which is all Graves requires. Either of these can be installed with conda or pip. Graves also requires llvm be built from source for the portion of the tool which constructs program graphs. Luckily, this process can be expedited by only building what is needed for the graph builder. We recommend that you build using ninja as it is has been shown to be faster, but cmake will work.
+
+Setup
+-----
+To setup Graves perform the following steps:
+
+1. `git clone --recursive git@github.com:will-leeson/cpachecker.git`
+2. `mkdir llvm-project/build`
+3. `cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -B llvm-project/build -S llvm-project/llvm ` (Add `-G Ninja` if you have ninja installed)
+4. `make graph-builder` or `ninja graph-builder` if ninja is installed
+5. Proceed with the CPAChecker installation detailed in [`INSTALL.md`](INSTALL.md)
+
+Running Graves
+--------------
+In the scripts directory run:
+```
+./cpa.sh -graves [file.c]
+```
+where file.c is the C program you wish to verify.
+
+
 Getting Started with CPAchecker
 ===============================
 
