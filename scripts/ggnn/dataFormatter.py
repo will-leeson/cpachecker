@@ -1,4 +1,13 @@
 import json, os, sys
+'''
+File - dataFormatter.py
+
+This file will parse the raw graphs produced by dataCollector.py
+It will create dictionaries for all edge types. It will also use 
+control and dataflow information to produce more data flow edges
+using reaching definition
+'''
+
 
 def reachableDefs(cfgDict, genKillDict, stmtToNum, backwardsCFGDict, start):
     reachDefs = dict()
@@ -83,66 +92,75 @@ def handler(fileName):
 
     holdOnTo = None
     infile = open(fileName)
-    for line in infile:
-        newline = "".join(line.strip().split(")"))
-        newline = "".join(newline.split("("))
-        newline = newline.split(",")
-        if newline[0] == "AST":
-            #ASTPointer : ASTToken
-            ptrToToken[newline[1]] = newline[2]
-            ptrToToken[newline[3]] = newline[4]
-            #ASTPointer1 : [ASTPointer2, ...]
-            if newline[1] in astDict:
-                astDict[newline[1]].append(newline[3])
-            else:
-                astDict[newline[1]] = [newline[3]]
-        elif newline[0] == "CFG":
-            #StatementPointer : StatementPointerSuccessor
-            if newline[2] in cfgDict:
-                cfgDict[newline[2]].append(newline[4])
-            else:
-                cfgDict[newline[2]] = [newline[4]]
-            if ptrToToken[newline[4]] == "Function":
-                holdOnTo = newline[2]
-            #The purpose of the backwardsCFGDict is to be able to build the inset
-            #for reaching definitions. Since function calls will not add to this
-            #set and only serve to cause problems, we're ditching them
-            elif holdOnTo:
-                if newline[4] in backwardsCFGDict:
-                    backwardsCFGDict[newline[4]].append(holdOnTo)
-                else:
-                    backwardsCFGDict[newline[4]] = [holdOnTo]
-                holdOnTo = None
-            else:
-                if newline[4] in backwardsCFGDict:
-                    backwardsCFGDict[newline[4]].append(newline[2])
-                else:
-                    backwardsCFGDict[newline[4]] = [newline[2]]
-            if newline[2] in stmtToNum:
-                stmtToNum[newline[2]].append(newline[1])
-            else:
-                stmtToNum[newline[2]] = [newline[1]]
-            if newline[3] == "main":
-                start = newline[4]
+    try:
+        for line in infile:
+            if "(void)" in line:
+                line = "".join(line.split("(void)"))
+            newline = "".join(line.strip().split(")"))
+            newline = "".join(newline.split("("))
+            newline = newline.split(",")
 
-        elif newline[0] == "DFG":
-            #DataPoint : DataPointAcceptor
-            if newline[1] in dfgDict:
-                dfgDict[newline[1]].append(newline[3])
-            else:
-                dfgDict[newline[1]] = [newline[3]]
-        elif newline[0] == "Gen/Kill":
-            # CFGNum : (DeclRefExpr, Var)
-            if newline[1] in genKillDict:
-                genKillDict[newline[1]].append((newline[2],newline[3]))
-            else:
-                genKillDict[newline[1]] = [(newline[2],newline[3])]
-        elif newline[0] == "Ref":
-            #CFGNum : (DeclRefExpr, Var)
-            if newline[1] in refDict:
-                refDict[newline[1]].append((newline[3],newline[4]))
-            else:
-                refDict[newline[1]] = [(newline[3],newline[4])]
+            if newline[0] == "AST":
+                #ASTPointer : ASTToken
+                if newline[1] not in ptrToToken:
+                    ptrToToken[newline[1]] = newline[2]
+                if newline[3] not in ptrToToken:
+                    ptrToToken[newline[3]] = newline[4]
+                #ASTPointer1 : [ASTPointer2, ...]
+                if newline[1] in astDict:
+                    astDict[newline[1]].append(newline[3])
+                else:
+                    astDict[newline[1]] = [newline[3]]
+            elif newline[0] == "CFG":
+                #StatementPointer : StatementPointerSuccessor
+                if newline[2] in cfgDict:
+                    cfgDict[newline[2]].append(newline[4])
+                else:
+                    cfgDict[newline[2]] = [newline[4]]
+                if ptrToToken[newline[4]] == "Function":
+                    holdOnTo = newline[2]
+                #The purpose of the backwardsCFGDict is to be able to build the inset
+                #for reaching definitions. Since function calls will not add to this
+                #set and only serve to cause problems, we're ditching them
+                elif holdOnTo:
+                    if newline[4] in backwardsCFGDict:
+                        backwardsCFGDict[newline[4]].append(holdOnTo)
+                    else:
+                        backwardsCFGDict[newline[4]] = [holdOnTo]
+                    holdOnTo = None
+                else:
+                    if newline[4] in backwardsCFGDict:
+                        backwardsCFGDict[newline[4]].append(newline[2])
+                    else:
+                        backwardsCFGDict[newline[4]] = [newline[2]]
+                if newline[2] in stmtToNum:
+                    stmtToNum[newline[2]].append(newline[1])
+                else:
+                    stmtToNum[newline[2]] = [newline[1]]
+                if newline[3] == "main":
+                    start = newline[4]
+
+            elif newline[0] == "DFG":
+                #DataPoint : DataPointAcceptor
+                if newline[1] in dfgDict:
+                    dfgDict[newline[1]].append(newline[3])
+                else:
+                    dfgDict[newline[1]] = [newline[3]]
+            elif newline[0] == "Gen/Kill":
+                # CFGNum : (DeclRefExpr, Var)
+                if newline[1] in genKillDict:
+                    genKillDict[newline[1]].append((newline[2],newline[3]))
+                else:
+                    genKillDict[newline[1]] = [(newline[2],newline[3])]
+            elif newline[0] == "Ref":
+                #CFGNum : (DeclRefExpr, Var)
+                if newline[1] in refDict:
+                    refDict[newline[1]].append((newline[3],newline[4]))
+                else:
+                    refDict[newline[1]] = [(newline[3],newline[4])]
+    except:
+        print(fileName)
+        assert()
 
     reachDef = reachableDefs(cfgDict, genKillDict, stmtToNum, backwardsCFGDict, start)
     defsToRefs = defToRef(reachDef, refDict)

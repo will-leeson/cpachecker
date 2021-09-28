@@ -2,7 +2,8 @@
 
 [ -d ggnnLogFiles ] || mkdir ggnnLogFiles
 DIR=`dirname "$0"`
-$DIR/graph-builder $1 > ggnnLogFiles/tempFile.txt
-python3 $DIR/dataFormatter.py ggnnLogFiles/tempFile.txt
-python3 $DIR/prepData.py ggnnLogFiles/tempFile.json $DIR
-python3 $DIR/predict.py ggnnLogFiles $DIR/model.pt
+FILE=`basename $1`
+$DIR/../../llvm-project/build/bin/graph-builder $1 > ggnnLogFiles/${FILE}graph.txt
+python3 $DIR/dataFormatter.py ggnnLogFiles/${FILE}graph.txt
+python3 $DIR/prepData.py ggnnLogFiles/${FILE}graph.json $DIR
+python3 $DIR/predict.py ggnnLogFiles/${FILE}graph.json.npz ggnnLogFiles/${FILE}graph.jsonEdges.npz $DIR/model.pt

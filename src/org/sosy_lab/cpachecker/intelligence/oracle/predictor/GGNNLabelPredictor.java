@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.nio.charset.Charset;
+import java.net.URL;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
@@ -77,7 +78,11 @@ public class GGNNLabelPredictor implements IOracleLabelPredictor {
     statistics.reset();
 
     program = program.substring(1, program.length()-1);
-    var pb = new ProcessBuilder("./ggnn/ggnnPredict.sh", program);
+    URL location = getClass().getProtectionDomain().getCodeSource().getLocation();
+    
+    logger.log(Level.INFO, "Working Directory = " + System.getProperty("user.dir"));
+
+    var pb = new ProcessBuilder(System.getProperty("user.dir")+"/ggnn/ggnnPredict.sh", program, System.getProperty("user.dir"));
     try{
       File log = new File("log");
       pb.redirectOutput(log);
@@ -93,7 +98,9 @@ public class GGNNLabelPredictor implements IOracleLabelPredictor {
     List<String> out = new ArrayList<String>();
 
     try {
-      File myObj = new File("ggnnLogFiles/prediction.txt");
+      final int lastUnixPos = program.lastIndexOf('/');
+      logger.log(Level.INFO, "Program = " + program.substring(lastUnixPos+1));
+      File myObj = new File("ggnnLogFiles/"+program.substring(lastUnixPos+1)+"/prediction.txt");
       Scanner myReader = new Scanner(myObj, Charset.defaultCharset().name());
       while (myReader.hasNextLine()) {
         String data = myReader.nextLine();
