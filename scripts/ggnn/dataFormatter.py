@@ -171,7 +171,7 @@ def handler(fileName):
             dfgDict[aDef] = [defsToRefs[aDef]]
 
     output = {"tokens":ptrToToken, "AST":astDict, "CFG":cfgDict, "DFG":dfgDict}
-    json.dump(output, open("ggnnLogFiles/"+os.path.basename(fileName).replace("txt", "json"), 'w'))
+    json.dump(output, open(sys.argv[-1]+"/"+os.path.basename(fileName).replace("txt", "json"), 'w'))
     return tokenSet
 
 handler(sys.argv[1])
