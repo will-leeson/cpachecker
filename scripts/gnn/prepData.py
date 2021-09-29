@@ -6,7 +6,7 @@ File - prepData.py
 
 This file will take the graphs produced by dataFormatter.py and
 produce the final representation of the graphs. It will produce
-the representation of each node in the graph for the GGNN to
+the representation of each node in the graph for the GNN to
 perform calculations on. It will also produce a set of edge files
 which will contain the edges
 '''

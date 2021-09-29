@@ -65,8 +65,8 @@ public class PredictorFactory {
       predictor = new JaccardLabelPredictor(config, logger, pSampleRegistry, pShutdownNotifier, sample);
     }
 
-    if(oracle.equals("GGNN")){
-      predictor = new GGNNLabelPredictor(logger, config, sample);
+    if(oracle.equals("GNN")){
+      predictor = new GNNLabelPredictor(logger, config, sample);
     }
 
     if(oracle.equals("fallback")){

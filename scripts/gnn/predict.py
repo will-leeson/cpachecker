@@ -27,7 +27,7 @@ prediction = (-model(x=data.x, edge_index=data.edge_index, edge_attr=data.edge_a
 
 order = [possible[x] for x in prediction.squeeze()]
 
-outfile = open("ggnnLogFiles/"+"prediction.txt", 'w')
+outfile = open(argv[-1]+"/prediction.txt", 'w')
 
 for analysis in order:
     outfile.write(analysis+"\n")

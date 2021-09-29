@@ -47,11 +47,11 @@ import org.sosy_lab.cpachecker.intelligence.learn.binary.exception.IncompleteCon
 import org.sosy_lab.cpachecker.intelligence.learn.sample.IProgramSample;
 import org.sosy_lab.cpachecker.intelligence.oracle.OracleStatistics;
 
-@Options(prefix="GGNNPredictor")
-public class GGNNLabelPredictor implements IOracleLabelPredictor {
+@Options(prefix="GNNPredictor")
+public class GNNLabelPredictor implements IOracleLabelPredictor {
 
   @Option(secure = true,
-      description = "pretrained parameter of GGNN")
+      description = "pretrained parameter of GNN")
   private String pretrained = null;
 
   private LogManager logger;
@@ -59,7 +59,7 @@ public class GGNNLabelPredictor implements IOracleLabelPredictor {
   private IProgramSample currentSample;
 
 
-  public GGNNLabelPredictor(
+  public GNNLabelPredictor(
       LogManager pLogger,
       Configuration pConfiguration,
       IProgramSample pCurrentSample) throws InvalidConfigurationException {
@@ -70,7 +70,7 @@ public class GGNNLabelPredictor implements IOracleLabelPredictor {
 
   @Override
   public String getName() {
-    return "GGNN";
+    return "GNN";
   }
 
   @Override
@@ -82,7 +82,7 @@ public class GGNNLabelPredictor implements IOracleLabelPredictor {
     
     logger.log(Level.INFO, "Working Directory = " + System.getProperty("user.dir"));
 
-    var pb = new ProcessBuilder(System.getProperty("user.dir")+"/ggnn/ggnnPredict.sh", program, System.getProperty("user.dir"));
+    var pb = new ProcessBuilder(System.getProperty("user.dir")+"/gnn/gnnPredict.sh", program, System.getProperty("user.dir"));
     try{
       File log = new File("log");
       pb.redirectOutput(log);
@@ -100,7 +100,7 @@ public class GGNNLabelPredictor implements IOracleLabelPredictor {
     try {
       final int lastUnixPos = program.lastIndexOf('/');
       logger.log(Level.INFO, "Program = " + program.substring(lastUnixPos+1));
-      File myObj = new File("ggnnLogFiles/"+program.substring(lastUnixPos+1)+"/prediction.txt");
+      File myObj = new File("gnnLogFiles/"+program.substring(lastUnixPos+1)+"/prediction.txt");
       Scanner myReader = new Scanner(myObj, Charset.defaultCharset().name());
       while (myReader.hasNextLine()) {
         String data = myReader.nextLine();
