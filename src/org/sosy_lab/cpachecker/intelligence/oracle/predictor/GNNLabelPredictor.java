@@ -28,6 +28,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.StringJoiner;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -78,15 +79,19 @@ public class GNNLabelPredictor implements IOracleLabelPredictor {
     statistics.reset();
 
     program = program.substring(1, program.length()-1);
-    URL location = getClass().getProtectionDomain().getCodeSource().getLocation();
+    String fileLocation = getClass().getProtectionDomain().getCodeSource().getLocation().toString().substring(5);
     
     logger.log(Level.INFO, "Working Directory = " + System.getProperty("user.dir"));
+    logger.log(Level.INFO, "python3", fileLocation+"../scripts/gnn/graves.py", program, fileLocation+"../scripts/gnn/model.pt");
 
-    var pb = new ProcessBuilder(System.getProperty("user.dir")+"/gnn/gnnPredict.sh", program, System.getProperty("user.dir"));
+    var pb = new ProcessBuilder("python3", fileLocation+"../scripts/gnn/graves.py", program, fileLocation+"../scripts/gnn/model.pt");
+    String result = "";
     try{
-      File log = new File("log");
-      pb.redirectOutput(log);
       Process p = pb.start();
+      final BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+      StringJoiner sj = new StringJoiner(System.getProperty("line.separator"));
+      reader.lines().iterator().forEachRemaining(sj::add);
+      result = sj.toString();
       var ret = p.waitFor();
       logger.log(Level.INFO, "Done ", ret);
     }
@@ -94,27 +99,8 @@ public class GNNLabelPredictor implements IOracleLabelPredictor {
       logger.log(Level.WARNING, iE, "Use random sequence");
       return new ArrayList<>();
     }
-
-    List<String> out = new ArrayList<String>();
-
-    try {
-      final int lastUnixPos = program.lastIndexOf('/');
-      logger.log(Level.INFO, "Program = " + program.substring(lastUnixPos+1));
-      File myObj = new File("gnnLogFiles/"+program.substring(lastUnixPos+1)+"/prediction.txt");
-      Scanner myReader = new Scanner(myObj, Charset.defaultCharset().name());
-      while (myReader.hasNextLine()) {
-        String data = myReader.nextLine();
-        out.add(data);
-      }
-      myReader.close();
-    } catch (FileNotFoundException e) {
-      System.out.println("An error occurred.");
-      e.printStackTrace();
-    }
-
-    if(out.get(out.size() - 1 ).equalsIgnoreCase("Unknown")){
-      out.remove(out.size() - 1);
-    }
+    
+    List<String> out = Arrays.asList(result.split("\n"));
 
     logger.log(Level.INFO, "Predicted ranking: "+out.toString());
 
