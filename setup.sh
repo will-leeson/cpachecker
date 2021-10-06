@@ -107,8 +107,8 @@ echo
 echo "---------------------------------------------"
 echo " graph-builder added to ${HOME}/.local/bin   "
 echo " Make sure ${HOME}/.local/bin is in path     "
-echo " E.G. add the following command to ~/.bashrc "
-echo " export PATH=\$PATH:\$HOME/.local/bin          "
+echo " E.G. add the following command to ~/.bashrc:"
+echo " export PATH=\$PATH:\$HOME/.local/bin        "
 echo "---------------------------------------------"
 echo
 
