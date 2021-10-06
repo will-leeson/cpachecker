@@ -32,7 +32,7 @@ Running Graves
 --------------
 In the scripts directory run:
 ```
-./cpa.sh -graves [file.c]
+./cpa.sh -svcomp22-graves [file.c]
 ```
 where file.c is the C program you wish to verify.
 
