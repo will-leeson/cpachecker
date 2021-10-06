@@ -40,7 +40,7 @@ then
     then
         conda install pyg -c pyg -c conda-forge
     else
-        pip3 install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.9.0+cpu.html
+        pip3 install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric
     fi
 else
     echo "---------------------------------------------"
@@ -86,6 +86,10 @@ else
         mkdir ${HOME}/.local/bin
     fi
 
+    if test -f "${HOME}/.local/bin/graph-builder"
+    then
+        rm "${HOME}/.local/bin/graph-builder"
+    fi
     ln ${PWD}/llvm-project/build/bin/graph-builder -s ${HOME}/.local/bin
 
     echo
