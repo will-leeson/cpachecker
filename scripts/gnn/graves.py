@@ -251,7 +251,7 @@ data = Data(x=nodes.float(), edge_index=edges_tensor, edge_attr=edge_labels, pro
 data = Batch.from_data_list([data])
 
 model = GAT(passes=1, numEdgeSets=3, inputLayerSize=nodes.size(1), outputLayerSize=len(possible), numAttentionLayers=5, mode='cat', pool='mean', k='3')
-model.load_state_dict(torch.load(argv[2]))
+model.load_state_dict(torch.load(argv[2], map_location="cpu"))
 
 prediction = (-model(x=data.x, edge_index=data.edge_index, edge_attr=data.edge_attr, problemType=data.problemType, batch=data.batch)).argsort()
 
