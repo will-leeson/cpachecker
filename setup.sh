@@ -7,7 +7,12 @@ elif command -v pip3 &> /dev/null
 then
     PIP=1
 else
-    echo "Neither conda or pip3 are installed. Please install one"
+    echo "Neither conda or pip3 are installed. Please install one and re-attempt the install"
+fi
+
+if command -v ant &> /dev/null
+then
+    echo "ant is not installed. Please install it and re-attempt the install "
 fi
 
 if ! python3 -c "import torch" &> /dev/null
@@ -83,3 +88,10 @@ else
     echo "---------------------------------------------"
     echo
 fi
+
+echo
+echo "---------------------------------------------"
+echo "             Building CPAChecker             "
+echo "---------------------------------------------"
+echo
+
