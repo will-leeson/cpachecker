@@ -61,16 +61,24 @@ else
     echo "           Building graph-builder            "
     echo "---------------------------------------------"
     echo
-    mkdir llvm-project/build
+    
+    if [ -d llvm-project/build ]
+    then
+        rm -r llvm-project/build
+    else
+        mkdir llvm-project/build
+    fi
+
     pushd llvm-project/build
     if command -v ninja &> /dev/null
     then
-        cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -G Ninja ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -G Ninja ../llvm
         ninja graph-builder
     else
-        cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" ..
+        cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" ../llvm
         make graph-builder
     fi
+    popd
 
     if [ ! -d "${HOME}/.local/bin" ]
     then   
@@ -95,3 +103,5 @@ echo "             Building CPAChecker             "
 echo "---------------------------------------------"
 echo
 
+ant
+ant jar
