@@ -20,7 +20,7 @@ then
     echo "---------------------------------------------"
     echo "Installing PyTorch now:"
     echo "---------------------------------------------"
-    if $CONDA
+    if [ "$CONDA" -eq "1" ] 
     then
         conda install pytorch torchvision torchaudio cpuonly -c pytorch
     else
@@ -36,7 +36,7 @@ then
     echo "---------------------------------------------"
     echo "Installing PyTorch-Geometric now:"
     echo "---------------------------------------------"
-    if $CONDA
+    if [ "$CONDA" -eq "1" ] 
     then
         conda install pyg -c pyg -c conda-forge
     else
