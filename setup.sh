@@ -10,9 +10,9 @@ else
     echo "Neither conda or pip3 are installed. Please install one and re-attempt the install"
 fi
 
-if command -v ant &> /dev/null
+if ! command -v ant &> /dev/null
 then
-    echo "ant is not installed. Please install it and re-attempt the install "
+    echo "ant is not installed. Please install it and re-attempt the install "; exit 1;
 fi
 
 if ! python3 -c "import torch" &> /dev/null
@@ -20,7 +20,7 @@ then
     echo "---------------------------------------------"
     echo "Installing PyTorch now:"
     echo "---------------------------------------------"
-    if CONDA
+    if $CONDA
     then
         conda install pytorch torchvision torchaudio cpuonly -c pytorch
     else
@@ -36,7 +36,7 @@ then
     echo "---------------------------------------------"
     echo "Installing PyTorch-Geometric now:"
     echo "---------------------------------------------"
-    if CONDA
+    if $CONDA
     then
         conda install pyg -c pyg -c conda-forge
     else
