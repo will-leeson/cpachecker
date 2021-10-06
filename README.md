@@ -25,6 +25,7 @@ To setup Graves perform the following steps:
 3. `mkdir llvm-project/build`
 4. `cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -B llvm-project/build -S llvm-project/llvm ` (Add `-G Ninja` if you have ninja installed)
 5. `make graph-builder` or `ninja graph-builder` if ninja is installed
+6. Add the binary "/path/to/cpachecker/bin/graph-builder" to your path
 
 You can now build CPAChecker from source with the command `ant` in the root directory
 
