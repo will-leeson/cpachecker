@@ -40,7 +40,7 @@ then
     then
         conda install pyg -c pyg -c conda-forge
     else
-        pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.9.0+cpu.html
+        pip3 install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.9.0+cpu.html
     fi
 else
     echo "---------------------------------------------"
@@ -64,7 +64,8 @@ else
     
     if [ -d llvm-project/build ]
     then
-        rm -r llvm-project/build
+        rm -r llvm-project/build/
+        mkdir llvm-project/build
     else
         mkdir llvm-project/build
     fi
