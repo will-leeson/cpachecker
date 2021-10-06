@@ -92,14 +92,6 @@ else
     fi
     ln ${PWD}/llvm-project/build/bin/graph-builder -s ${HOME}/.local/bin
 
-    echo
-    echo "---------------------------------------------"
-    echo " graph-builder added to ${HOME}/.local/bin   "
-    echo " Make sure ${HOME}/.local/bin is in path     "
-    echo " E.G. add the following command to ~/.bashrc "
-    echo " export PATH=$PATH:$HOME/.local/bin          "
-    echo "---------------------------------------------"
-    echo
 fi
 
 echo
@@ -110,3 +102,18 @@ echo
 
 ant
 ant jar
+
+echo
+echo "---------------------------------------------"
+echo " graph-builder added to ${HOME}/.local/bin   "
+echo " Make sure ${HOME}/.local/bin is in path     "
+echo " E.G. add the following command to ~/.bashrc "
+echo " export PATH=$PATH:$HOME/.local/bin          "
+echo "---------------------------------------------"
+echo
+
+echo "---------------------------------------------"
+echo "   Build succesful. Try graves by running:   "
+echo "./scripts/cpa.sh -svcomp22-graves [file.c]   "
+echo "---------------------------------------------"
+echo
