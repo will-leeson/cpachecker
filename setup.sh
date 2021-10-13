@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if ! command -v cmake &> /dev/null
+then
+    echo "CMake is not installed. Please install and re-attempt the build"; exit 1;
+fi
+
 if command -v conda &> /dev/null
 then
     CONDA=1
