@@ -14,7 +14,7 @@ Graves is an algorithm selection tool which uses graph representations of progra
 
 Dependencies
 ------------
-Beyond the normal dependencies of CPAChecker, Graves requires both [PyTorch](https://pytorch.org/get-started/locally/) and [PyTorch-Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html). Both of these libraries have CPU only installs, which is all Graves requires. These will be installed by the setup script, as long as conda or pip are installed.
+Beyond the normal dependencies of CPAChecker, Graves requires both [PyTorch](https://pytorch.org/get-started/locally/)>=1.9.1 and [PyTorch-Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html)>2.0.1 (Other versions may work, but these are the officially supported version). Both of these libraries have CPU only installs, which is all Graves requires. These will be installed by the setup script, as long as conda or pip are installed.
 
 Graves also requires llvm be built from source for the portion of the tool which constructs program graphs, which requires CMake and a build tool, like make or ninja. Luckily, this process can be expedited by only building what is needed for the graph builder. The setup script supports both ninja and make, but it is generally faster if ninja is installed.
 
