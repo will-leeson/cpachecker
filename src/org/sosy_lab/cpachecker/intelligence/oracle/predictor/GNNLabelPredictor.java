@@ -86,23 +86,31 @@ public class GNNLabelPredictor implements IOracleLabelPredictor {
 
     var pb = new ProcessBuilder("python3", fileLocation+"../scripts/gnn/graves.py", program, fileLocation+"../scripts/gnn/model.pt");
     String result = "";
+    int ret;
     try{
       Process p = pb.start();
       final BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
       StringJoiner sj = new StringJoiner(System.getProperty("line.separator"));
       reader.lines().iterator().forEachRemaining(sj::add);
       result = sj.toString();
-      var ret = p.waitFor();
+      ret = p.waitFor();
       logger.log(Level.INFO, "Done ", ret);
     }
     catch (IOException | InterruptedException iE){
       logger.log(Level.WARNING, iE, "Use random sequence");
       return new ArrayList<>();
     }
-    
-    List<String> out = Arrays.asList(result.split("\n"));
 
-    logger.log(Level.INFO, "Predicted ranking: "+out.toString());
+    List<String> out;
+    if(ret==0){
+      out = Arrays.asList(result.split("\n"));
+      logger.log(Level.INFO, "Predicted ranking: "+out.toString());
+    }
+    else{
+      String defaultOrder[] = new String[] {"VA-NoCegar", "VA-Cegar", "PA", "KI", "BMC"};
+      out = Arrays.asList(defaultOrder);
+      logger.log(Level.INFO, "Prediction Failed. Using Default order: "+out.toString());
+    }
 
     statistics.setOrder(out);
     statistics.stopTime();

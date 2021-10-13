@@ -227,16 +227,18 @@ def makeFinalRep(graphDict):
     DFG = np.array(DFGDict)
     return nodeRepresentations, AST, CFG, DFG
 
+#Call graph-builder and collect output
 graphBuilder = Popen(['graph-builder', argv[1]], stdout=PIPE, stderr=PIPE)
 stdout, stderr = graphBuilder.communicate()
 stdout = stdout.decode("utf-8")
 graph = stdout.split('\n')
 graph = [x for x in graph if x != '']
 
+#Convert graph into edge sets and node set
 graph =  handler(graph)
 nodes, ast, cfg, dfg = makeFinalRep(graph)
 
-
+#Possible results
 possible = ["PA", "KI", "VA-NoCegar", "BMC", "VA-Cegar", "Unknown", ]
 
 nodes = torch.from_numpy(nodes)
@@ -250,12 +252,15 @@ data = Data(x=nodes.float(), edge_index=edges_tensor, edge_attr=edge_labels, pro
 
 data = Batch.from_data_list([data])
 
-model = GAT(passes=1, numEdgeSets=3, inputLayerSize=nodes.size(1), outputLayerSize=len(possible), numAttentionLayers=5, mode='cat', pool='mean', k='3')
+#Build model and load weights
+model = GAT(passes=3, numEdgeSets=3, inputLayerSize=nodes.size(1), outputLayerSize=len(possible), numAttentionLayers=5, mode='cat', pool='mean', k='3')
 model.load_state_dict(torch.load(argv[2], map_location="cpu"))
 
+#Make prediction
 prediction = (-model(x=data.x, edge_index=data.edge_index, edge_attr=data.edge_attr, problemType=data.problemType, batch=data.batch)).argsort()
 
 order = [possible[x] for x in prediction.squeeze()]
 
+#Output order
 for analysis in order:
     print(analysis)
