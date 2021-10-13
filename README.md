@@ -18,7 +18,7 @@ Beyond the normal dependencies of CPAChecker, Graves requires both [PyTorch](htt
 
 Graves also requires llvm be built from source for the portion of the tool which constructs program graphs, which requires CMake and a build tool, like make or ninja. Luckily, this process can be expedited by only building what is needed for the graph builder. The setup script supports both ninja and make, but it is generally faster if ninja is installed.
 
-Graves is built on CPAChecker, so ant and a Java SDK of version 11 or greater are needed to install it. These can be installed via package manager. Foe example, on ubuntu `sudo apt install ant` and `sudo apt-get install openjdk-11-jdk`
+Graves is built on CPAChecker, so ant and a Java SDK of version 11 or greater are needed to install it. These can be installed via package manager. For example, on ubuntu `sudo apt install ant` and `sudo apt-get install openjdk-11-jdk`
 
 Setup
 -----
