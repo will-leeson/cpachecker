@@ -143,19 +143,16 @@ public class ManagedOracle implements IConfigOracle {
   }
 
   private AnnotatedValue<Path> translate(String label){
-
     if(label.equalsIgnoreCase("unknown")){
       Path p = Paths.get("SKIP");
       AnnotatedValue<Path> annotatedValue = AnnotatedValue.create(p, "shutdownAfter");
       return annotatedValue;
     }
-
     if(label.equals("intercept-unknown")){
         label = "skip";
         interceptIterator = Iterators.peekingIterator(unknown.iterator());
         manager.next();
     }
-
     if(label.equalsIgnoreCase("skip")){
       Path p = Paths.get("SKIP");
       AnnotatedValue<Path> annotatedValue = AnnotatedValue.create(p);
@@ -163,6 +160,7 @@ public class ManagedOracle implements IConfigOracle {
     }
 
     if(labelToPath.containsKey(label)){
+      logger.log(Level.INFO, label,".");
       return labelToPath.get(label);
     }
 

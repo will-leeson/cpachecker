@@ -67,22 +67,22 @@ else
     echo "---------------------------------------------"
     echo
     
-    if [ -d llvm-project/build ]
+    if [ -d graph-builder/build ]
     then
-        rm -r llvm-project/build/
-        mkdir llvm-project/build
+        rm -r graph-builder/build/
+        mkdir graph-builder/build
     else
-        mkdir llvm-project/build
+        mkdir graph-builder/build
     fi
 
-    pushd llvm-project/build
+    pushd graph-builder/build
     if command -v ninja &> /dev/null
     then
-        cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -G Ninja ../llvm
-        ninja graph-builder
+        cmake -G Ninja ..
+        ninja
     else
-        cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" ../llvm
-        make graph-builder
+        cmake ..
+        make
     fi
     popd
 
@@ -95,7 +95,7 @@ else
     then
         rm "${HOME}/.local/bin/graph-builder"
     fi
-    ln ${PWD}/llvm-project/build/bin/graph-builder -s ${HOME}/.local/bin
+    ln ${PWD}/graph-builder/build/src/graph-builder -s ${HOME}/.local/bin
 
 fi
 

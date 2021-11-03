@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.nio.charset.Charset;
+import java.util.concurrent.TimeUnit;
 import java.net.URL;
+import java.net.URISyntaxException;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.configuration.Option;
@@ -79,35 +81,45 @@ public class GNNLabelPredictor implements IOracleLabelPredictor {
     statistics.reset();
 
     program = program.substring(1, program.length()-1);
-    String fileLocation = getClass().getProtectionDomain().getCodeSource().getLocation().toString().substring(5);
-    
-    logger.log(Level.INFO, "Working Directory = " + System.getProperty("user.dir"));
-    logger.log(Level.INFO, "python3", fileLocation+"../scripts/gnn/graves.py", program, fileLocation+"../scripts/gnn/model.pt");
-
-    var pb = new ProcessBuilder("python3", fileLocation+"../scripts/gnn/graves.py", program, fileLocation+"../scripts/gnn/model.pt");
     String result = "";
-    int ret;
+    boolean ret;
+    List<String> out;
+    String jarDir;
+    try{
+      jarDir = new File(GNNLabelPredictor.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent().toString();
+    }
+    catch(URISyntaxException ue){
+      String defaultOrder[] = new String[] {"SymEx", "VA-NoCegar", "VA-Cegar", "KI", "PA"};
+      out = Arrays.asList(defaultOrder);
+      logger.log(Level.INFO, "Prediction Failed. Using Default order: "+out.toString());
+      return out;
+    }
+
+    logger.log(Level.INFO, "python3", jarDir.toString()+"/scripts/gnn/graves.py", program, jarDir.toString()+"/scripts/gnn/model.pt", jarDir.toString()+"/graph-builder");
+    var pb = new ProcessBuilder("python3", jarDir.toString()+"/scripts/gnn/graves.py", program, jarDir.toString()+"/scripts/gnn/model.pt", jarDir.toString()+"/graph-builder");
+    
     try{
       Process p = pb.start();
       final BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
       StringJoiner sj = new StringJoiner(System.getProperty("line.separator"));
       reader.lines().iterator().forEachRemaining(sj::add);
       result = sj.toString();
-      ret = p.waitFor();
+      ret = p.waitFor(90, TimeUnit.SECONDS);
       logger.log(Level.INFO, "Done ", ret);
     }
     catch (IOException | InterruptedException iE){
-      logger.log(Level.WARNING, iE, "Use random sequence");
-      return new ArrayList<>();
+      String defaultOrder[] = new String[] {"SymEx", "VA-NoCegar", "VA-Cegar", "KI", "PA"};
+      out = Arrays.asList(defaultOrder);
+      logger.log(Level.INFO, "Prediction Failed. Using Default order: "+out.toString());
+      return out;
     }
 
-    List<String> out;
-    if(ret==0){
+    if(ret){
       out = Arrays.asList(result.split("\n"));
       logger.log(Level.INFO, "Predicted ranking: "+out.toString());
     }
     else{
-      String defaultOrder[] = new String[] {"VA-NoCegar", "VA-Cegar", "PA", "KI", "BMC"};
+      String defaultOrder[] = new String[] {"SymEx", "VA-NoCegar", "VA-Cegar", "KI", "PA"};
       out = Arrays.asList(defaultOrder);
       logger.log(Level.INFO, "Prediction Failed. Using Default order: "+out.toString());
     }

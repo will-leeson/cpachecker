@@ -5,7 +5,7 @@ from lib.gnn import GAT
 import torch
 from torch_geometric.data import Data, Batch
 
-tokenDict = {"--": 0, "const unsigned int": 1, "const signed char": 2, "/": 3, "<<": 4, "void": 5, "IntegerLiteral": 6, "array": 7, "input u16 ": 8, "const long long": 9, "TranslationUnit": 10, "input char ": 11, "const long": 12, "input void * ": 13, "||": 14, "Empty": 15, "ContinueStmt": 16, "|=": 17, "input u8 ": 18, "struct": 19, "&&": 20, "long double": 21, "%": 22, "volatile char": 23, "BinaryOperator": 24, "CompoundStmt": 25, "const float": 26, "IfStmt": 27, "input sector_t ": 28, "const char": 29, "OpaqueValueExpr": 30, "volatile unsigned short": 31, "float": 32, "input loff_t ": 33, "-=": 34, "<<=": 35, "^=": 36, "=": 37, "const unsigned long": 38, "signed char": 39, "BreakStmt": 40, "input long long ": 41, "input unsigned long ": 42, "const _Bool": 43, "ConditionalOperator": 44, "input double ": 45, "Var": 46, "long long": 47, ">>": 48, "const unsigned short": 49, "unsigned long long": 50, ">=": 51, "*": 52, ">": 53, "SwitchStmt": 54, "^": 55, "UnaryExprOrTypeTraitExpr": 56, "input _Bool ": 57, "&": 58, "volatile _Bool": 59, "!": 60, "DesignatedInitExpr": 61, "volatile unsigned long": 62, "FloatingLiteral": 63, "input pthread_t ": 64, "input const char * ": 65, "LabelStmt": 66, "const int": 67, "!=": 68, "<": 69, "CompoundLiteralExpr": 70, "int": 71, "input size_t ": 72, "ForStmt": 73, "_Bool": 74, "GotoStmt": 75, "main": 76, "ParmVar": 77, "Field": 78, "ReturnStmt": 79, "long": 80, "char": 81, "EnumConstant": 82, "ImplicitCastExpr": 83, "OffsetOfExpr": 84, "PredefinedExpr": 85, "UnaryOperator": 86, "volatile int": 87, "otherType": 88, "volatile unsigned long long": 89, "unsigned long": 90, "DeclRefExpr": 91, "input unsigned int ": 92, "<=": 93, "WhileStmt": 94, "const double": 95, "Typedef": 96, "|": 97, "DefaultStmt": 98, "input float ": 99, "+=": 100, "CommaOperator": 101, "~": 102, "InitListExpr": 103, "input long ": 104, "input uint ": 105, "CharacterLiteral": 106, "==": 107, "unsigned short": 108, "CallExpr": 109, "volatile long": 110, "Record": 111, "++": 112, "input short ": 113, "VAArgExpr": 114, "const unsigned long long": 115, "double": 116, "volatile unsigned int": 117, "DeclStmt": 118, "*=": 119, "Function": 120, "input char * ": 121, "DoStmt": 122, "StmtExpr": 123, "short": 124, "Enum": 125, "ParenExpr": 126, "+": 127, "TypeTraitExpr": 128, "&=": 129, "MemberExpr": 130, "ConstantExpr": 131, "input unsigned long long ": 132, "CStyleCastExpr": 133, "pointer": 134, "CaseStmt": 135, "unsigned char": 136, "input int ": 137, "-": 138, "input unsigned char ": 139, "input unsigned short ": 140, "/=": 141, "input u32 ": 142, ">>=": 143, "StringLiteral": 144, "ChooseExpr": 145, "input ulong ": 146, "const unsigned char": 147, "ArraySubscriptExpr": 148, "NullStmt": 149, "const short": 150, "GCCAsmStmt": 151, "BinaryConditionalOperator": 152, "unsigned int": 153, "volatile unsigned char": 154}
+tokenDict = {"input short ": 0, "SwitchStmt": 1, "volatile _Bool": 2, "BinaryOperator": 3, "const int": 4, "DefaultStmt": 5, "input u16 ": 6, "input unsigned long ": 7, "float": 8, "/=": 9, "+=": 10, "input long long ": 11, "<=": 12, "void": 13, "volatile unsigned char": 14, "CaseStmt": 15, "input unsigned short ": 16, "input float ": 17, "const double": 18, "int": 19, "=": 20, "ParenExpr": 21, "Enum": 22, "DeclRefExpr": 23, "const _Bool": 24, "ForStmt": 25, "StringLiteral": 26, "<<=": 27, "^=": 28, "input int ": 29, "IntegerLiteral": 30, "OpaqueValueExpr": 31, "short": 32, "IfStmt": 33, "Typedef": 34, "input bool ": 35, "long": 36, "const unsigned int": 37, "ConstantExpr": 38, "input char * ": 39, "DeclStmt": 40, "struct": 41, "signed char": 42, "InitListExpr": 43, "long double": 44, "ReturnStmt": 45, "WhileStmt": 46, "!=": 47, "input unsigned int ": 48, "_Bool": 49, "input _Bool ": 50, "input ulong ": 51, "LabelStmt": 52, "*=": 53, "const unsigned long long": 54, "input unsigned long long ": 55, "<<": 56, ">": 57, "input u32 ": 58, "BreakStmt": 59, "otherType": 60, "+": 61, "const unsigned short": 62, "const float": 63, "&=": 64, "ParmVar": 65, "ImplicitCastExpr": 66, "Field": 67, "const long": 68, "--": 69, "Empty": 70, "-": 71, "const short": 72, "TypeTraitExpr": 73, "GCCAsmStmt": 74, "input loff_t ": 75, "~": 76, "array": 77, "DesignatedInitExpr": 78, "AtomicExpr": 79, "CompoundStmt": 80, "CallExpr": 81, "__extension__": 82, "unsigned long long": 83, "CommaOperator": 84, "input uint ": 85, "UnaryExprOrTypeTraitExpr": 86, "unsigned int": 87, "|=": 88, "CharacterLiteral": 89, "PredefinedExpr": 90, "TranslationUnit": 91, "char": 92, "EnumConstant": 93, "Function": 94, "unsigned short": 95, "long long": 96, "==": 97, "volatile unsigned long long": 98, "%": 99, "|": 100, ">>=": 101, "volatile int": 102, "input const char * ": 103, "Var": 104, "&": 105, "CStyleCastExpr": 106, "unsigned long": 107, "++": 108, "DoStmt": 109, "^": 110, "input long ": 111, "input pthread_t ": 112, "MemberExpr": 113, "!": 114, "volatile unsigned long": 115, "double": 116, "volatile unsigned short": 117, "ContinueStmt": 118, "main": 119, "-=": 120, "const unsigned char": 121, ">=": 122, ">>": 123, "const unsigned long": 124, "CompoundLiteralExpr": 125, "pointer": 126, "Record": 127, "input sector_t ": 128, "/": 129, "StmtExpr": 130, "||": 131, "const char": 132, "GotoStmt": 133, "const long long": 134, "UnaryOperator": 135, "ConditionalOperator": 136, "ChooseExpr": 137, "ArraySubscriptExpr": 138, "input size_t ": 139, "volatile char": 140, "input u8 ": 141, "<": 142, "OffsetOfExpr": 143, "BinaryConditionalOperator": 144, "input char ": 145, "volatile unsigned int": 146, "input unsigned char ": 147, "volatile long": 148, "VAArgExpr": 149, "NullStmt": 150, "*": 151, "const signed char": 152, "&&": 153, "FloatingLiteral": 154, "unsigned char": 155, "input double ": 156}
 
 def reachableDefs(cfgDict, genKillDict, stmtToNum, backwardsCFGDict, start):
     reachDefs = dict()
@@ -239,28 +239,34 @@ graph =  handler(graph)
 nodes, ast, cfg, dfg = makeFinalRep(graph)
 
 #Possible results
-possible = ["PA", "KI", "VA-NoCegar", "BMC", "VA-Cegar", "Unknown", ]
+possible = ["KI", "SymEx", "PA", "VA-NoCegar", "VA-Cegar", "Unknown"]
 
 nodes = torch.from_numpy(nodes)
 
 edges_tensor = [torch.from_numpy(edgeSet) for edgeSet in [ast, cfg, dfg]]
+edges_tensor = edges_tensor[:1]
 
 edge_labels = torch.cat([torch.full((len(edges_tensor[i]),1),i) for i in range(len(edges_tensor))], dim=0)        
 edges_tensor = torch.cat(edges_tensor).transpose(0,1).long()
 
-data = Data(x=nodes.float(), edge_index=edges_tensor, edge_attr=edge_labels, problemType=torch.FloatTensor([1]))
+data = Data(x=nodes.float(), edge_index=edges_tensor, edge_attr=edge_labels, problemType=torch.FloatTensor([0]))
 
 data = Batch.from_data_list([data])
 
 #Build model and load weights
-model = GAT(passes=3, numEdgeSets=3, inputLayerSize=nodes.size(1), outputLayerSize=len(possible), numAttentionLayers=5, mode='cat', pool='mean', k='3')
-model.load_state_dict(torch.load(argv[2], map_location="cpu"))
+model = GAT(passes=2, numEdgeSets=1, inputLayerSize=nodes.size(1), outputLayerSize=len(possible)-1, numAttentionLayers=5, mode='cat', pool='mean', k='3')
+model.load_state_dict(torch.load(argv[2], map_location=torch.device(0)))
 
 #Make prediction
-prediction = (-model(x=data.x, edge_index=data.edge_index, edge_attr=data.edge_attr, problemType=data.problemType, batch=data.batch)).argsort()
+prediction = -model(x=data.x, edge_index=data.edge_index, edge_attr=data.edge_attr, problemType=data.problemType, batch=data.batch)
+prediction = torch.cat((prediction, torch.zeros((1,1))),dim=1)
+prediction = prediction.argsort()
 
 order = [possible[x] for x in prediction.squeeze()]
 
+# res[program] = order
+# if order[0] == "Unknown":
+#     order = order[1:4]+[order[0]]+order[4:]
 #Output order
 for analysis in order:
     print(analysis)

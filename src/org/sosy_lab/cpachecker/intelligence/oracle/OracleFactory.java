@@ -60,7 +60,7 @@ public class OracleFactory {
           "predicateAnalysis", "PA",
           "kInduction", "KI",
           "bmc", "BMC",
-          "symEx", "SymEx"
+          "symbolicExecution", "SymEx"
       );
 
       String fileName = pConfig.value().getFileName().toString();
