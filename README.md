@@ -8,7 +8,7 @@ SPDX-FileCopyrightText: 2007-2020 Dirk Beyer <https://www.sosy-lab.org>
 SPDX-License-Identifier: Apache-2.0
 -->
 
-GraVeS - Graph-based Verifier Selector 
+Graves-CPA - Graph-based Verifier Selector 
 ======================================
 Graves is an algorithm selection tool which uses graph representations of programs to decide the order in which to run a variety of verification algorithms. Using state of the art graph neural network techniques, Graves predicts the optimal ordering of several CPAChecker configurations. This is a fork of the [PeSCo](https://github.com/cedricrupb/cpachecker) repositpory, which itself is a fork of the original [CPAChecker](https://github.com/sosy-lab/cpachecker) repository.
 
