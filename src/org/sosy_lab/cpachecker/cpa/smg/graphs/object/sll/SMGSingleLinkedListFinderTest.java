@@ -10,6 +10,7 @@ package org.sosy_lab.cpachecker.cpa.smg.graphs.object.sll;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Collections;

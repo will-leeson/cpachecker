@@ -47,12 +47,6 @@ class ModelView implements Model {
     return delegate.evaluate(wrappingHandler.unwrap(f));
   }
 
-
-    @Override
-    public <T extends Formula> @Nullable T eval(T t) {
-      throw new UnsupportedOperationException();
-    }
-
     @Nullable
   @Override
   public Object evaluate(Formula f) {
