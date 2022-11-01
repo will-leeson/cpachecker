@@ -8,157 +8,161 @@
 
 package org.sosy_lab.cpachecker.util.slicing;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import java.io.PrintStream;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import org.sosy_lab.common.ShutdownNotifier;
 import org.sosy_lab.common.configuration.Configuration;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.cpachecker.cfa.CFA;
-import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionCallStatement;
-import org.sosy_lab.cpachecker.cfa.ast.c.CFunctionDeclaration;
-import org.sosy_lab.cpachecker.cfa.ast.c.CStatement;
+import org.sosy_lab.cpachecker.cfa.ast.ASimpleDeclaration;
+import org.sosy_lab.cpachecker.cfa.ast.c.CDeclaration;
+import org.sosy_lab.cpachecker.cfa.ast.c.CParameterDeclaration;
+import org.sosy_lab.cpachecker.cfa.ast.c.CVariableDeclaration;
 import org.sosy_lab.cpachecker.cfa.model.CFAEdge;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
+import org.sosy_lab.cpachecker.cfa.model.c.CDeclarationEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionCallEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionReturnEdge;
-import org.sosy_lab.cpachecker.cfa.model.c.CStatementEdge;
+import org.sosy_lab.cpachecker.cfa.model.c.CFunctionSummaryEdge;
 import org.sosy_lab.cpachecker.core.CPAcheckerResult.Result;
 import org.sosy_lab.cpachecker.core.interfaces.Statistics;
 import org.sosy_lab.cpachecker.core.interfaces.StatisticsProvider;
 import org.sosy_lab.cpachecker.core.reachedset.UnmodifiableReachedSet;
 import org.sosy_lab.cpachecker.util.CFAUtils;
-import org.sosy_lab.cpachecker.util.dependencegraph.DependenceGraph;
-import org.sosy_lab.cpachecker.util.dependencegraph.DependenceGraph.TraversalDirection;
+import org.sosy_lab.cpachecker.util.dependencegraph.CSystemDependenceGraph;
+import org.sosy_lab.cpachecker.util.dependencegraph.SystemDependenceGraph;
 import org.sosy_lab.cpachecker.util.states.MemoryLocation;
+import org.sosy_lab.cpachecker.util.statistics.StatCounter;
 import org.sosy_lab.cpachecker.util.statistics.StatInt;
 import org.sosy_lab.cpachecker.util.statistics.StatKind;
 import org.sosy_lab.cpachecker.util.statistics.StatTimer;
 import org.sosy_lab.cpachecker.util.statistics.StatisticsWriter;
 
 /**
- * Static program slicer based on a given dependence graph.
+ * Static program slicer using a given system dependence graph.
  *
- * <p>For a given slicing criterion CFA edge g and a dependence graph, the slice consists of all CFA
- * edges reachable in the dependence graph through backwards-traversal from g.
+ * <p>Implementation detail: this slicing method is based on "Interprocedural Slicing Using
+ * Dependence Graphs" (Horwitz et al.).
  *
  * @see SlicerFactory
  */
 public class StaticSlicer extends AbstractSlicer implements StatisticsProvider {
 
-  private DependenceGraph depGraph;
+  private final CSystemDependenceGraph sdg;
 
-  private StatInt candidateSliceCount =
-      new StatInt(StatKind.SUM, "Number of proposed slicing " + "procedures");
-  private StatInt sliceCount = new StatInt(StatKind.SUM, "Number of slicing procedures");
-  private StatTimer slicingTime = new StatTimer(StatKind.SUM, "Time needed for slicing");
+  private final StatCounter sliceCount = new StatCounter("Number of slicing procedures");
+  private final StatTimer slicingTime = new StatTimer(StatKind.SUM, "Time needed for slicing");
 
   private final StatInt sliceEdgesNumber =
       new StatInt(StatKind.MAX, "Number of relevant slice edges");
   private final StatInt programEdgesNumber = new StatInt(StatKind.MAX, "Number of program edges");
+
+  private final boolean partiallyRelevantEdges;
 
   StaticSlicer(
       SlicingCriteriaExtractor pExtractor,
       LogManager pLogger,
       ShutdownNotifier pShutdownNotifier,
       Configuration pConfig,
-      DependenceGraph pDependenceGraph)
+      CSystemDependenceGraph pSdg,
+      boolean pPartiallyRelevantEdges)
       throws InvalidConfigurationException {
     super(pExtractor, pLogger, pShutdownNotifier, pConfig);
 
-    if (pDependenceGraph == null) {
+    if (pSdg == null) {
       throw new InvalidConfigurationException("Dependence graph required, but missing");
     }
 
-    depGraph = pDependenceGraph;
+    sdg = pSdg;
+    partiallyRelevantEdges = pPartiallyRelevantEdges;
   }
 
-  private static Set<CFAEdge> getAbortCallEdges(CFA pCfa) {
+  private Function<CFAEdge, Iterable<CSystemDependenceGraph.Node>>
+      createCfaEdgeToSdgNodesFunction() {
 
-    Set<CFAEdge> abortCallEdges = new HashSet<>();
+    Multimap<CFAEdge, CSystemDependenceGraph.Node> nodesPerCfaNode = ArrayListMultimap.create();
 
-    for (CFANode node : pCfa.getAllNodes()) {
-      for (CFAEdge edge : CFAUtils.allLeavingEdges(node)) {
-        if (edge instanceof CStatementEdge) {
-          CStatement statement = ((CStatementEdge) edge).getStatement();
-          if (statement instanceof CFunctionCallStatement) {
-            CFunctionDeclaration declaration =
-                ((CFunctionCallStatement) statement).getFunctionCallExpression().getDeclaration();
-            if (declaration != null && declaration.getQualifiedName().equals("abort")) {
-              abortCallEdges.add(edge);
-            }
-          }
-        }
+    for (CSystemDependenceGraph.Node node : sdg.getNodes()) {
+      Optional<CFAEdge> optCfaEdge = node.getStatement();
+      if (optCfaEdge.isPresent()) {
+        nodesPerCfaNode.put(optCfaEdge.orElseThrow(), node);
       }
     }
 
-    return abortCallEdges;
+    return cfaEdge -> nodesPerCfaNode.get(cfaEdge);
   }
 
   @Override
   public Slice getSlice0(CFA pCfa, Collection<CFAEdge> pSlicingCriteria)
       throws InterruptedException {
 
-    candidateSliceCount.setNextValue(pSlicingCriteria.size());
-    int realSlices = 0;
     slicingTime.start();
 
-    Set<CFAEdge> criteriaEdges = new HashSet<>();
-    Set<CFAEdge> relevantEdges = new HashSet<>();
-    DependenceGraph.ReachedSet depReachedSet = DependenceGraph.ReachedSet.empty();
+    Set<CFAEdge> criteriaEdges = new LinkedHashSet<>(pSlicingCriteria);
 
-    criteriaEdges.addAll(pSlicingCriteria);
+    Set<CSystemDependenceGraph.Node> startNodes = new LinkedHashSet<>();
+    Function<CFAEdge, Iterable<CSystemDependenceGraph.Node>> cfaEdgeToSdgNodes =
+        createCfaEdgeToSdgNodesFunction();
 
-    // TODO: make this configurable
-    if (!criteriaEdges.isEmpty()) {
-      criteriaEdges.addAll(getAbortCallEdges(pCfa));
+    for (CFAEdge criteriaEdge : criteriaEdges) {
+      Iterables.addAll(startNodes, cfaEdgeToSdgNodes.apply(criteriaEdge));
     }
 
-    try {
-      // Heuristic: Reverse to make states that are deeper in the path first - these
-      // have a higher chance of including earlier states in their dependences
-      ImmutableList<CFAEdge> sortedCriteriaEdges =
-          ImmutableList.sortedCopyOf(
-              Comparator.comparingInt(edge -> edge.getPredecessor().getReversePostorderId()),
-              criteriaEdges);
+    Phase1Visitor phase1Visitor = new Phase1Visitor();
+    sdg.traverse(startNodes, sdg.createVisitOnceVisitor(phase1Visitor));
+    Set<CFAEdge> relevantEdges = new LinkedHashSet<>(phase1Visitor.getRelevantEdges());
 
-      for (CFAEdge g : sortedCriteriaEdges) {
-        if (relevantEdges.contains(g)) {
-          // If the relevant edges contain g, then all dependences of g are also already included
-          // and we can skip it (this is only true as long as no function call/return edge is a
-          // criterion!)
-          continue;
-        } else {
-          realSlices++;
-        }
-
-        depReachedSet =
-            DependenceGraph.ReachedSet.combine(
-                depReachedSet, depGraph.getReachable(g, TraversalDirection.BACKWARD));
-        relevantEdges.addAll(depReachedSet.getReachedCfaEdges());
+    startNodes.clear();
+    // the second phase depends on the results of the first phase
+    if (partiallyRelevantEdges) {
+      startNodes.addAll(phase1Visitor.getVisitedSdgNodes());
+    } else {
+      for (CFAEdge criteriaEdge : relevantEdges) {
+        Iterables.addAll(startNodes, cfaEdgeToSdgNodes.apply(criteriaEdge));
       }
-
-      final Slice slice =
-          new StaticSlicerSlice(pCfa, ImmutableSet.copyOf(criteriaEdges), depReachedSet);
-      slicingTime.stop();
-
-      sliceEdgesNumber.setNextValue(relevantEdges.size());
-      if (programEdgesNumber.getValueCount() == 0) {
-        programEdgesNumber.setNextValue(countProgramEdges(pCfa));
-      }
-
-      return slice;
-
-    } finally {
-      sliceCount.setNextValue(realSlices);
     }
+
+    Phase2Visitor phase2Visitor = new Phase2Visitor(relevantEdges);
+    sdg.traverse(startNodes, sdg.createVisitOnceVisitor(phase2Visitor));
+    relevantEdges.addAll(phase2Visitor.getRelevantEdges());
+
+    Set<CSystemDependenceGraph.Node> relevantSdgNodes =
+        Sets.union(phase1Visitor.getVisitedSdgNodes(), phase2Visitor.getVisitedSdgNodes());
+    final Slice slice =
+        new SdgProgramSlice(
+            pCfa,
+            sdg,
+            cfaEdgeToSdgNodes,
+            ImmutableSet.copyOf(relevantSdgNodes),
+            ImmutableSet.copyOf(criteriaEdges),
+            ImmutableSet.copyOf(relevantEdges));
+
+    slicingTime.stop();
+    sliceCount.inc();
+
+    sliceEdgesNumber.setNextValue(relevantEdges.size());
+    if (programEdgesNumber.getValueCount() == 0) {
+      programEdgesNumber.setNextValue(countProgramEdges(pCfa));
+    }
+
+    return slice;
   }
 
   private int countProgramEdges(CFA pCfa) {
@@ -189,7 +193,7 @@ public class StaticSlicer extends AbstractSlicer implements StatisticsProvider {
               final PrintStream pOut, final Result pResult, final UnmodifiableReachedSet pReached) {
 
             StatisticsWriter writer = StatisticsWriter.writingStatisticsTo(pOut);
-            writer.put(candidateSliceCount).put(sliceCount).put(slicingTime);
+            writer.put(sliceCount).put(slicingTime);
 
             writer.put(sliceEdgesNumber).put(programEdgesNumber);
             writer.put(
@@ -204,44 +208,283 @@ public class StaticSlicer extends AbstractSlicer implements StatisticsProvider {
         });
   }
 
-  private static final class StaticSlicerSlice implements Slice {
+  private static final class SdgProgramSlice extends AbstractSlice {
 
-    private final CFA originalCfa;
-    private final ImmutableCollection<CFAEdge> criteriaEdges;
-    private final DependenceGraph.ReachedSet reachedSet;
+    private final CSystemDependenceGraph sdg;
+    private final Function<CFAEdge, Iterable<CSystemDependenceGraph.Node>> cfaEdgeToSdgNodes;
+    private final ImmutableSet<CSystemDependenceGraph.Node> relevantSdgNodes;
 
-    private StaticSlicerSlice(
+    private final ImmutableSet<ActualNode> relevantActualNodes;
+
+    private SdgProgramSlice(
         CFA pOriginalCfa,
+        CSystemDependenceGraph pSdg,
+        Function<CFAEdge, Iterable<CSystemDependenceGraph.Node>> pCfaEdgeToSdgNodes,
+        ImmutableSet<CSystemDependenceGraph.Node> pRelevantSdgNodes,
         ImmutableCollection<CFAEdge> pCriteriaEdges,
-        DependenceGraph.ReachedSet pReachedSet) {
-      originalCfa = pOriginalCfa;
-      criteriaEdges = pCriteriaEdges;
-      reachedSet = pReachedSet;
+        ImmutableSet<CFAEdge> pRelevantEdges) {
+      super(
+          pOriginalCfa,
+          pCriteriaEdges,
+          pRelevantEdges,
+          AbstractSlice.computeRelevantDeclarations(
+              pRelevantEdges, createRelevantDeclarationFilter(pRelevantSdgNodes)));
+
+      sdg = pSdg;
+      cfaEdgeToSdgNodes = pCfaEdgeToSdgNodes;
+      relevantSdgNodes = pRelevantSdgNodes;
+
+      relevantActualNodes =
+          pRelevantSdgNodes.stream()
+              .filter(SdgProgramSlice::isActualNode)
+              .map(ActualNode::new)
+              .collect(ImmutableSet.toImmutableSet());
     }
 
-    @Override
-    public CFA getOriginalCfa() {
-      return originalCfa;
+    private static boolean isFormalNode(CSystemDependenceGraph.Node pNode) {
+      return pNode.getType() == SystemDependenceGraph.NodeType.FORMAL_IN
+          || pNode.getType() == SystemDependenceGraph.NodeType.FORMAL_OUT;
     }
 
-    @Override
-    public ImmutableCollection<CFAEdge> getUsedCriteria() {
-      return criteriaEdges;
+    private static boolean isActualNode(CSystemDependenceGraph.Node pNode) {
+      return pNode.getType() == SystemDependenceGraph.NodeType.ACTUAL_IN
+          || pNode.getType() == SystemDependenceGraph.NodeType.ACTUAL_OUT;
     }
 
-    @Override
-    public ImmutableSet<CFAEdge> getRelevantEdges() {
-      return reachedSet.getReachedCfaEdges();
+    private static Predicate<ASimpleDeclaration> createRelevantDeclarationFilter(
+        ImmutableSet<CSystemDependenceGraph.Node> pRelevantSdgNodes) {
+
+      ImmutableSet<MemoryLocation> relevantFormalVariables =
+          pRelevantSdgNodes.stream()
+              .filter(SdgProgramSlice::isFormalNode)
+              .map(node -> node.getVariable())
+              .flatMap(Optional::stream)
+              .collect(ImmutableSet.toImmutableSet());
+
+      return declaration -> {
+        if (declaration instanceof CParameterDeclaration
+            || declaration instanceof CVariableDeclaration) {
+          return relevantFormalVariables.contains(MemoryLocation.forDeclaration(declaration));
+        } else {
+          return true;
+        }
+      };
+    }
+
+    private boolean isInitializerRelevant(CFAEdge pEdge) {
+
+      var declarationEdgeSdgVisitor =
+          new CSystemDependenceGraph.ForwardsVisitor() {
+
+            private boolean relevantDef = false;
+
+            private boolean isDefRelevant() {
+              return relevantDef;
+            }
+
+            @Override
+            public SystemDependenceGraph.VisitResult visitNode(CSystemDependenceGraph.Node pNode) {
+              return relevantSdgNodes.contains(pNode)
+                  ? SystemDependenceGraph.VisitResult.CONTINUE
+                  : SystemDependenceGraph.VisitResult.SKIP;
+            }
+
+            @Override
+            public SystemDependenceGraph.VisitResult visitEdge(
+                SystemDependenceGraph.EdgeType pType,
+                CSystemDependenceGraph.Node pPredecessor,
+                CSystemDependenceGraph.Node pSuccessor) {
+
+              if (relevantSdgNodes.contains(pSuccessor)
+                  && pType == SystemDependenceGraph.EdgeType.FLOW_DEPENDENCY) {
+                relevantDef = true;
+              }
+
+              return SystemDependenceGraph.VisitResult.SKIP;
+            }
+          };
+
+      sdg.traverse(
+          ImmutableSet.copyOf(cfaEdgeToSdgNodes.apply(pEdge)),
+          sdg.createVisitOnceVisitor(declarationEdgeSdgVisitor));
+
+      return declarationEdgeSdgVisitor.isDefRelevant();
     }
 
     @Override
     public boolean isRelevantDef(CFAEdge pEdge, MemoryLocation pMemoryLocation) {
 
-      if (pEdge instanceof CFunctionCallEdge || pEdge instanceof CFunctionReturnEdge) {
-        return reachedSet.contains(pEdge, pMemoryLocation);
+      checkNotNull(pEdge, "pEdge must not be null");
+      checkNotNull(pMemoryLocation, "pEdge must not be null");
+      checkArgument(
+          getRelevantEdges().contains(pEdge), "pEdge is not relevant to this program slice");
+
+      if (pEdge instanceof CDeclarationEdge) {
+        CDeclaration declaration = ((CDeclarationEdge) pEdge).getDeclaration();
+        if (declaration instanceof CVariableDeclaration) {
+          return isInitializerRelevant(pEdge);
+        }
+      } else if (pEdge instanceof CFunctionCallEdge
+          || pEdge instanceof CFunctionReturnEdge
+          || pEdge instanceof CFunctionSummaryEdge) {
+        return relevantActualNodes.contains(new ActualNode(pEdge, pMemoryLocation));
       }
 
       return true;
+    }
+
+    @Override
+    public boolean isRelevantUse(CFAEdge pEdge, MemoryLocation pMemoryLocation) {
+
+      checkNotNull(pEdge, "pEdge must not be null");
+      checkNotNull(pMemoryLocation, "pEdge must not be null");
+      checkArgument(
+          getRelevantEdges().contains(pEdge), "pEdge is not relevant to this program slice");
+
+      if (pEdge instanceof CFunctionCallEdge
+          || pEdge instanceof CFunctionReturnEdge
+          || pEdge instanceof CFunctionSummaryEdge) {
+        return relevantActualNodes.contains(new ActualNode(pEdge, pMemoryLocation));
+      }
+
+      return true;
+    }
+
+    private static final class ActualNode {
+
+      private final CFAEdge edge;
+      private final MemoryLocation variable;
+
+      private ActualNode(CFAEdge pEdge, MemoryLocation pVariable) {
+        edge = pEdge;
+        variable = pVariable;
+      }
+
+      private ActualNode(CSystemDependenceGraph.Node pNode) {
+        this(pNode.getStatement().orElseThrow(), pNode.getVariable().orElseThrow());
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(edge, variable);
+      }
+
+      @Override
+      public boolean equals(Object pObject) {
+
+        if (this == pObject) {
+          return true;
+        }
+
+        if (!(pObject instanceof ActualNode)) {
+          return false;
+        }
+
+        ActualNode other = (ActualNode) pObject;
+
+        return Objects.equals(edge, other.edge) && Objects.equals(variable, other.variable);
+      }
+    }
+  }
+
+  /**
+   * SDG visitor for the first phase of interprocedural slicing.
+   *
+   * <p>During the first phase, the SDG is traversed backwards, starting from the criteria edges,
+   * while only calling procedures are visited (don't "descend" into called procedures). For a more
+   * comprehensive description, see "Interprocedural Slicing Using Dependence Graphs" (Horwitz et
+   * al.).
+   */
+  private static final class Phase1Visitor implements CSystemDependenceGraph.BackwardsVisitor {
+
+    private final Set<CFAEdge> relevantEdges;
+    private final Set<CSystemDependenceGraph.Node> visitedSdgNodes;
+
+    private Phase1Visitor() {
+      relevantEdges = new LinkedHashSet<>();
+      visitedSdgNodes = new LinkedHashSet<>();
+    }
+
+    private Set<CFAEdge> getRelevantEdges() {
+      return relevantEdges;
+    }
+
+    private Set<CSystemDependenceGraph.Node> getVisitedSdgNodes() {
+      return visitedSdgNodes;
+    }
+
+    @Override
+    public SystemDependenceGraph.VisitResult visitNode(CSystemDependenceGraph.Node pNode) {
+
+      visitedSdgNodes.add(pNode);
+      pNode.getStatement().ifPresent(relevantEdges::add);
+
+      return SystemDependenceGraph.VisitResult.CONTINUE;
+    }
+
+    @Override
+    public SystemDependenceGraph.VisitResult visitEdge(
+        SystemDependenceGraph.EdgeType pType,
+        CSystemDependenceGraph.Node pPredecessor,
+        CSystemDependenceGraph.Node pSuccessor) {
+
+      // don't "descend" into called procedures
+      if (pPredecessor.getType() == SystemDependenceGraph.NodeType.FORMAL_OUT) {
+        return SystemDependenceGraph.VisitResult.SKIP;
+      }
+
+      return SystemDependenceGraph.VisitResult.CONTINUE;
+    }
+  }
+
+  /**
+   * SDG visitor for the second phase of interprocedural slicing.
+   *
+   * <p>During the second phase, the SDG is traversed backwards, starting from the SDG nodes visited
+   * during the first phase, while only called procedures are visited (don't "ascend" into calling
+   * procedures). For a more comprehensive description, see "Interprocedural Slicing Using
+   * Dependence Graphs" (Horwitz et al.).
+   */
+  private static final class Phase2Visitor implements CSystemDependenceGraph.BackwardsVisitor {
+
+    private final Set<CFAEdge> relevantEdges;
+    private final Set<CSystemDependenceGraph.Node> visitedSdgNodes;
+
+    private Phase2Visitor(Set<CFAEdge> pRelevantEdges) {
+      relevantEdges = new LinkedHashSet<>(pRelevantEdges);
+      visitedSdgNodes = new LinkedHashSet<>();
+    }
+
+    private Set<CFAEdge> getRelevantEdges() {
+      return relevantEdges;
+    }
+
+    private Set<CSystemDependenceGraph.Node> getVisitedSdgNodes() {
+      return visitedSdgNodes;
+    }
+
+    @Override
+    public SystemDependenceGraph.VisitResult visitNode(CSystemDependenceGraph.Node pNode) {
+
+      visitedSdgNodes.add(pNode);
+      pNode.getStatement().ifPresent(relevantEdges::add);
+
+      return SystemDependenceGraph.VisitResult.CONTINUE;
+    }
+
+    @Override
+    public SystemDependenceGraph.VisitResult visitEdge(
+        SystemDependenceGraph.EdgeType pType,
+        CSystemDependenceGraph.Node pPredecessor,
+        CSystemDependenceGraph.Node pSuccessor) {
+
+      // don't "ascend" into calling procedures
+      if (pSuccessor.getType() == SystemDependenceGraph.NodeType.FORMAL_IN
+          || pType == SystemDependenceGraph.EdgeType.CALL_EDGE) {
+        return SystemDependenceGraph.VisitResult.SKIP;
+      }
+
+      return SystemDependenceGraph.VisitResult.CONTINUE;
     }
   }
 }

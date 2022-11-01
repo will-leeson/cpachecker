@@ -22,37 +22,24 @@ import org.sosy_lab.cpachecker.cfa.types.java.JClassOrInterfaceType;
 import org.sosy_lab.cpachecker.cfa.types.java.JClassType;
 import org.sosy_lab.cpachecker.cfa.types.java.JInterfaceType;
 
-
 class THDotBuilder {
 
-  /**
-   * Normal arrowhead style.
-   */
+  /** Normal arrowhead style. */
   private static final String NORMAL = "normal";
 
-  /**
-   * Empty arrowhead style.
-   */
+  /** Empty arrowhead style. */
   private static final String EMPTY = "empty";
 
-  /**
-   * No arrowhead.
-   */
+  /** No arrowhead. */
   private static final String NONE = "none";
 
-  /**
-   * Normal edge style.
-   */
+  /** Normal edge style. */
   private static final String SOLID = "solid";
 
-  /**
-   * Dashed edge style.
-   */
+  /** Dashed edge style. */
   private static final String DASHED = "dashed";
 
-  /**
-   * Empty Dot arrowhead style.
-   */
+  /** Empty Dot arrowhead style. */
   private static final String ODOT = "odot";
 
   private final Appendable sb;
@@ -61,7 +48,8 @@ class THDotBuilder {
 
   private final TypeHierarchy typeHierarchy;
 
-  private THDotBuilder(Appendable pSb, Set<JClassOrInterfaceType> pTypes, TypeHierarchy pTypeHierarchy) {
+  private THDotBuilder(
+      Appendable pSb, Set<JClassOrInterfaceType> pTypes, TypeHierarchy pTypeHierarchy) {
     sb = pSb;
     types = pTypes;
     typeHierarchy = pTypeHierarchy;
@@ -117,7 +105,8 @@ class THDotBuilder {
     addEdge(typeName, enclosingTypeName);
   }
 
-  private void appendEdgeStyle(String arrowhead, String style, String arrowtail) throws IOException {
+  private void appendEdgeStyle(String arrowhead, String style, String arrowtail)
+      throws IOException {
     sb.append("        edge [\n");
     sb.append("                  arrowhead = \"" + arrowhead + "\"\n");
     sb.append("                  style = \"" + style + "\"\n");
@@ -129,7 +118,6 @@ class THDotBuilder {
   private void addImplementsInterfaceEdges() throws IOException {
 
     appendEdgeStyle(EMPTY, DASHED, NONE);
-
 
     for (JClassOrInterfaceType type : types) {
       if (type instanceof JClassType) {
@@ -205,8 +193,11 @@ class THDotBuilder {
     addNodeDefinition(pType, fieldDecl, methodDecl);
   }
 
-  private void addNodeDefinition(JClassOrInterfaceType pType,
-      Set<JFieldDeclaration> pFieldDecl, Set<JMethodDeclaration> pMethodDecl) throws IOException {
+  private void addNodeDefinition(
+      JClassOrInterfaceType pType,
+      Set<JFieldDeclaration> pFieldDecl,
+      Set<JMethodDeclaration> pMethodDecl)
+      throws IOException {
 
     String nodeName = NameConverter.getNodeName(pType);
 
@@ -216,10 +207,11 @@ class THDotBuilder {
     sb.append("                  label = \"" + label + "\"\n");
     sb.append("        ]\n");
     sb.append("\n");
-
   }
 
-  private String getLabelContentOfNode(JClassOrInterfaceType pType, Set<JFieldDeclaration> pFieldDecl,
+  private String getLabelContentOfNode(
+      JClassOrInterfaceType pType,
+      Set<JFieldDeclaration> pFieldDecl,
       Set<JMethodDeclaration> pMethodDecl) {
 
     StringBuilder label = new StringBuilder();
@@ -292,7 +284,7 @@ class THDotBuilder {
 
     String visibilityLabel = getVisibilityLabel(pAttr);
     String fieldName = pAttr.getSimpleName();
-    String typeName =  pAttr.getType().toASTString("");
+    String typeName = pAttr.getType().toASTString("");
 
     pLabel.append(visibilityLabel);
     pLabel.append(fieldName);
@@ -307,21 +299,20 @@ class THDotBuilder {
 
   private String getVisibilityLabel(VisibilityModifier visibility) {
     switch (visibility) {
-    case PUBLIC:
-      return "+";
-    case PROTECTED:
-      return "#";
-    case NONE:
-      return "";
-    case PRIVATE:
-      return "-";
-    default:
-      throw new AssertionError();
+      case PUBLIC:
+        return "+";
+      case PROTECTED:
+        return "#";
+      case NONE:
+        return "";
+      case PRIVATE:
+        return "-";
+      default:
+        throw new AssertionError();
     }
   }
 
-  private void appendNameRowToLabel(StringBuilder pLabel,
-      JClassOrInterfaceType pType) {
+  private void appendNameRowToLabel(StringBuilder pLabel, JClassOrInterfaceType pType) {
 
     String simpleName = pType.getSimpleName();
 

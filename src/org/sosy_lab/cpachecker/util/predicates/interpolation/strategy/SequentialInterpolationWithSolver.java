@@ -38,5 +38,4 @@ public class SequentialInterpolationWithSolver extends ITPStrategy {
     return interpolator.itpProver.getSeqInterpolants0(
         projectToThird(formulasWithStatesAndGroupdIds));
   }
-
 }

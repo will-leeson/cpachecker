@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +36,8 @@ import org.sosy_lab.cpachecker.util.LoopStructure;
 import org.sosy_lab.cpachecker.util.variableclassification.VariableClassification;
 
 /**
- * This class represents a CFA after it has been fully created (parsing, linking
- * of functions, etc.).
+ * This class represents a CFA after it has been fully created (parsing, linking of functions,
+ * etc.).
  */
 class ImmutableCFA implements CFA, Serializable {
 
@@ -196,7 +195,7 @@ class ImmutableCFA implements CFA, Serializable {
     s.writeObject(ImmutableList.copyOf(Lists.transform(fileNames, Path::toString)));
   }
 
-  @SuppressWarnings({"unchecked", "UnusedVariable"}) // parameter is required by API
+  @SuppressWarnings("unchecked")
   private void readObject(java.io.ObjectInputStream s)
       throws java.io.IOException, ClassNotFoundException {
 
@@ -213,6 +212,6 @@ class ImmutableCFA implements CFA, Serializable {
       edge.getPredecessor().addLeavingEdge(edge);
     }
 
-    fileNames = ImmutableList.copyOf(Lists.transform((List<String>) s.readObject(), Paths::get));
+    fileNames = ImmutableList.copyOf(Lists.transform((List<String>) s.readObject(), Path::of));
   }
 }

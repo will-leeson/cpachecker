@@ -108,36 +108,6 @@ class ValidationError(Exception):
         return self._msg
 
 
-class ExecutionResult(object):
-    """Results of a subprocess execution."""
-
-    def __init__(self, returncode, stdout, stderr):
-        """Create a new ExecutionResult with the given information about
-        the execution.
-
-        :param int returncode: Return code of the execution.
-        :param Optional[str] stdout: Output that the execution wrote to stdout,
-                if any.
-        :param Optionl[str] stderr: Output that the execution wrote to stderr,
-                if any.
-        """
-        self._returncode = returncode
-        self._stdout = stdout
-        self._stderr = stderr
-
-    @property
-    def returncode(self):
-        return self._returncode
-
-    @property
-    def stdout(self):
-        return self._stdout
-
-    @property
-    def stderr(self):
-        return self._stderr
-
-
 def get_cpachecker_version():
     """Return the CPAchecker version used."""
 
@@ -228,13 +198,13 @@ def create_parser():
 def _determine_file_args(argv):
     parameter_prefix = "-"
     files = []
-    logging.debug(f"Determining file args from {argv}")
+    logging.debug("Determining file args from %s", argv)
     for fst, snd in zip(argv[:-1], argv[1:]):
         if not fst.startswith(parameter_prefix) and not snd.startswith(
             parameter_prefix
         ):
             files.append(snd)
-    logging.debug(f"Determined file args: {files}")
+    logging.debug("Determined file args: %s", files)
     return files
 
 
@@ -376,23 +346,19 @@ def execute(command, quiet=False):
 
     :param List[str] command: list of words that describe the command line.
     :param Bool quiet: whether to log the executed command line as INFO.
-    :return ExecutionResult: result object with information about the execution.
+    :return subprocess.CompletedProcess: information about the execution.
     """
     if not quiet:
         logging.info(" ".join(command))
-    p = subprocess.Popen(
+    return subprocess.run(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
     )
-    returncode = p.wait()
-    output = p.stdout.read()
-    err_output = p.stderr.read()
-    return ExecutionResult(returncode, output, err_output)
 
 
 def analyze_result(test_result, harness, specification):
     """Analyze the given test result and return its verdict.
 
-    :param ExecutionResult test_result: result of test execution
+    :param CompletedProcess test_result: result of test execution
     :param str harness: path to harness file
     :param Specification specification: specification to check result against
     :return: tuple of the verdict of the test execution and the violated property, if any.
@@ -439,16 +405,14 @@ def _analyze_result_values(
         and expected_errmsg in test_result.stderr
     ):
         logging.info(
-            "Harness {} reached expected property violation ({}).".format(
-                harness, spec_prop
-            )
+            "Harness %s reached expected property violation (%s).", harness, spec_prop
         )
         return RESULT_ACCEPT, spec_prop
     elif test_result.returncode == 0:
-        logging.info("Harness {} did not encounter _any_ error".format(harness))
+        logging.info("Harness %s did not encounter _any_ error", harness)
         return RESULT_REJECT, None
     else:
-        logging.info("Run with harness {} was not successful".format(harness))
+        logging.info("Run with harness %s was not successful", harness)
         return RESULT_UNK, None
 
 
@@ -536,7 +500,7 @@ def _execute_harnesses(
     reject_count = 0
     for harness in created_harnesses:
         iter_count += 1
-        logging.info("Looking at {}".format(harness))
+        logging.info("Looking at %s", harness)
         exe_target = output_dir + os.sep + get_target_name(harness)
         compile_cmd = create_compile_cmd(
             harness, program_file, exe_target, args, specification
@@ -555,7 +519,7 @@ def _execute_harnesses(
             _log_multiline(compile_result.stdout, level=logging.DEBUG)
 
             if compile_result.returncode != 0:
-                logging.warning("Compilation failed for harness {}".format(harness))
+                logging.warning("Compilation failed for harness %s", harness)
                 continue
 
         else:
@@ -568,15 +532,11 @@ def _execute_harnesses(
         if test_result.stdout:
             with open(test_stdout_file, "w+") as output:
                 output.write(test_result.stdout)
-                logging.info(
-                    "Wrote stdout of test execution to {}".format(test_stdout_file)
-                )
+                logging.info("Wrote stdout of test execution to %s", test_stdout_file)
         if test_result.stderr:
             with open(test_stderr_file, "w+") as error_output:
                 error_output.write(test_result.stderr)
-                logging.info(
-                    "Wrote stderr of test execution to {}".format(test_stderr_file)
-                )
+                logging.info("Wrote stderr of test execution to %s", test_stderr_file)
 
         result, new_violated_property = analyze_result(
             test_result, harness, specification

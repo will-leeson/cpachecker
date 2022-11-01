@@ -11,7 +11,6 @@ package org.sosy_lab.cpachecker.cpa.chc;
 import java.util.ArrayList;
 import org.sosy_lab.cpachecker.core.interfaces.Precision;
 
-
 public class CHCPrecision implements Precision {
 
   private ArrayList<String> Vars;
@@ -26,5 +25,4 @@ public class CHCPrecision implements Precision {
     }
     return false;
   }
-
 }
