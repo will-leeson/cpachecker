@@ -243,12 +243,15 @@ possible = ["BMC", "KI", "PA", "SymEx", "VA-NoCegar", "VA-Cegar"]
 
 nodes = torch.from_numpy(nodes)
 
-edges_tensor = [torch.from_numpy(edgeSet) for edgeSet in [ast]]
-edges_tensor = edges_tensor[:1]
+edges_tensor = [torch.from_numpy(edgeSet) for edgeSet in [ast, dfg]]
+edges_tensor = edges_tensor
 
-edge_labels = torch.cat([torch.full((len(edges_tensor[i]),1),i) for i in range(len(edges_tensor))], dim=0).float()  
-edges_tensor = torch.cat(edges_tensor).transpose(0,1).long()
+edge_labels = torch.cat([torch.full((len(edges_tensor[i]),1),i) for i in range(len(edges_tensor))], dim=0).float() 
 
+# edges_tensor = torch.cat(edges_tensor).transpose(0,1).long()
+
+edges_tensor = torch.cat(edges_tensor)
+edges_tensor = edges_tensor.transpose(0,1).long()
 data = Data(x=nodes.float(), edge_index=edges_tensor, edge_attr=edge_labels, problemType=torch.FloatTensor([0]))
 
 data = Batch.from_data_list([data])
