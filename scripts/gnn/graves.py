@@ -1,7 +1,7 @@
 from subprocess import Popen, PIPE
 from sys import argv
 import numpy as np
-from lib.gnn import GAT
+from lib.gnn import EGC
 import torch
 from torch_geometric.data import Data, Batch
 
@@ -228,7 +228,7 @@ def makeFinalRep(graphDict):
     return nodeRepresentations, AST, CFG, DFG
 
 #Call graph-builder and collect output
-graphBuilder = Popen(['graph-builder', argv[1]], stdout=PIPE, stderr=PIPE)
+graphBuilder = Popen([argv[3], argv[1]], stdout=PIPE, stderr=PIPE)
 stdout, stderr = graphBuilder.communicate()
 stdout = stdout.decode("utf-8")
 graph = stdout.split('\n')
@@ -239,14 +239,14 @@ graph =  handler(graph)
 nodes, ast, cfg, dfg = makeFinalRep(graph)
 
 #Possible results
-possible = ["KI", "SymEx", "PA", "VA-NoCegar", "VA-Cegar", "Unknown"]
+possible = ["BMC", "KI", "PA", "SymEx", "VA-NoCegar", "VA-Cegar"]
 
 nodes = torch.from_numpy(nodes)
 
-edges_tensor = [torch.from_numpy(edgeSet) for edgeSet in [ast, cfg, dfg]]
+edges_tensor = [torch.from_numpy(edgeSet) for edgeSet in [ast]]
 edges_tensor = edges_tensor[:1]
 
-edge_labels = torch.cat([torch.full((len(edges_tensor[i]),1),i) for i in range(len(edges_tensor))], dim=0)        
+edge_labels = torch.cat([torch.full((len(edges_tensor[i]),1),i) for i in range(len(edges_tensor))], dim=0).float()  
 edges_tensor = torch.cat(edges_tensor).transpose(0,1).long()
 
 data = Data(x=nodes.float(), edge_index=edges_tensor, edge_attr=edge_labels, problemType=torch.FloatTensor([0]))
@@ -254,19 +254,14 @@ data = Data(x=nodes.float(), edge_index=edges_tensor, edge_attr=edge_labels, pro
 data = Batch.from_data_list([data])
 
 #Build model and load weights
-model = GAT(passes=2, numEdgeSets=1, inputLayerSize=nodes.size(1), outputLayerSize=len(possible)-1, numAttentionLayers=5, mode='cat', pool='mean', k='3')
-model.load_state_dict(torch.load(argv[2], map_location=torch.device(0)))
+model = EGC(passes=1, inputLayerSize=nodes.size(1), outputLayerSize=len(possible), pool=['max','mean','attention'], aggregators=['max','mean','std'])
+model.load_state_dict(torch.load(argv[2], map_location="cpu"))
 
 #Make prediction
-prediction = -model(x=data.x, edge_index=data.edge_index, edge_attr=data.edge_attr, problemType=data.problemType, batch=data.batch)
-prediction = torch.cat((prediction, torch.zeros((1,1))),dim=1)
+prediction = -model(x=data.x, edge_index=data.edge_index, problemType=data.problemType, batch=data.batch)
 prediction = prediction.argsort()
 
 order = [possible[x] for x in prediction.squeeze()]
 
-# res[program] = order
-# if order[0] == "Unknown":
-#     order = order[1:4]+[order[0]]+order[4:]
-#Output order
 for analysis in order:
     print(analysis)
