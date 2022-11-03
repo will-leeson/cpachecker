@@ -148,6 +148,9 @@ case "$platform" in
     ;;
 esac
 
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+export PYTHONPATH="${PYTHONPATH}:${SCRIPT_DIR}/gnn/lib/pytorch"
+
 # Run CPAchecker.
 # Order of arguments for JVM:
 # - options hard-coded in this script (to allow overriding them)
