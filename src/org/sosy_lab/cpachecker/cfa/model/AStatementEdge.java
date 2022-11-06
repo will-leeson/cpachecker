@@ -8,7 +8,8 @@
 
 package org.sosy_lab.cpachecker.cfa.model;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
+import org.sosy_lab.cpachecker.cfa.ast.AAstNode;
 import org.sosy_lab.cpachecker.cfa.ast.AStatement;
 import org.sosy_lab.cpachecker.cfa.ast.FileLocation;
 
@@ -18,8 +19,12 @@ public class AStatementEdge extends AbstractCFAEdge {
   private static final long serialVersionUID = 2639832981364107114L;
   protected final AStatement statement;
 
-  protected AStatementEdge(String pRawStatement, AStatement pStatement,
-      FileLocation pFileLocation, CFANode pPredecessor, CFANode pSuccessor) {
+  protected AStatementEdge(
+      String pRawStatement,
+      AStatement pStatement,
+      FileLocation pFileLocation,
+      CFANode pPredecessor,
+      CFANode pSuccessor) {
 
     super(pRawStatement, pFileLocation, pPredecessor, pSuccessor);
     statement = pStatement;
@@ -35,7 +40,7 @@ public class AStatementEdge extends AbstractCFAEdge {
   }
 
   @Override
-  public Optional<? extends AStatement> getRawAST() {
+  public Optional<AAstNode> getRawAST() {
     return Optional.of(statement);
   }
 
@@ -43,5 +48,4 @@ public class AStatementEdge extends AbstractCFAEdge {
   public String getCode() {
     return statement.toASTString();
   }
-
 }

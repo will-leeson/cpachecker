@@ -56,8 +56,8 @@ final class NeqRelation {
   }
 
   /**
-   * replace an old value with a fresh one,
-   * i.e. transform all relations from (A->OLD) towards (A->FRESH) and delete OLD.
+   * replace an old value with a fresh one, i.e. transform all relations from (A->OLD) towards
+   * (A->FRESH) and delete OLD.
    */
   public NeqRelation replaceValueAndCopy(SMGValue fresh, SMGValue old) {
     NeqRelation result = removeValueAndCopy(old);
@@ -69,7 +69,7 @@ final class NeqRelation {
 
   @Override
   public String toString() {
-    return "neq_rel=" + smgValues.toString();
+    return "neq_rel=" + smgValues;
   }
 
   @Override

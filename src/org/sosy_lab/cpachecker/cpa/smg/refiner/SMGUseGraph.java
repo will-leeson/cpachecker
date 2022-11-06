@@ -39,7 +39,6 @@ public class SMGUseGraph<V extends SMGUseVertice, E extends SMGUseGraphEdge<V>> 
 
       assert srcPos <= curPos;
 
-
       result.put(source, new SMGUseRange(srcPos, curPos));
       waitlist.add(source);
     }

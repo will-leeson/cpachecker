@@ -187,12 +187,10 @@ public class AlgorithmContext {
 
     } catch (InvalidConfigurationException e) {
       pLogger.logUserException(
-          Level.WARNING,
-          e,
-          "Configuration file " + configFile.toString() + " is invalid");
+          Level.WARNING, e, "Configuration file " + configFile + " is invalid");
 
     } catch (IOException e) {
-      String message = "Failed to read " + configFile.toString() + ".";
+      String message = "Failed to read " + configFile + ".";
       if (pShutdownNotifier.shouldShutdown() && e instanceof ClosedByInterruptException) {
         pLogger.log(Level.WARNING, message);
       } else {
@@ -266,5 +264,4 @@ public class AlgorithmContext {
   public TimeSpan getTotalTimeSpent() {
     return timer.getSumTime();
   }
-
 }

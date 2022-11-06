@@ -52,5 +52,4 @@ public class RTTCPA extends AbstractCPA implements StatisticsProvider {
   public LogManager getLogger() {
     return logger;
   }
-
 }

@@ -10,8 +10,6 @@ package org.sosy_lab.cpachecker.core.algorithm.invariants;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.sosy_lab.cpachecker.cfa.model.CFANode;
-import org.sosy_lab.cpachecker.core.reachedset.AggregatedReachedSets;
-import org.sosy_lab.cpachecker.exceptions.CPAException;
 
 public abstract class AbstractInvariantGenerator implements InvariantGenerator {
 
@@ -29,16 +27,10 @@ public abstract class AbstractInvariantGenerator implements InvariantGenerator {
   public abstract void cancel();
 
   @Override
-  public AggregatedReachedSets get() throws CPAException, InterruptedException {
-    return new AggregatedReachedSets();
-  }
-
-  @Override
   public abstract boolean isProgramSafe();
 
   @Override
   public boolean isStarted() {
     return started.get();
   }
-
 }

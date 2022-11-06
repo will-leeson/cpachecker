@@ -133,7 +133,7 @@ public class GraphGenAlgorithm implements Algorithm {
     Path out = Paths.get(output);
     Path parent = out.getParent();
 
-    if(!Files.exists(parent) || !Files.isDirectory(parent)){
+    if((parent != null && !Files.exists(parent))){
       Files.createDirectory(parent);
     }
 

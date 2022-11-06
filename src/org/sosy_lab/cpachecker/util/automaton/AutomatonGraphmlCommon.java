@@ -10,8 +10,8 @@ package org.sosy_lab.cpachecker.util.automaton;
 
 import static org.sosy_lab.common.collect.Collections3.transformedImmutableListCopy;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -23,6 +23,8 @@ import com.google.common.io.CharStreams;
 import com.google.common.io.MoreFiles;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -90,7 +92,7 @@ import org.sosy_lab.cpachecker.cfa.model.c.CFunctionReturnEdge;
 import org.sosy_lab.cpachecker.cfa.model.c.CFunctionSummaryStatementEdge;
 import org.sosy_lab.cpachecker.cfa.types.MachineModel;
 import org.sosy_lab.cpachecker.core.counterexample.CFAEdgeWithAdditionalInfo;
-import org.sosy_lab.cpachecker.core.specification.SpecificationProperty;
+import org.sosy_lab.cpachecker.core.specification.Property;
 import org.sosy_lab.cpachecker.util.CFATraversal;
 import org.sosy_lab.cpachecker.util.CFATraversal.CFAVisitor;
 import org.sosy_lab.cpachecker.util.CFATraversal.TraversalProcess;
@@ -157,7 +159,8 @@ public class AutomatonGraphmlCommon {
     LINECOLS("lineCols", ElementType.EDGE, "lineColSet", "string"),
     CONTROLCASE("control", ElementType.EDGE, "control", "string"),
     ASSUMPTION("assumption", ElementType.EDGE, "assumption", "string"),
-    ASSUMPTIONRESULTFUNCTION("assumption.resultfunction", ElementType.EDGE, "assumption.resultfunction", "string"),
+    ASSUMPTIONRESULTFUNCTION(
+        "assumption.resultfunction", ElementType.EDGE, "assumption.resultfunction", "string"),
     ASSUMPTIONSCOPE("assumption.scope", ElementType.EDGE, "assumption.scope", "string"),
     FUNCTIONENTRY("enterFunction", ElementType.EDGE, "enterFunction", "string"),
     FUNCTIONEXIT("returnFrom", ElementType.EDGE, "returnFromFunction", "string"),
@@ -239,7 +242,6 @@ public class AutomatonGraphmlCommon {
         stringToFlagMap.put(f.key.id, f);
       }
     }
-
 
     public static NodeFlag getNodeFlagByKey(final String key) {
       return stringToFlagMap.get(key);
@@ -372,16 +374,15 @@ public class AutomatonGraphmlCommon {
           createDataElement(KeyDef.PRODUCER, pVerificationTaskMetaData.getProducerString()));
 
       int nSpecs = 0;
-      for (SpecificationProperty property : pVerificationTaskMetaData.getProperties()) {
-        graph.appendChild(createDataElement(KeyDef.SPECIFICATION, property.toString()));
+      for (Property property : pVerificationTaskMetaData.getProperties()) {
+        graph.appendChild(createDataElement(KeyDef.SPECIFICATION, property.toFullString(pCfa)));
         ++nSpecs;
       }
 
       for (Path specFile : pVerificationTaskMetaData.getNonPropertySpecificationFiles()) {
         graph.appendChild(
             createDataElement(
-                KeyDef.SPECIFICATION,
-                MoreFiles.asCharSource(specFile, Charsets.UTF_8).read().trim()));
+                KeyDef.SPECIFICATION, Files.readString(specFile, StandardCharsets.UTF_8).trim()));
         ++nSpecs;
       }
 
@@ -414,8 +415,7 @@ public class AutomatonGraphmlCommon {
 
     private void defineKey(KeyDef pKeyDef, Optional<String> pOverrideDefaultValue) {
       if (definedKeys.add(pKeyDef)) {
-        keyDefsToAppend.put(pKeyDef,
-            createKeyDefElement(pKeyDef, pOverrideDefaultValue));
+        keyDefsToAppend.put(pKeyDef, createKeyDefElement(pKeyDef, pOverrideDefaultValue));
       }
     }
 
@@ -479,8 +479,7 @@ public class AutomatonGraphmlCommon {
     public void appendTo(Appendable pTarget) throws IOException {
       Node root = doc.getFirstChild();
       Node insertionLocation = root.getFirstChild();
-      for (Node graphMLKeyDefNode : Iterables
-          .consumingIterable(keyDefsToAppend.values())) {
+      for (Node graphMLKeyDefNode : Iterables.consumingIterable(keyDefsToAppend.values())) {
         while (insertionLocation != null
             && insertionLocation.getNodeName().equals(GraphMLTag.KEY.toString())) {
           insertionLocation = insertionLocation.getNextSibling();
@@ -501,17 +500,16 @@ public class AutomatonGraphmlCommon {
 
         transformer.transform(new DOMSource(doc), new StreamResult(CharStreams.asWriter(pTarget)));
       } catch (TransformerException ex) {
-        if (ex.getException() instanceof IOException) {
-          throw (IOException) ex.getException();
+        for (Throwable cause : Throwables.getCausalChain(ex)) {
+          Throwables.throwIfInstanceOf(cause, IOException.class);
         }
         throw new RuntimeException("Error while writing witness.", ex);
       }
     }
-
   }
 
-  public static boolean handleAsEpsilonEdge(CFAEdge pEdge, CFAEdgeWithAdditionalInfo
-      pAdditionalInfo) {
+  public static boolean handleAsEpsilonEdge(
+      CFAEdge pEdge, CFAEdgeWithAdditionalInfo pAdditionalInfo) {
     if (pAdditionalInfo != null && !pAdditionalInfo.getInfos().isEmpty()) {
       return false;
     }
@@ -519,8 +517,8 @@ public class AutomatonGraphmlCommon {
   }
 
   /**
-   * This method checks whether an edge qualifies as epsilon edge.
-   * Epsilon edges are irrelevant edges that are not required in the witness.
+   * This method checks whether an edge qualifies as epsilon edge. Epsilon edges are irrelevant
+   * edges that are not required in the witness.
    * <li>global declarations (there is no other path possible in the CFA),
    * <li>CPAchecker-internal temporary variable declarations (irrelevant for the witness),
    * <li>blank edges and function summary edges (not required for a path in the witness).
@@ -539,7 +537,8 @@ public class AutomatonGraphmlCommon {
       }
       if (AutomatonGraphmlCommon.treatAsTrivialAssume(edge)) {
         return false;
-      } if (AutomatonGraphmlCommon.treatAsWhileTrue(edge)) {
+      }
+      if (AutomatonGraphmlCommon.treatAsWhileTrue(edge)) {
         return false;
       }
       return true;
@@ -653,29 +652,29 @@ public class AutomatonGraphmlCommon {
     return architecture;
   }
 
-  public static Set<FileLocation> getFileLocationsFromCfaEdge(CFAEdge pEdge, FunctionEntryNode
-      pMainEntry, CFAEdgeWithAdditionalInfo pAdditionalInfo) {
+  public static Set<FileLocation> getFileLocationsFromCfaEdge(
+      CFAEdge pEdge, FunctionEntryNode pMainEntry, CFAEdgeWithAdditionalInfo pAdditionalInfo) {
     if (handleAsEpsilonEdge(pEdge, pAdditionalInfo)) {
       return ImmutableSet.of();
     }
     return getFileLocationsFromCfaEdge0(pEdge, pMainEntry);
   }
 
-  public static Set<FileLocation> getFileLocationsFromCfaEdge(CFAEdge pEdge, FunctionEntryNode
-      pMainEntry) {
+  public static Set<FileLocation> getFileLocationsFromCfaEdge(
+      CFAEdge pEdge, FunctionEntryNode pMainEntry) {
     if (handleAsEpsilonEdge(pEdge)) {
       return ImmutableSet.of();
     }
     return getFileLocationsFromCfaEdge0(pEdge, pMainEntry);
   }
 
-  public static Set<FileLocation> getFileLocationsFromCfaEdge0(CFAEdge pEdge, FunctionEntryNode
-    pMainEntry) {
+  public static Set<FileLocation> getFileLocationsFromCfaEdge0(
+      CFAEdge pEdge, FunctionEntryNode pMainEntry) {
 
     if (isMainFunctionEntry(pEdge)
         && pMainEntry.getFunctionName().equals(pEdge.getSuccessor().getFunctionName())) {
       FileLocation location = pMainEntry.getFileLocation();
-      if (!FileLocation.DUMMY.equals(location)) {
+      if (location.isRealLocation()) {
         location =
             new FileLocation(
                 location.getFileName(),
@@ -697,7 +696,7 @@ public class AutomatonGraphmlCommon {
     if (pEdge instanceof AStatementEdge) {
       AStatementEdge statementEdge = (AStatementEdge) pEdge;
       FileLocation statementLocation = statementEdge.getStatement().getFileLocation();
-      if (!FileLocation.DUMMY.equals(statementLocation)) {
+      if (statementLocation.isRealLocation()) {
         return Collections.singleton(statementLocation);
       }
     }
@@ -709,7 +708,7 @@ public class AutomatonGraphmlCommon {
         if (call instanceof AFunctionCallAssignmentStatement) {
           AFunctionCallAssignmentStatement statement = (AFunctionCallAssignmentStatement) call;
           FileLocation callLocation = statement.getRightHandSide().getFileLocation();
-          if (!FileLocation.DUMMY.equals(callLocation)) {
+          if (callLocation.isRealLocation()) {
             return Collections.singleton(callLocation);
           }
         }
@@ -720,8 +719,9 @@ public class AutomatonGraphmlCommon {
       FileLocation location = assumeEdge.getFileLocation();
       if (isDefaultCase(assumeEdge)) {
         CFANode successorNode = assumeEdge.getSuccessor();
-        FileLocation switchLocation = Iterables.getOnlyElement(CFAUtils.leavingEdges(successorNode)).getFileLocation();
-        if (!FileLocation.DUMMY.equals(switchLocation)) {
+        FileLocation switchLocation =
+            Iterables.getOnlyElement(CFAUtils.leavingEdges(successorNode)).getFileLocation();
+        if (switchLocation.isRealLocation()) {
           location = switchLocation;
         } else {
           SwitchDetector switchDetector = new SwitchDetector(assumeEdge);
@@ -731,9 +731,8 @@ public class AutomatonGraphmlCommon {
                   switchDetector.getEdgesBackwardToSwitchNode(), CFAEdge::getFileLocation);
           location = FileLocation.merge(caseLocations);
         }
-
       }
-      if (!FileLocation.DUMMY.equals(location)) {
+      if (location.isRealLocation()) {
         return Collections.singleton(location);
       }
     }
@@ -822,8 +821,9 @@ public class AutomatonGraphmlCommon {
         BlankEdge edge = (BlankEdge) pEdge;
         String switchPrefix = "switch (";
         if (edge.getDescription().equals(switchPrefix + switchOperand + ")")
-            && !FileLocation.DUMMY.equals(edge.getFileLocation())
-            && assumeExpression.getFileLocation().getNodeOffset() == edge.getFileLocation().getNodeOffset() + switchPrefix.length()) {
+            && edge.getFileLocation().isRealLocation()
+            && assumeExpression.getFileLocation().getNodeOffset()
+                == edge.getFileLocation().getNodeOffset() + switchPrefix.length()) {
           switchNode = edge.getSuccessor();
           return TraversalProcess.ABORT;
         }
@@ -836,7 +836,6 @@ public class AutomatonGraphmlCommon {
     public TraversalProcess visitNode(CFANode pNode) {
       return TraversalProcess.CONTINUE;
     }
-
   }
 
   /**
@@ -1021,13 +1020,14 @@ public class AutomatonGraphmlCommon {
     if (leavingEdges.size() != 2) {
       return false;
     }
-    com.google.common.base.Optional<CFAEdge> potentialTerminationValueAssumeEdge =
-        leavingEdges.firstMatch(e -> e.getSuccessor() instanceof CFATerminationNode);
+    Optional<CFAEdge> potentialTerminationValueAssumeEdge =
+        leavingEdges.firstMatch(e -> e.getSuccessor() instanceof CFATerminationNode).toJavaUtil();
     if (!potentialTerminationValueAssumeEdge.isPresent()
-        || !(potentialTerminationValueAssumeEdge.get() instanceof AssumeEdge)) {
+        || !(potentialTerminationValueAssumeEdge.orElseThrow() instanceof AssumeEdge)) {
       return false;
     }
-    AssumeEdge terminationValueAssumption = (AssumeEdge) potentialTerminationValueAssumeEdge.get();
+    AssumeEdge terminationValueAssumption =
+        (AssumeEdge) potentialTerminationValueAssumeEdge.orElseThrow();
     AExpression terminationValueAssumeExpression = terminationValueAssumption.getExpression();
     if (!(terminationValueAssumeExpression instanceof ABinaryExpression)) {
       return false;
@@ -1049,7 +1049,7 @@ public class AutomatonGraphmlCommon {
     if (operator.equals(BinaryOperator.NOT_EQUALS)
         || operator.equals(
             org.sosy_lab.cpachecker.cfa.ast.java.JBinaryExpression.BinaryOperator.NOT_EQUALS)) {
-      return flip ^ !terminationValueAssumption.getTruthAssumption();
+      return flip == terminationValueAssumption.getTruthAssumption();
     }
     if (operator.equals(BinaryOperator.EQUALS)
         || operator.equals(
